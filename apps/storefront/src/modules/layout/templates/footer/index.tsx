@@ -1,0 +1,79 @@
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Brand from "@modules/common/components/brand"
+import Icon from "@modules/common/components/icon"
+import BottomTabs from "@modules/layout/components/bottom-tabs"
+import { storeConfig as c } from "../../../../store.config"
+
+const COLS = [
+  { title: "تسوّقي", links: c.nav.map((n) => ({ label: n.label, href: n.href })) },
+  { title: "خدمة العملاء", links: [
+    { label: "تتبّع طلبك", href: "/account/orders" },
+    { label: "سياسة الاستبدال والإرجاع", href: "/pages/returns" },
+    { label: "دليل المقاسات", href: "/pages/size-guide" },
+    { label: "الأسئلة الشائعة", href: "/pages/faq" },
+  ] },
+  { title: `عن ${c.shortName}`, links: [
+    { label: "قصتنا", href: "/pages/about" },
+    { label: "فروعنا", href: "/pages/stores" },
+    { label: "برنامج الولاء", href: "/account" },
+    { label: "بطاقات الهدايا", href: "/store?q=هدية" },
+  ] },
+]
+
+export default function Footer() {
+  return (
+    <>
+      <footer className="site">
+        <div className="wrap">
+          <div className="ftop">
+            <div className="fbrand">
+              <Brand dark />
+              <p>{c.description}</p>
+              <div className="social">
+                <a href={c.social.instagram} target="_blank" rel="noreferrer" aria-label="Instagram"><Icon name="instagram" size={18} /></a>
+                <a href={c.social.snapchat} target="_blank" rel="noreferrer" aria-label="Snapchat"><Icon name="snap" size={18} /></a>
+                <a href={c.social.tiktok} target="_blank" rel="noreferrer" aria-label="TikTok"><Icon name="tiktok" size={18} /></a>
+                <a href={`https://wa.me/${c.contact.whatsapp}`} target="_blank" rel="noreferrer" aria-label="WhatsApp"><Icon name="whatsapp" size={18} /></a>
+              </div>
+            </div>
+            {COLS.map((col) => (
+              <div className="fcol" key={col.title}>
+                <details className="small:hidden">
+                  <summary>{col.title}</summary>
+                  <ul>{col.links.map((l) => <li key={l.href}><LocalizedClientLink href={l.href}>{l.label}</LocalizedClientLink></li>)}</ul>
+                </details>
+                <div className="hidden small:block">
+                  <h4>{col.title}</h4>
+                  <ul>{col.links.map((l) => <li key={l.href}><LocalizedClientLink href={l.href}>{l.label}</LocalizedClientLink></li>)}</ul>
+                </div>
+              </div>
+            ))}
+            <div className="fcontact">
+              <h4>تواصلي معنا</h4>
+              <div><Icon name="pin" size={16} /><span><b>{c.contact.address}</b>{c.contact.hours}</span></div>
+              <div><Icon name="phone" size={16} /><span><b dir="ltr">{c.contact.phone}</b>{c.contact.email}</span></div>
+              <a href={`https://wa.me/${c.contact.whatsapp}`} target="_blank" rel="noreferrer" className="btn wa sm mt-2"><Icon name="whatsapp" size={16} /> راسلينا على واتساب</a>
+            </div>
+          </div>
+          <div className="fpay">
+            <span>طرق دفع آمنة ومتنوعة</span>
+            <div className="logos">
+              <span><img src="/img/pay/thawani.png" alt="" /> ثواني</span>
+              <span><img src="/img/pay/visa.svg" alt="Visa" /></span>
+              <span><img src="/img/pay/mastercard.svg" alt="Mastercard" /></span>
+              <span><img src="/img/pay/applepay.svg" alt="Apple Pay" /></span>
+              <span><Icon name="cash" size={14} /> الدفع عند الاستلام</span>
+            </div>
+            <span><Icon name="truck" size={14} className="me-1" /> توصيل لكل محافظات السلطنة خلال ٢٤–٤٨ ساعة</span>
+          </div>
+          <div className="fbottom">
+            <span>© {new Date().getFullYear()} {c.name} — جميع الحقوق محفوظة.</span>
+            <span className="flex gap-4"><LocalizedClientLink href="/pages/terms">الشروط والأحكام</LocalizedClientLink><LocalizedClientLink href="/pages/privacy">سياسة الخصوصية</LocalizedClientLink></span>
+            <span>صُنع بشغف بواسطة <a href={c.builtBy.url} target="_blank" rel="noreferrer"><b>{c.builtBy.name}</b></a></span>
+          </div>
+        </div>
+      </footer>
+      <BottomTabs />
+    </>
+  )
+}
