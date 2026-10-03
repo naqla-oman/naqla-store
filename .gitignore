@@ -55,3 +55,6 @@ yarn-error.log*
 ehthumbs.db
 Thumbs.db
 **/.DS_Store
+# Naqla
+apps/backend/.env
+apps/storefront/.env.local
