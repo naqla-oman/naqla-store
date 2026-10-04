@@ -51,7 +51,7 @@ type W = Window & {
   fbq?: (...a: unknown[]) => void
   snaptr?: (...a: unknown[]) => void
   ttq?: { track: (...a: unknown[]) => void }
-  __trk?: { debug?: boolean; log: { event: string; event_id: string; to: string[] }[] }
+  __trk?: { debug?: boolean; ready?: boolean; pending?: [TrackEvent, TrackParams][]; log: { event: string; event_id: string; to: string[] }[] }
 }
 
 const uid = () => (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`)
@@ -59,6 +59,12 @@ const uid = () => (crypto?.randomUUID ? crypto.randomUUID() : `${Date.now()}-${M
 export function track(name: TrackEvent, p: TrackParams = {}) {
   if (typeof window === "undefined") return
   const w = window as W
+  w.__trk = w.__trk ?? { log: [] }
+  // قبل جاهزية البكسلات (أول تحميل للصفحة): يُصفّ الحدث بمعرّفه ويُرسل عند الجاهزية
+  if (!w.__trk.ready) {
+    ;(w.__trk.pending = w.__trk.pending ?? []).push([name, { ...p, event_id: p.event_id ?? `${name}_${uid()}` }])
+    return
+  }
   const event_id = p.event_id ?? `${name}_${uid()}`
   const currency = (p.currency ?? "OMR").toUpperCase()
   const items = p.items ?? []
@@ -97,7 +103,6 @@ export function track(name: TrackEvent, p: TrackParams = {}) {
     to.push("tiktok")
   }
   // سجل للتحقق في الاختبار (window.__trk.log)
-  w.__trk = w.__trk ?? { log: [] }
   w.__trk.log.push({ event: name, event_id, to })
   if (w.__trk.debug) console.info("[track]", name, event_id, to)
 }
@@ -111,3 +116,14 @@ export const itemOf = (p: { id?: string; title?: string; categories?: { name?: s
   variant: v?.title ?? undefined,
   category: p.categories?.[0]?.name ?? undefined,
 })
+
+/** يُستدعى من مكوّن التتبع بعد تهيئة المنصات: يعلن الجاهزية ويرسل ما صُفّ قبلها */
+export function flushTracking() {
+  if (typeof window === "undefined") return
+  const w = window as W
+  w.__trk = w.__trk ?? { log: [] }
+  w.__trk.ready = true
+  const queue = w.__trk.pending ?? []
+  w.__trk.pending = []
+  for (const [name, params] of queue) track(name, params)
+}

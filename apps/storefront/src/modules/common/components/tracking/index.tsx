@@ -1,6 +1,7 @@
 "use client"
 
 import { TrackingConfig } from "@lib/data/tracking"
+import { flushTracking } from "@lib/tracking/events"
 import { g } from "@lib/voice"
 import Icon from "@modules/common/components/icon"
 import { useCallback, useEffect, useState } from "react"
@@ -106,6 +107,8 @@ export default function Tracking({ config }: { config: TrackingConfig | null }) 
     const c = readConsent()
     if (c) apply(config, c)
     else setOpen(true)
+    // المنصات المتاحة الآن (Google دائماً بوضع الموافقة، والإعلانية إن وُجدت موافقة) جاهزة لاستقبال الطابور
+    flushTracking()
     const reopen = () => { setCustom(true); setChoice(readConsent() ?? { analytics: false, ads: false }); setOpen(true) }
     window.addEventListener("open-consent", reopen)
     return () => window.removeEventListener("open-consent", reopen)
