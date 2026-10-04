@@ -37,6 +37,7 @@ export default function ProductActions({ product, disabled }: Props) {
   const [adding, setAdding] = useState(false)
   const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null)
   const [showSticky, setShowSticky] = useState(false)
+  const [pageUrl, setPageUrl] = useState("")
   const buyRef = useRef<HTMLDivElement>(null)
   const boxRef = useRef<HTMLDivElement>(null)
 
@@ -56,18 +57,24 @@ export default function ProductActions({ product, disabled }: Props) {
   useEffect(() => {
     if (!variant?.id) return
     const url = new URL(window.location.href)
-    if (url.searchParams.get("v_id") === variant.id) return
+    if (url.searchParams.get("v_id") === variant.id) { setPageUrl(url.toString()); return }
     url.searchParams.set("v_id", variant.id)
     window.history.replaceState(null, "", url.toString())
+    setPageUrl(url.toString())
   }, [variant?.id])
 
   // شريط الشراء المثبّت يظهر عندما يخرج زر الإضافة من الشاشة
   useEffect(() => {
-    const el = buyRef.current
-    if (!el) return
-    const io = new IntersectionObserver(([e]) => setShowSticky(!e.isIntersecting && e.boundingClientRect.top < 0))
-    io.observe(el)
-    return () => io.disconnect()
+    let raf = 0
+    const check = () => {
+      raf = 0
+      const el = buyRef.current
+      if (el) setShowSticky(el.getBoundingClientRect().bottom < 0)
+    }
+    const onScroll = () => { if (!raf) raf = requestAnimationFrame(check) }
+    window.addEventListener("scroll", onScroll, { passive: true })
+    check()
+    return () => { window.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf) }
   }, [])
 
   useEffect(() => {
@@ -111,12 +118,11 @@ export default function ProductActions({ product, disabled }: Props) {
     }
   }
 
-  const waOrder = () => {
-    const href = typeof window !== "undefined" ? window.location.href : ""
-    return waLink(
-      `مرحباً ${storeConfig.shortName}، أرغب بطلب:\n${product.title}\n${selectionText}\nالكمية: ${qty}\nالسعر: ${formatAmount(price * qty)} ${storeConfig.currencyLabel}\n${href}`
+  // الرابط يُقرأ بعد التحميل فقط (pageUrl) حتى تتطابق نسخة الخادم مع المتصفح
+  const waOrder = () =>
+    waLink(
+      `مرحباً ${storeConfig.shortName}، أرغب بطلب:\n${product.title}\n${selectionText}\nالكمية: ${qty}\nالسعر: ${formatAmount(price * qty)} ${storeConfig.currencyLabel}${pageUrl ? `\n${pageUrl}` : ""}`
     )
-  }
   const waNotify = () =>
     waLink(`مرحباً ${storeConfig.shortName}، أرجو إعلامي عند توفر ${product.title} (${selectionText}).`)
   const waAtelier = (kind: "custom" | "fitting") =>

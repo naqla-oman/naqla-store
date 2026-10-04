@@ -30,7 +30,7 @@ export default async function ProductPreview({
         {product.thumbnail && (
           <Image src={product.thumbnail} alt={product.title} fill sizes="(max-width: 700px) 50vw, (max-width: 1024px) 33vw, 25vw" />
         )}
-        {pct > 0 ? <span className="tag red">-{pct}%</span> : tag ? <span className="tag">{tag}</span> : null}
+        {pct > 0 ? <span className="tag red"><bdi dir="ltr">-{pct}%</bdi></span> : tag ? <span className="tag">{tag}</span> : null}
         <button type="button" className="wish" aria-label="أضيفي للمفضلة"><Icon name="heart" size={17} /></button>
       </div>
       <div className="pb">

@@ -28,7 +28,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, imag
   const { price, old } = variantPricing(product)
   const pct = old ? Math.round((1 - price / old) * 100) : 0
   const tag = product.collection?.handle ? TAG[product.collection.handle] : null
-  const badge = pct > 0 ? <span className="ptag red">-{pct}%</span> : tag ? <span className="ptag">{tag}</span> : null
+  const badge = pct > 0 ? <span className="ptag red"><bdi dir="ltr">-{pct}%</bdi></span> : tag ? <span className="ptag">{tag}</span> : null
 
   return (
     <div className="wrap" data-testid="product-container">
