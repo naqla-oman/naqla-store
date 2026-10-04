@@ -23,6 +23,9 @@ const OrderDeliveryDetailsWidget = ({ data: order }: DetailWidgetProps<AdminOrde
   const gov = GOVERNORATES[code]
   const phone = (addr?.phone ?? "").replace(/\D/g, "")
   const pickup = meta.shipping_code === "pickup"
+  // خدمات التفصيل الخاص في الطلب (line item metadata.tailoring)
+  const tailored = (order.items ?? []).filter((i: any) => i.metadata?.tailoring)
+  const MEASURE: Record<string, string> = { length: "الطول", chest: "الصدر", shoulder: "الكتف", sleeve: "الكم" }
 
   return (
     <Container className="divide-y p-0" dir="rtl" data-testid="order-delivery-details">
@@ -72,6 +75,26 @@ const OrderDeliveryDetailsWidget = ({ data: order }: DetailWidgetProps<AdminOrde
           )}
         </div>
       )}
+      {tailored.map((i: any) => {
+        const t = i.metadata.tailoring
+        return (
+          <div key={i.id} className="px-6 py-4" data-testid="tailoring-details">
+            <Text size="small" weight="plus" className="mb-1">✂️ {i.variant_title || i.title}{t.for ? ` — لـ ${t.for}` : ""}</Text>
+            {t.contact ? (
+              <Text size="small" className="text-ui-fg-subtle">تواصلوا مع الزبونة لأخذ المقاسات</Text>
+            ) : (
+              <div className="grid grid-cols-4 gap-2 mt-1">
+                {Object.entries(t.measurements ?? {}).map(([k, v]) => (
+                  <div key={k} className="bg-ui-bg-subtle rounded-md px-2 py-1 text-center">
+                    <Text size="xsmall" className="text-ui-fg-muted">{MEASURE[k] ?? k}</Text>
+                    <Text size="small" weight="plus">{String(v)} سم</Text>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
       {phone && (
         <div className="px-6 py-3">
           <a

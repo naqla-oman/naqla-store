@@ -9,6 +9,7 @@ import ProductDetails from "@modules/products/components/product-details"
 import CompleteLook from "@modules/products/components/complete-look"
 import RelatedProducts from "@modules/products/components/related-products"
 import ProductInfo from "@modules/products/templates/product-info"
+import TailoringSlot from "@modules/products/components/tailoring/slot"
 import { variantPricing } from "@modules/products/lib/variants"
 import ProductActionsWrapper from "./product-actions-wrapper"
 
@@ -50,6 +51,9 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, imag
           <ProductInfo product={product} />
           <Suspense fallback={<ProductActions disabled product={product} region={region} />}>
             <ProductActionsWrapper id={product.id} region={region} />
+          </Suspense>
+          <Suspense fallback={null}>
+            <TailoringSlot product={product} region={region} />
           </Suspense>
           <ProductDetails product={product} />
         </div>

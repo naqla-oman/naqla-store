@@ -73,11 +73,13 @@ export const listProducts = async ({
     )
     .then(({ products, count }) => {
       const nextPage = count > offset + limit ? pageParam + 1 : null
+      // منتجات الخدمة (مثل «تفصيل خاص» — metadata.service) لا تظهر في القوائم، إلا عند طلبها بالاسم
+      const visible = queryParams?.handle ? products : products.filter((p) => !(p.metadata as any)?.service)
 
       return {
         response: {
-          products,
-          count,
+          products: visible,
+          count: count - (products.length - visible.length),
         },
         nextPage: nextPage,
         queryParams,

@@ -70,6 +70,12 @@ type ClientStore = {
     shipping: Record<string, { icon: string; eta: string }>
     giftNote: string
   }
+  tailoring?: {
+    handle: string
+    title: string
+    services: { key: string; title: string; price: number; categories: string[] }[]
+    measurements: { key: string; label: string }[]
+  }
   product: {
     lowStockAt: number
     /** نص التوفر تحت زر الشراء (مثل «متوفر في المشغل — جرّبيها قبل الشراء») */
@@ -164,6 +170,16 @@ export const storeConfig = {
     // نص الامتياز يُعرض فقط إن وُجد (أي إن كان مطبَّقاً فعلاً)، والمستويات تُطفأ بمفتاحها
     tierPerks: Object.fromEntries(c.loyalty.tiers.map((t) => [t.key, on("loyaltyTiers") ? t.perk ?? "" : t.min === 0 ? t.perk ?? "" : ""])) as Record<string, string>,
   },
+
+  /** التفصيل الخاص (features.tailoring) + خصم المستوى عليه إن وُجد */
+  tailoring: on("tailoring") && c.tailoring
+    ? {
+        ...c.tailoring,
+        discountTier: on("loyalty") && on("loyaltyTiers")
+          ? (c.loyalty.tiers.find((t) => (t as any).tailoringDiscount) as (Tier & { tailoringDiscount: number }) | undefined) ?? null
+          : null,
+      }
+    : null,
 
   checkout: {
     orderPrefix: c.orderPrefix,

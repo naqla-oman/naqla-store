@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation"
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
+import { tailoringNote } from "@lib/util/tailoring"
 
 type Props = {
   cart: HttpTypes.StoreCart
@@ -206,6 +207,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               <div className="n">
                 <div>{i.product_title}</div>
                 <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? ` · طول ${len} سم` : ""}</div>
+                {tailoringNote(i.metadata) && <div className="q tnote">{tailoringNote(i.metadata)}</div>}
               </div>
               <span className="price num" style={{ fontSize: 13.5 }}>{formatAmount(i.unit_price * i.quantity)}</span>
             </div>
