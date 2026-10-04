@@ -36,7 +36,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
       "items.id", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
       "fulfillments.packed_at", "fulfillments.shipped_at", "fulfillments.delivered_at",
     ],
-    filters: { display_id: displayId },
+    filters: { display_id: displayId } as any, // display_id رقمي في القاعدة
   })
   const o: any = data[0]
   if (!o || digits(o.shipping_address?.phone).slice(-8) !== phone) throw notFound

@@ -32,8 +32,13 @@ import type {
  * الطلب يُعتمد (authorized) فوراً، ويُسجَّل التحصيل (capture) من لوحة الإدارة
  * عند استلام المبلغ فعلياً من الزبونة.
  */
-export abstract class OfflinePaymentProvider extends AbstractPaymentProvider<Record<string, never>> {
-  protected abstract method: string
+export class OfflinePaymentProvider extends AbstractPaymentProvider<Record<string, never>> {
+  protected method = "offline"
+
+  // مُنشئ عام: مُنشئ الفئة الأساسية protected، وModuleProvider يتطلب فئة قابلة للإنشاء
+  constructor(container: Record<string, unknown>, options: Record<string, never> = {}) {
+    super(container, options)
+  }
 
   async initiatePayment(input: InitiatePaymentInput): Promise<InitiatePaymentOutput> {
     return { id: crypto.randomUUID(), data: { method: this.method, ...(input.data ?? {}) } }

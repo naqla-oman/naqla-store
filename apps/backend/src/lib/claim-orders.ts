@@ -1,5 +1,6 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
+import { awardOrderPointsWorkflow } from "../workflows/loyalty"
 
 const digits = (p?: string | null) => String(p ?? "").replace(/\D/g, "")
 
@@ -26,6 +27,10 @@ export async function claimOrdersByPhone(container: MedusaContainer, customerId:
 
   if (ids.length) {
     await orderModule.updateOrders(ids.map((id) => ({ id, customer_id: customerId })))
+    // الطلبات المنسوبة تكسب نقاطها أيضاً (معلّقة أو متاحة حسب حالة توصيلها)
+    for (const order_id of ids) {
+      await awardOrderPointsWorkflow(container).run({ input: { order_id } })
+    }
   }
   return ids
 }
