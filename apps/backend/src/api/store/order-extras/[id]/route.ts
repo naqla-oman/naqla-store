@@ -2,7 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 
 /** حقول metadata المسموح عرضها للزبونة في صفحة النجاح فقط */
-const PUBLIC_KEYS = ["gift", "gift_message", "courier_note", "payment_channel"] as const
+const PUBLIC_KEYS = ["gift", "gift_message", "courier_note", "payment_channel", "shipping_code"] as const
 
 /**
  * GET /store/order-extras/:id

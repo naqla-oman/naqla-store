@@ -199,7 +199,7 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
     await removeCartId()
     await refresh()
     revalidateTag(await getCacheTag("orders"))
-    return { ok: true, data: { orderId: res.order.id, displayId: res.order.display_id } }
+    return { ok: true, data: { orderId: res.order.id, displayId: res.order.display_id ?? 0 } }
   } catch (e) {
     const msg = String((e as any)?.message ?? "")
     if (/inventory|stock/i.test(msg)) return { ok: false, error: "بعض المنتجات لم تعد متوفرة بالكمية المطلوبة" }

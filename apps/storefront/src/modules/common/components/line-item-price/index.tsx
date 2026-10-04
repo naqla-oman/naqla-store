@@ -14,9 +14,9 @@ const LineItemPrice = ({
   style = "default",
   currencyCode,
 }: LineItemPriceProps) => {
-  const { total, original_total } = item
-  const originalPrice = original_total
-  const currentPrice = total
+  // قد تغيب المجاميع إن لم تُطلب حقولها من الـAPI
+  const originalPrice = item.original_total ?? item.total ?? 0
+  const currentPrice = item.total ?? 0
   const hasReducedPrice = currentPrice < originalPrice
 
   return (

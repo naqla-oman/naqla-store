@@ -41,12 +41,13 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
     return regions
       ?.map((r) => {
         return r.countries?.map((c) => ({
-          country: c.iso_2,
+          country: c.iso_2 ?? "",
           region: r.id,
-          label: c.display_name,
+          label: c.display_name ?? c.iso_2 ?? "",
         }))
       })
       .flat()
+      .filter((o): o is CountryOption => !!o?.country)
       .sort((a, b) => (a?.label ?? "").localeCompare(b?.label ?? ""))
   }, [regions])
 

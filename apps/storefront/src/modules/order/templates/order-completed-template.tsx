@@ -1,50 +1,147 @@
-import { Heading } from "@medusajs/ui"
-import { cookies as nextCookies } from "next/headers"
-
-import CartTotals from "@modules/common/components/cart-totals"
-import Help from "@modules/order/components/help"
-import Items from "@modules/order/components/items"
-import OnboardingCta from "@modules/order/components/onboarding-cta"
-import OrderDetails from "@modules/order/components/order-details"
-import ShippingDetails from "@modules/order/components/shipping-details"
-import PaymentDetails from "@modules/order/components/payment-details"
+import Image from "next/image"
+import { deliveryEta, governorateName, orderNumber } from "@lib/util/eta"
+import { formatAmount } from "@lib/util/money"
+import { orderMessage, waUrl } from "@lib/util/wa-order"
 import { HttpTypes } from "@medusajs/types"
+import Icon from "@modules/common/components/icon"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import CopyButton from "@modules/order/components/copy-button"
+import { storeConfig } from "../../../store.config"
 
-type OrderCompletedTemplateProps = {
+type Props = {
   order: HttpTypes.StoreOrder
+  extras: Record<string, any>
+  via?: string
 }
 
-export default async function OrderCompletedTemplate({
-  order,
-}: OrderCompletedTemplateProps) {
-  const cookies = await nextCookies()
+const { checkout, currencyLabel: CUR } = storeConfig
+const fmt = (n: number) => `${formatAmount(n)} ${CUR}`
+const CONFETTI = ["var(--accent)", "var(--copper)", "#e8d5b5", "#9fd4c0"]
 
-  const isOnboarding = cookies.get("_medusa_onboarding")?.value === "true"
+/** صفحة النجاح — مطابقة لصفحة التأكيد في الديمو */
+export default function OrderCompletedTemplate({ order, extras, via }: Props) {
+  const number = orderNumber(order.display_id)
+  const addr = order.shipping_address
+  const shipCode: string | undefined = extras.shipping_code
+  const pickup = shipCode === "pickup"
+  const providerId = order.payment_collections?.[0]?.payment_sessions?.[0]?.provider_id
+  const pay = checkout.payments.find((p) => p.id === providerId || p.key === extras.payment_channel)
+  const isWa = pay?.key === "whatsapp" || via === "whatsapp"
+  const items = order.items ?? []
+  const subtotal = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
+  const ship = order.shipping_methods?.[0]
+  const placedAt = new Intl.DateTimeFormat("ar-OM", {
+    timeZone: storeConfig.product.delivery.timezone,
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(order.created_at ?? Date.now()))
+  const eta = deliveryEta(shipCode, addr?.province)
+  const phone = addr?.phone?.replace(checkout.phone.prefix, "")
+  const name = [addr?.first_name, addr?.last_name].filter(Boolean).join(" ")
+
+  const waLink = waUrl(
+    orderMessage({
+      number,
+      items: items.map((i) => ({ title: i.product_title ?? i.title, variant: i.variant_title, qty: i.quantity, length: (i.metadata as any)?.length_cm })),
+      total: order.total,
+      shipping: ship?.name,
+      place: pickup ? null : `${governorateName(addr?.province)} — ${addr?.city ?? ""}`,
+      name,
+      gift: !!extras.gift,
+      giftMessage: extras.gift_message,
+    })
+  )
 
   return (
-    <div className="py-6 min-h-[calc(100vh-64px)]">
-      <div className="content-container flex flex-col justify-center items-center gap-y-10 max-w-4xl h-full w-full">
-        {isOnboarding && <OnboardingCta orderId={order.id} />}
-        <div
-          className="flex flex-col gap-4 max-w-4xl h-full bg-white w-full py-10"
-          data-testid="order-complete-container"
-        >
-          <Heading
-            level="h1"
-            className="flex flex-col gap-y-3 text-ui-fg-base text-3xl mb-4"
-          >
-            <span>Thank you!</span>
-            <span>Your order was placed successfully.</span>
-          </Heading>
-          <OrderDetails order={order} />
-          <Heading level="h2" className="flex flex-row text-3xl-regular">
-            Summary
-          </Heading>
-          <Items order={order} />
-          <CartTotals totals={order} />
-          <ShippingDetails order={order} />
-          <PaymentDetails order={order} />
-          <Help />
+    <div className="wrap">
+      <div className="succwrap" data-testid="order-complete-container">
+        <div className="succhero">
+          <div className="confetti" aria-hidden="true">
+            {Array.from({ length: 26 }, (_, i) => (
+              <i key={i} style={{ left: `${(i * 3.9) % 100}%`, background: CONFETTI[i % 4], animationDelay: `${(i % 7) * 0.12}s` }} />
+            ))}
+          </div>
+          <div className="ring"><Icon name="check" size={40} /></div>
+          <h1>تم استلام طلبك!</h1>
+          <p>
+            شكراً لتسوقك من {storeConfig.shortName} — سنتواصل معك على واتساب لتأكيد الطلب
+            {phone && <> على <bdi dir="ltr" style={{ whiteSpace: "nowrap" }}>{checkout.phone.prefix} {phone}</bdi></>}.
+          </p>
+          <div className="ordrow">
+            <div className="ordernum" data-testid="order-number">رقم الطلب: <bdi dir="ltr">{number}</bdi></div>
+            <CopyButton text={number} />
+          </div>
+          {isWa && (
+            <a className="btn wa lg" href={waLink} target="_blank" rel="noopener noreferrer" style={{ marginTop: 12 }} data-testid="wa-send">
+              <Icon name="whatsapp" size={18} /> إرسال الطلب على واتساب
+            </a>
+          )}
+        </div>
+
+        <div className="succgrid">
+          <div className="panelbox">
+            <h3>ماذا يحدث الآن؟</h3>
+            <ul className="tl">
+              <li className="done">
+                <i><Icon name="check" size={13} /></i>
+                <div><b>تم استلام الطلب</b><span>{isWa ? "بانتظار رسالتك على واتساب لتأكيده" : "وصلنا طلبك وبدأنا بمراجعته"}</span></div>
+                <small>{placedAt}</small>
+              </li>
+              <li className="now">
+                <i><Icon name="scissors" size={13} /></i>
+                <div><b>قيد التجهيز في المشغل</b><span>كيّ وتغليف{extras.gift ? " هدية" : ""} وفحص نهائي للقطعة</span></div>
+                <small>خلال ساعات</small>
+              </li>
+              <li>
+                <i><Icon name="truck" size={13} /></i>
+                <div>
+                  <b>{pickup ? "جاهز للاستلام" : "في الطريق إليك"}</b>
+                  <span>{pickup ? "نرسل لك رسالة عند الجاهزية" : "نرسل اسم المندوب ورقمه عند الانطلاق"}</span>
+                </div>
+              </li>
+              <li>
+                <i><Icon name="home" size={13} /></i>
+                <div><b>{eta}</b><span>{pickup ? storeConfig.contact.address : "سيتصل المندوب قبل الوصول"}</span></div>
+              </li>
+            </ul>
+          </div>
+
+          <div className="panelbox">
+            <h3>تفاصيل الطلب</h3>
+            {items.map((i) => {
+              const len = (i.metadata as any)?.length_cm
+              return (
+                <div key={i.id} className="oline">
+                  <div className="mini">{i.thumbnail && <Image src={i.thumbnail} alt="" fill sizes="46px" />}</div>
+                  <div>
+                    {i.product_title}
+                    <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? ` · طول ${len} سم` : ""}</div>
+                  </div>
+                  <span className="pr">{formatAmount(i.unit_price * i.quantity)}</span>
+                </div>
+              )
+            })}
+            <div style={{ marginTop: 10 }}>
+              <div className="kv"><span>المجموع</span><span className="num">{fmt(subtotal)}</span></div>
+              {(order.discount_total ?? 0) > 0 && (
+                <div className="kv"><span>الخصم</span><span className="num" style={{ color: "var(--accent)" }}>− {fmt(order.discount_total)}</span></div>
+              )}
+              <div className="kv"><span>التوصيل</span><span>{ship?.name} · {order.shipping_total ? fmt(order.shipping_total) : "مجاني"}</span></div>
+              <div className="kv"><span>الدفع</span><span>{pay?.title ?? "—"}</span></div>
+              <div className="kv"><span>العنوان</span><span>{pickup ? "استلام من المشغل" : `${governorateName(addr?.province)} — ${addr?.city ?? ""}`}</span></div>
+              {extras.gift && (
+                <div className="kv"><span>هدية</span><span>{extras.gift_message ? `«${extras.gift_message}»` : "تغليف هدية"}</span></div>
+              )}
+              <div className="kv"><span><b style={{ color: "var(--ink)" }}>الإجمالي</b></span><span><b className="num">{fmt(order.total)}</b></span></div>
+            </div>
+          </div>
+        </div>
+
+        <div className="succacts">
+          <LocalizedClientLink href="/store" className="btn">متابعة التسوق</LocalizedClientLink>
+          <a className="btn ghost" href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer">
+            <Icon name="whatsapp" size={16} /> تواصلي معنا
+          </a>
         </div>
       </div>
     </div>
