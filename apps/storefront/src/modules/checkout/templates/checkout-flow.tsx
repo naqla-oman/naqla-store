@@ -234,6 +234,13 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {CUR}</span>
             </div>
           ))}
+          {/* خصم تلقائي (امتياز مستوى مثل خصم التفصيل للماسية) بلا كود: سطر يشرح الفرق في الإجمالي */}
+          {discount > 0 && !codes.length && (
+            <div className="trow" data-testid="auto-discount">
+              <span>خصم امتياز عضويتك</span>
+              <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {CUR}</span>
+            </div>
+          )}
           <div className="trow"><span>التوصيل</span><span data-testid="sum-shipping">{shipping === null ? "في الخطوة التالية" : shipping === 0 && shipDiscount > 0 ? <>مجاني <span className="perktag">امتياز عضويتك</span></> : shipping === 0 ? "مجاني" : fmt(shipping)}</span></div>
           <div className="trow final"><span>الإجمالي</span><span>{fmt(total)}</span></div>
         </div>

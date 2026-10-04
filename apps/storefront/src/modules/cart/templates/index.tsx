@@ -56,7 +56,10 @@ export default function CartTemplate({ cart }: { cart: HttpTypes.StoreCart | nul
               <div className="trow"><span>المجموع</span><span>{formatAmount(subtotal)} {storeConfig.currencyLabel}</span></div>
               {discount > 0 && (
                 <div className="trow">
-                  <span>الخصم {cart.promotions?.map((p) => p.code).join("، ")}</span>
+                  <span>
+                    {/* أكواد الزبونة فقط؛ العروض التلقائية (امتيازات المستوى) باسم عام */}
+                    {(cart.promotions ?? []).filter((p: any) => !p.is_automatic).map((p) => p.code).join("، ") || "خصم امتياز عضويتك"}
+                  </span>
                   <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {storeConfig.currencyLabel}</span>
                 </div>
               )}
