@@ -5,6 +5,7 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Icon from "@modules/common/components/icon"
 import WishButton from "@modules/common/components/wish-button"
+import { storeConfig } from "../../../../store.config"
 
 const TAG: Record<string, string> = { new: "جديد", bestsellers: "الأكثر مبيعاً", sale: "خصم" }
 
@@ -38,8 +39,8 @@ export default async function ProductPreview({
         {cat && <div className="cat">{cat}</div>}
         <div className="nm" data-testid="product-title">{product.title}</div>
         <div className="meta">
-          {meta.rating && <span className="st"><Icon name="star" size={12} /> {meta.rating}</span>}
-          {meta.reviews && <span>({meta.reviews})</span>}
+          {storeConfig.features.reviews && meta.rating && <span className="st"><Icon name="star" size={12} /> {meta.rating}</span>}
+          {storeConfig.features.reviews && meta.reviews && <span>({meta.reviews})</span>}
           {meta.sold_week >= 15 && <span className="ms-auto flex items-center gap-1"><Icon name="fire" size={12} /> اشترتها {meta.sold_week} هذا الأسبوع</span>}
         </div>
         <div className="pr">

@@ -362,6 +362,22 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
 
               <div className="panelbox" role="radiogroup" aria-label="طريقة التوصيل">
                 <h3>طريقة التوصيل</h3>
+                {!customer && storeConfig.loyalty.freeShippingTier && (
+                  <div className="guest copper" data-testid="gold-hint">
+                    <Icon name="sparkle" size={15} />
+                    <span>
+                      {g(
+                        `عضوة ${storeConfig.loyalty.freeShippingTier.name}؟`,
+                        `عضو ${storeConfig.loyalty.freeShippingTier.name.replace(/ة$/, "")}؟`,
+                        `عضوية ${storeConfig.loyalty.freeShippingTier.name}؟`
+                      )}{" "}
+                      <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>
+                        {g("سجّلي الدخول برقمك", "سجّل الدخول برقمك")}
+                      </LocalizedClientLink>{" "}
+                      ليصبح التوصيل مجانياً
+                    </span>
+                  </div>
+                )}
                 {!sortedOptions.length && <div className="alert">لا توجد طريقة توصيل متاحة لهذا العنوان — {g("تواصلي معنا على واتساب", "تواصل معنا على واتساب")}</div>}
                 {sortedOptions.map((o) => {
                   const c = (o.type as any)?.code as string

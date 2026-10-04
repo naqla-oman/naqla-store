@@ -2,6 +2,7 @@ import { HttpTypes } from "@medusajs/types"
 import Icon from "@modules/common/components/icon"
 import ShareButton from "@modules/products/components/share-button"
 import WishButton from "@modules/common/components/wish-button"
+import { storeConfig } from "../../../../store.config"
 
 /** رأس المنتج: القسم، العنوان مع المشاركة، والتقييم */
 export default function ProductInfo({ product }: { product: HttpTypes.StoreProduct }) {
@@ -18,7 +19,8 @@ export default function ProductInfo({ product }: { product: HttpTypes.StoreProdu
         <WishButton productId={product.id} className="iconbtn share wishbtn" size={18} />
         <ShareButton title={product.title} />
       </div>
-      {rating > 0 && (
+      {/* التقييمات خلف features.reviews: بيانات الديمو مزروعة، وتُطفأ لأي عميل حقيقي حتى نظام تقييمات فعلي */}
+      {storeConfig.features.reviews && rating > 0 && (
         <div className="raterow">
           <span className="stars" aria-label={`التقييم ${rating} من 5`}>
             {Array.from({ length: 5 }, (_, i) => (
