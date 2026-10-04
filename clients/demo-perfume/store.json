@@ -395,7 +395,10 @@
       },
       "tags": [
         "gift"
-      ]
+      ],
+      "rating": 4.8,
+      "reviews": 94,
+      "sold_week": 12
     },
     {
       "handle": "night-musk",
@@ -423,7 +426,10 @@
         "50 مل": 8,
         "100 مل": 2
       },
-      "tags": []
+      "tags": [],
+      "rating": 4.7,
+      "reviews": 61,
+      "sold_week": 9
     },
     {
       "handle": "saffron-amber",
@@ -453,7 +459,10 @@
       },
       "tags": [
         "eid"
-      ]
+      ],
+      "rating": 4.9,
+      "reviews": 38,
+      "sold_week": 6
     },
     {
       "handle": "muscat-oud",
@@ -483,7 +492,10 @@
       },
       "tags": [
         "eid"
-      ]
+      ],
+      "rating": 4.8,
+      "reviews": 112,
+      "sold_week": 15
     },
     {
       "handle": "dhofar-frankincense",
@@ -511,7 +523,10 @@
         "50 مل": 9,
         "100 مل": 9
       },
-      "tags": []
+      "tags": [],
+      "rating": 4.6,
+      "reviews": 47,
+      "sold_week": 7
     },
     {
       "handle": "royal-oud-oil",
@@ -544,7 +559,10 @@
       },
       "tags": [
         "gift"
-      ]
+      ],
+      "rating": 4.9,
+      "reviews": 73,
+      "sold_week": 11
     },
     {
       "handle": "dar-bakhoor",
@@ -572,7 +590,10 @@
         "50 غ": 25,
         "100 غ": 14
       },
-      "tags": []
+      "tags": [],
+      "rating": 4.5,
+      "reviews": 29,
+      "sold_week": 5
     }
   ]
 }
