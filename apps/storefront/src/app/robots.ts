@@ -8,7 +8,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/*/cart", "/*/checkout", "/*/account", "/*/order/", "/*/track", "/*?*v_id="],
+        // روابط المتغيّرات (?v_id=) تبقى مسموحة: هي روابط الكتالوجات، وMerchant Center يرفض صفحة هبوط محجوبة؛
+        // التكرار يعالجه الرابط الأساسي (canonical) في صفحة المنتج
+        disallow: ["/*/cart", "/*/checkout", "/*/account", "/*/order/", "/*/track"],
       },
     ],
     sitemap: `${getBaseURL()}/sitemap.xml`,
