@@ -7,6 +7,7 @@ import { formatAmount } from "@lib/util/money"
 import Icon from "@modules/common/components/icon"
 import { FormEvent, useEffect, useRef, useState } from "react"
 import { storeConfig } from "../../store.config"
+import { g } from "@lib/voice"
 
 const { checkout, currencyLabel: CUR } = storeConfig
 const t = (iso?: string | null) =>
@@ -39,7 +40,7 @@ export default function TrackOrder({ initialNo, initialPhone }: { initialNo: str
     { t: "تم استلام الطلب", d: "وصلنا طلبك وبدأنا بمراجعته", i: "check", at: order?.times.placed },
     { t: "قيد التجهيز في المشغل", d: "كيّ وتغليف وفحص نهائي للقطعة", i: "scissors", at: order?.times.packed },
     { t: pickup ? "جاهز للاستلام" : "في الطريق إليك", d: pickup ? storeConfig.contact.address : "المندوب انطلق — سيتصل قبل الوصول", i: "truck", at: order?.times.shipped },
-    { t: pickup ? "تم الاستلام" : "تم التوصيل", d: "نتمنى أن تسعدك القطعة", i: "home", at: order?.times.delivered },
+    { t: pickup ? "تم الاستلام" : "تم التوصيل", d: g("نتمنى أن تسعدك القطعة", "نتمنى أن تسعدك القطعة", "نتمنى أن ينال طلبك رضاك"), i: "home", at: order?.times.delivered },
   ]
   const stage = order?.stage ?? 0
   const current = stage >= 0 ? STEPS[Math.min(stage, 3)] : null
@@ -49,7 +50,7 @@ export default function TrackOrder({ initialNo, initialPhone }: { initialNo: str
   return (
     <div className="wrap">
       <div className="trackpage">
-        <div className="secthead"><div><h1>تتبّع طلبك</h1><p>بلا تسجيل دخول — أدخلي رقم الطلب ورقم هاتفك</p></div></div>
+        <div className="secthead"><div><h1>تتبّع طلبك</h1><p>بلا تسجيل دخول — {g("أدخلي رقم الطلب ورقم هاتفك", "أدخل رقم الطلب ورقم هاتفك")}</p></div></div>
         <form className="panelbox" onSubmit={search} noValidate>
           <div className="f2">
             <div className="field">

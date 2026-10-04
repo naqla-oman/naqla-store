@@ -25,6 +25,8 @@ type Features = {
 
 type ClientStore = {
   slug: string
+  /** المخاطبة: f مؤنث، m مذكر، neutral محايد */
+  voice?: "f" | "m" | "neutral"
   name: string
   nameEn: string
   shortName: string
@@ -43,6 +45,7 @@ type ClientStore = {
   contact: { whatsapp: string; phone: string; email: string; address: string; hours: string }
   social: Record<string, string>
   nav: Link[]
+  searchPlaceholder?: string
   ticker: string[]
   welcomeCode?: { code: string; text: string } | null
   home: {
@@ -62,6 +65,8 @@ type ClientStore = {
   }
   product: {
     lowStockAt: number
+    /** نص التوفر تحت زر الشراء (مثل «متوفر في المشغل — جرّبيها قبل الشراء») */
+    availability?: { inStock: string; outOfStock: string }
     lengthField?: { categories: string[]; note: string }
     atelier?: { categories: string[] }
     bnpl?: { installments: number; providers: string[] }
@@ -78,7 +83,7 @@ const on = (k: keyof Features) => c.features?.[k] === true
 
 /** طرق الدفع المدعومة في المنصة — تظهر فقط إن فُعّلت في store.json وفي منطقة Medusa */
 const PAYMENTS = [
-  { id: "pp_thawani_thawani", key: "thawani", feature: "thawani" as const, icon: "card", title: "الدفع الإلكتروني عبر ثواني", desc: "بطاقة بنكية، Apple Pay أو محفظة ثواني", cta: "ادفعي الآن", logos: ["visa.svg", "mastercard.svg", "applepay.svg", "thawani.png"] },
+  { id: "pp_thawani_thawani", key: "thawani", feature: "thawani" as const, icon: "card", title: "الدفع الإلكتروني عبر ثواني", desc: "بطاقة بنكية، Apple Pay أو محفظة ثواني", cta: c.voice === "f" ? "ادفعي الآن" : "ادفع الآن", logos: ["visa.svg", "mastercard.svg", "applepay.svg", "thawani.png"] },
   { id: "pp_cod_offline", key: "cod", feature: "cod" as const, icon: "cash", title: "الدفع عند الاستلام", desc: "نقداً أو ببطاقة عند وصول المندوب", cta: "تأكيد الطلب" },
   { id: "pp_whatsapp_offline", key: "whatsapp", feature: "whatsappOrder" as const, icon: "whatsapp", title: "إرسال الطلب عبر واتساب", desc: "نؤكد معك الطلب والدفع على واتساب", cta: "إرسال عبر واتساب" },
 ]
@@ -88,6 +93,7 @@ export const clientAsset = (p: string) => (/^https?:\/\//.test(p) ? p : `/client
 
 export const storeConfig = {
   slug: c.slug,
+  voice: (c.voice ?? "neutral") as "f" | "m" | "neutral",
   name: c.name,
   nameEn: c.nameEn,
   shortName: c.shortName,
@@ -103,6 +109,7 @@ export const storeConfig = {
   contact: c.contact,
   social: c.social,
   nav: c.nav,
+  searchPlaceholder: c.searchPlaceholder ?? "ابحث في المتجر…",
   ticker: c.ticker,
   welcomeCode: c.welcomeCode ?? null,
   home: c.home,
@@ -143,6 +150,7 @@ export const storeConfig = {
 
   product: {
     lowStockAt: c.product.lowStockAt,
+    availability: c.product.availability ?? { inStock: "متوفر", outOfStock: "سنعيد توفيره قريباً" },
     lengthField: on("lengthField") && c.product.lengthField ? c.product.lengthField : { categories: [] as string[], note: "" },
     atelier: on("tailoring") && c.product.atelier ? c.product.atelier : { categories: [] as string[] },
     bnpl: { enabled: on("bnpl"), installments: c.product.bnpl?.installments ?? 4, providers: c.product.bnpl?.providers ?? [] },

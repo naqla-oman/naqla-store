@@ -8,6 +8,7 @@ import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CopyButton from "@modules/order/components/copy-button"
 import { storeConfig } from "../../../store.config"
+import { g } from "@lib/voice"
 
 type Props = {
   order: HttpTypes.StoreOrder
@@ -100,8 +101,8 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
               <div>
                 <Signed className="big" sign="+" value={extras._points.points} />
                 <small>
-                  نقطة ولاء بانتظارك —{" "}
-                  <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>ادخلي برقمك</LocalizedClientLink>
+                  نقطة ولاء {g("بانتظارك", "بانتظارك", "في انتظارك")} —{" "}
+                  <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{g("ادخلي برقمك", "ادخل برقمك")}</LocalizedClientLink>
                   {" "}لتُضاف لحسابك مع هذا الطلب
                 </small>
               </div>
@@ -171,7 +172,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
         <div className="succacts">
           <LocalizedClientLink href="/store" className="btn">متابعة التسوق</LocalizedClientLink>
           <a className="btn ghost" href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer">
-            <Icon name="whatsapp" size={16} /> تواصلي معنا
+            <Icon name="whatsapp" size={16} /> {g("تواصلي معنا", "تواصل معنا")}
           </a>
         </div>
       </div>

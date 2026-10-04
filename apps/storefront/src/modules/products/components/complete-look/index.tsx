@@ -4,6 +4,7 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Money from "@modules/common/components/money"
 import { variantPricing } from "@modules/products/lib/variants"
+import { g } from "@lib/voice"
 
 /** «أكملي الإطلالة»: القطع المكمّلة المحددة في metadata.complements */
 export default async function CompleteLook({ product, region }: { product: HttpTypes.StoreProduct; region: HttpTypes.StoreRegion }) {
@@ -32,9 +33,9 @@ export default async function CompleteLook({ product, region }: { product: HttpT
         ))}
       </div>
       <div className="ltxt">
-        <div className="pcat">أكملي الإطلالة</div>
+        <div className="pcat">{g("أكملي الإطلالة", "أكمل الإطلالة", "يكتمل مع")}</div>
         <h3 id="look-title">هذه القطعة مع {cats.join(" و")}</h3>
-        <p className="muted">اختارتها مصممتنا لتتناسق مع هذه القطعة — اضغطي على أي قطعة لاختيار لونها ومقاسها.</p>
+        <p className="muted">اختارتها مصممتنا لتتناسق مع هذه القطعة — {g("اضغطي على أي قطعة لاختيار خياراتها.", "اضغط على أي قطعة لاختيار خياراتها.")}</p>
         <div className="tot">
           <span className="muted">مجموع الإطلالة</span>
           <Money amount={total} />

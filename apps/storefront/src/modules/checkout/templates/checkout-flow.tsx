@@ -13,6 +13,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { useRouter } from "next/navigation"
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
 import { storeConfig } from "../../../store.config"
+import { g } from "@lib/voice"
 
 type Props = {
   cart: HttpTypes.StoreCart
@@ -28,8 +29,8 @@ const { checkout, currencyLabel: CUR } = storeConfig
 const phoneRe = new RegExp(checkout.phone.pattern)
 const URL_ERRORS: Record<string, string> = {
   thawani_cancelled: "أُلغي الدفع عبر ثواني ولم يُخصم أي مبلغ — يمكنك المحاولة مجدداً أو اختيار طريقة أخرى",
-  thawani_unpaid: "لم يكتمل الدفع عبر ثواني — لم يُسجَّل الطلب. حاولي مجدداً أو اختاري طريقة أخرى",
-  thawani_session: "انتهت جلسة الدفع، أعيدي المحاولة",
+  thawani_unpaid: g("لم يكتمل الدفع عبر ثواني — لم يُسجَّل الطلب. حاولي مجدداً أو اختاري طريقة أخرى", "لم يكتمل الدفع عبر ثواني — لم يُسجَّل الطلب. حاول مجدداً أو اختر طريقة أخرى"),
+  thawani_session: g("انتهت جلسة الدفع، أعيدي المحاولة", "انتهت جلسة الدفع، أعد المحاولة"),
 }
 
 type Errors = Partial<Record<"name" | "phone" | "province" | "city" | "email", string>>
@@ -37,11 +38,11 @@ const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 function validate(f: DeliveryInput): Errors {
   const e: Errors = {}
-  if (f.name.trim().split(/\s+/).filter(Boolean).length < 2) e.name = "أدخلي اسمك الكامل (الاسم والعائلة)"
+  if (f.name.trim().split(/\s+/).filter(Boolean).length < 2) e.name = g("أدخلي اسمك الكامل (الاسم والعائلة)", "أدخل اسمك الكامل (الاسم والعائلة)")
   if (!phoneRe.test(f.phone)) e.phone = "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7"
-  if (!f.province) e.province = "اختاري المحافظة"
-  if (!f.city.trim()) e.city = "أدخلي الولاية"
-  if (f.email.trim() && !emailRe.test(f.email.trim())) e.email = "تحققي من البريد، مثال: name@example.com"
+  if (!f.province) e.province = g("اختاري المحافظة", "اختر المحافظة")
+  if (!f.city.trim()) e.city = g("أدخلي الولاية", "أدخل الولاية")
+  if (f.email.trim() && !emailRe.test(f.email.trim())) e.email = g("تحققي من البريد، مثال: name@example.com", "تحقق من البريد، مثال: name@example.com")
   return e
 }
 
@@ -163,8 +164,8 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   }
 
   const onPlace = async () => {
-    if (!pay) { setPlaceError("اختاري طريقة الدفع"); return }
-    if (!methodValid) { setPlaceError("اختاري طريقة التوصيل"); return }
+    if (!pay) { setPlaceError(g("اختاري طريقة الدفع", "اختر طريقة الدفع")); return }
+    if (!methodValid) { setPlaceError(g("اختاري طريقة التوصيل", "اختر طريقة التوصيل")); return }
     setPlaceError(null)
     // نافذة واتساب تُفتح الآن (ضمن ضغطة الزبونة) حتى لا يحجبها المتصفح، ثم نوجّهها بعد تسجيل الطلب
     const waWin = pay.key === "whatsapp" ? window.open("about:blank", "_blank") : null
@@ -215,7 +216,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
           <div className="field" style={{ marginTop: 6 }}>
             <label htmlFor="coupon">كود الخصم</label>
             <div className="coupon">
-              <input id="coupon" value={code} onChange={(e) => setCode(e.target.value)} placeholder={storeConfig.welcomeCode ? `مثال: ${storeConfig.welcomeCode.code}` : "أدخلي الكود"} autoComplete="off" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onApply() } }} />
+              <input id="coupon" value={code} onChange={(e) => setCode(e.target.value)} placeholder={storeConfig.welcomeCode ? `مثال: ${storeConfig.welcomeCode.code}` : g("أدخلي الكود", "أدخل الكود")} autoComplete="off" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onApply() } }} />
               <button type="button" className="btn ghost" onClick={onApply} disabled={!code.trim() || busy === "code"}>{busy === "code" ? "…" : "تطبيق"}</button>
             </div>
             {codeMsg && !codeMsg.ok && <div className="ferr-inline" role="alert">{codeMsg.text}</div>}
@@ -265,12 +266,12 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
       <Steps current={step === "address" ? 1 : 2} />
       {customer ? (
         <div className="guest" data-testid="signed-in-note">
-          <Icon name="user" size={15} /> أنتِ داخلة بحسابك{customer.first_name ? ` يا ${customer.first_name}` : ""}{storeConfig.features.loyalty ? " — ستُضاف نقاط هذا الطلب لرصيدك" : ""}
+          <Icon name="user" size={15} /> {g("أنتِ داخلة بحسابك", "أنت داخل بحسابك", "تم الدخول بحسابك")}{customer.first_name ? ` يا ${customer.first_name}` : ""}{storeConfig.features.loyalty ? " — ستُضاف نقاط هذا الطلب لرصيدك" : ""}
         </div>
       ) : (
         <div className="guest" data-testid="guest-note">
-          <Icon name="user" size={15} /> لا حاجة لإنشاء حساب — أكملي كضيفة، أو{" "}
-          <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>ادخلي برقمك</LocalizedClientLink>{storeConfig.features.loyalty ? " لتكسبي نقاط الولاء" : " لحفظ طلباتك"}
+          <Icon name="user" size={15} /> {g("لا حاجة لإنشاء حساب — أكملي كضيفة، أو", "لا حاجة لإنشاء حساب — أكمل كضيف، أو", "لا حاجة لإنشاء حساب — أكمل الطلب مباشرة، أو")}{" "}
+          <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{g("ادخلي برقمك", "ادخل برقمك")}</LocalizedClientLink>{storeConfig.features.loyalty ? g(" لتكسبي نقاط الولاء", " لتكسب نقاط الولاء") : " لحفظ طلباتك"}
         </div>
       )}
       <button type="button" className="sumtoggle" aria-expanded={step === "payment" || sumOpen} aria-controls="sumBox" onClick={() => setSumOpen((v) => !v)}>
@@ -301,7 +302,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                 <div className={`field ${showErr("province") ? "err" : ""}`}>
                   <label htmlFor="fGov">المحافظة</label>
                   <select id="fGov" value={form.province} onChange={(e) => set("province", e.target.value)} aria-invalid={!!showErr("province")} aria-describedby="eGov">
-                    <option value="">اختاري المحافظة</option>
+                    <option value="">{g("اختاري المحافظة", "اختر المحافظة")}</option>
                     {checkout.governorates.map((g) => <option key={g.code} value={g.code}>{g.name}</option>)}
                   </select>
                   <span className="ferr" id="eGov">{showErr("province")}</span>
@@ -334,7 +335,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               {form.gift && (
                 <div className="field">
                   <label htmlFor="fGift">رسالة البطاقة</label>
-                  <textarea id="fGift" value={form.giftMessage} maxLength={200} onChange={(e) => set("giftMessage", e.target.value)} placeholder="مثال: كل عام وأنتِ بخير يا أمي" />
+                  <textarea id="fGift" value={form.giftMessage} maxLength={200} onChange={(e) => set("giftMessage", e.target.value)} placeholder={g("مثال: كل عام وأنتِ بخير يا أمي", "مثال: كل عام وأنت بخير", "مثال: كل عام وأنتم بخير")} />
                 </div>
               )}
               </>)}
@@ -361,7 +362,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
 
               <div className="panelbox" role="radiogroup" aria-label="طريقة التوصيل">
                 <h3>طريقة التوصيل</h3>
-                {!sortedOptions.length && <div className="alert">لا توجد طريقة توصيل متاحة لهذا العنوان — تواصلي معنا على واتساب</div>}
+                {!sortedOptions.length && <div className="alert">لا توجد طريقة توصيل متاحة لهذا العنوان — {g("تواصلي معنا على واتساب", "تواصل معنا على واتساب")}</div>}
                 {sortedOptions.map((o) => {
                   const c = (o.type as any)?.code as string
                   const on = o.id === currentOptionId && methodValid

@@ -6,6 +6,7 @@ import Icon from "@modules/common/components/icon"
 import { useRouter } from "next/navigation"
 import { FormEvent, useEffect, useRef, useState } from "react"
 import { storeConfig } from "../../store.config"
+import { g } from "@lib/voice"
 
 const { phone: P } = storeConfig.checkout
 const phoneRe = new RegExp(P.pattern)
@@ -97,7 +98,7 @@ export default function PhoneLogin() {
           {step === "phone" && (
             <form onSubmit={send} noValidate>
               <h1>أهلاً بك في {storeConfig.shortName}</h1>
-              <p className="lead">ادخلي برقم هاتفك — نرسل لك رمزاً على واتساب، بلا كلمة مرور.</p>
+              <p className="lead">{g("ادخلي برقم هاتفك", "ادخل برقم هاتفك")} — نرسل لك رمزاً على واتساب، بلا كلمة مرور.</p>
               <div className={`field ${error ? "err" : ""}`}>
                 <label htmlFor="lPhone">رقم الهاتف</label>
                 <div className="phone">
@@ -109,7 +110,7 @@ export default function PhoneLogin() {
                 <span className="ferr" id="lErr">{error}</span>
               </div>
               <button type="submit" className="btn block lg" style={{ marginTop: 16 }} disabled={busy} data-testid="send-otp">
-                <Icon name="whatsapp" size={18} /> {busy ? "جارٍ الإرسال…" : "أرسلي الرمز على واتساب"}
+                <Icon name="whatsapp" size={18} /> {busy ? "جارٍ الإرسال…" : g("أرسلي الرمز على واتساب", "أرسل الرمز على واتساب")}
               </button>
               <div className="perkline">
                 {storeConfig.features.loyalty && <div><Icon name="sparkle" size={15} /> {storeConfig.loyalty.pointsPerUnit} نقاط ولاء لكل ريال</div>}
@@ -121,7 +122,7 @@ export default function PhoneLogin() {
 
           {step === "otp" && (
             <div>
-              <h1>أدخلي الرمز</h1>
+              <h1>{g("أدخلي الرمز", "أدخل الرمز")}</h1>
               <p className="lead">
                 أرسلنا رمزاً من 6 أرقام على واتساب إلى{" "}
                 <span className="sentto"><bdi dir="ltr">{P.prefix} {phone}</bdi></span>{" "}

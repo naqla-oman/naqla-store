@@ -17,6 +17,7 @@ import Thumbnail from "@modules/products/components/thumbnail"
 import { usePathname } from "next/navigation"
 import Icon from "@modules/common/components/icon"
 import { Fragment, useEffect, useRef, useState } from "react"
+import { g } from "@lib/voice"
 
 const CartDropdown = ({
   cart: cartState,
@@ -212,8 +213,8 @@ const CartDropdown = ({
                   <div>
                     <LocalizedClientLink href="/store">
                       <>
-                        <span className="sr-only">ابدئي التسوق</span>
-                        <Button onClick={close}>ابدئي التسوق</Button>
+                        <span className="sr-only">{g("ابدئي التسوق", "ابدأ التسوق")}</span>
+                        <Button onClick={close}>{g("ابدئي التسوق", "ابدأ التسوق")}</Button>
                       </>
                     </LocalizedClientLink>
                   </div>
