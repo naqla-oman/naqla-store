@@ -33,7 +33,7 @@ class LoyaltyModuleService extends MedusaService({ LoyaltyEntry }) {
   }
 
   /** النقاط المستحقة لطلب: مجموع المنتجات بعد الخصم (بلا توصيل) × النقاط لكل ر.ع */
-  pointsFor(itemTotal: number) {
+  async pointsFor(itemTotal: number): Promise<number> {
     return Math.max(0, Math.floor(Number(itemTotal) * this.opts_.pointsPerUnit))
   }
 

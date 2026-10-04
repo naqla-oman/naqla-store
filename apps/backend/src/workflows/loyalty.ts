@@ -27,7 +27,7 @@ const awardOrderPointsStep = createStep("award-order-points", async ({ order_id 
   const [existing] = await loyalty.listLoyaltyEntries({ order_id, kind: "earn" })
   if (existing) return new StepResponse<any, string | undefined>(existing, undefined)
 
-  const points = loyalty.pointsFor(order.item_total)
+  const points = await loyalty.pointsFor(order.item_total)
   if (!points) return new StepResponse<any, string | undefined>(null, undefined)
 
   const delivered = (order.fulfillments ?? []).some((f: any) => f.delivered_at)
@@ -74,7 +74,7 @@ export const setOrderPointsStatusWorkflow = createWorkflow("set-order-points-sta
 
 type RedeemInput = { customer_id: string }
 
-const checkBalanceStep = createStep("loyalty-check-balance", async ({ customer_id }: RedeemInput, { container }) => {
+const checkBalanceStep = createStep("check-balance", async ({ customer_id }: RedeemInput, { container }) => {
   const loyalty = container.resolve<LoyaltyModuleService>(LOYALTY_MODULE)
   const { available } = await loyalty.summary(customer_id)
   const { redeemPoints, redeemValue } = loyalty.options
@@ -85,7 +85,7 @@ const checkBalanceStep = createStep("loyalty-check-balance", async ({ customer_i
 })
 
 const createRedeemPromotionStep = createStep(
-  "loyalty-create-promotion",
+  "create-redeem-promotion",
   async (input: { redeemValue: number; currency: string }, { container }) => {
     const promotion = container.resolve(Modules.PROMOTION)
     const code = `LNP-${crypto.randomBytes(4).toString("hex").toUpperCase()}`
@@ -115,7 +115,7 @@ const createRedeemPromotionStep = createStep(
 )
 
 const recordRedeemStep = createStep(
-  "loyalty-record-redeem",
+  "record-redeem",
   async (input: { customer_id: string; points: number; code: string }, { container }) => {
     const loyalty = container.resolve<LoyaltyModuleService>(LOYALTY_MODULE)
     const entry = await loyalty.createLoyaltyEntries({
@@ -133,7 +133,7 @@ const recordRedeemStep = createStep(
   }
 )
 
-export const redeemPointsWorkflow = createWorkflow("redeem-loyalty-points", (input: RedeemInput & { currency: string }) => {
+export const redeemPointsWorkflow = createWorkflow("redeem-points", (input: RedeemInput & { currency: string }) => {
   const rules = checkBalanceStep({ customer_id: input.customer_id })
   const promo = createRedeemPromotionStep({ redeemValue: rules.redeemValue, currency: input.currency })
   const entry = recordRedeemStep({ customer_id: input.customer_id, points: rules.redeemPoints, code: promo.code })
