@@ -81,6 +81,31 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
           )}
         </div>
 
+        {extras._points?.points > 0 && (
+          <div className="earned" data-testid="success-points">
+            <Icon name="sparkle" size={22} />
+            {extras._points.has_account ? (
+              <div>
+                <span className="big">+{extras._points.points}</span>
+                <small>
+                  {extras._points.status === "available"
+                    ? "نقطة ولاء أُضيفت لرصيدك المتاح"
+                    : "نقطة ولاء معلّقة حتى التوصيل — تُتاح للاستبدال عند استلام طلبك"}
+                </small>
+              </div>
+            ) : (
+              <div>
+                <span className="big">+{extras._points.points}</span>
+                <small>
+                  نقطة ولاء بانتظارك —{" "}
+                  <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>ادخلي برقمك</LocalizedClientLink>
+                  {" "}لتُضاف لحسابك مع هذا الطلب
+                </small>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="succgrid">
           <div className="panelbox">
             <h3>ماذا يحدث الآن؟</h3>

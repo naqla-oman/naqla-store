@@ -7,7 +7,7 @@ import { storeConfig as c } from "../../../../store.config"
 const COLS = [
   { title: "تسوّقي", links: c.nav.map((n) => ({ label: n.label, href: n.href })) },
   { title: "خدمة العملاء", links: [
-    { label: "تتبّع طلبك", href: "/account/orders" },
+    { label: "تتبّع طلبك", href: "/track" },
     { label: "سياسة الاستبدال والإرجاع", href: "/pages/returns" },
     { label: "دليل المقاسات", href: "/pages/size-guide" },
     { label: "الأسئلة الشائعة", href: "/pages/faq" },

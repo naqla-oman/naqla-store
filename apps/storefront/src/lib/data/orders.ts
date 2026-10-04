@@ -127,8 +127,11 @@ export const retrieveConfirmedOrder = async (id: string) => {
       })
       .then(({ order }) => order),
     sdk.client
-      .fetch<{ extras: Record<string, any> }>(`/store/order-extras/${id}`, { headers, cache: "no-store" })
-      .then((r) => r.extras)
+      .fetch<{ extras: Record<string, any>; points?: { points: number; status: string | null; has_account: boolean } }>(
+        `/store/order-extras/${id}`,
+        { headers, cache: "no-store" }
+      )
+      .then((r) => ({ ...r.extras, _points: r.points ?? null }))
       .catch(() => ({} as Record<string, any>)),
   ])
   return { order, extras }
