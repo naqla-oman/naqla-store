@@ -163,3 +163,7 @@ footer.site a { color: inherit; text-decoration: none; }
 .decor-wave { line-height: 0; margin: 18px auto; opacity: .9; }
 /* السطر اللاتيني تحت اسم المنتج (fonts.latin) */
 .latinline { font-family: var(--font-latin, inherit); text-transform: uppercase; letter-spacing: .32em; font-size: 11.5px; color: var(--muted); direction: ltr; text-align: start; margin: -2px 0 6px; }
+
+/* زر الواجهة الرئيسي: رمز خاص لكل عميل في theme.css (--hero-cta / --hero-cta-ink)، وإلا لون الهوية الأساسي */
+.btn.hero-cta { background: var(--hero-cta, var(--accent)); color: var(--hero-cta-ink, var(--accent-ink)); border-color: transparent; }
+.btn.hero-cta:hover { filter: brightness(1.06); }

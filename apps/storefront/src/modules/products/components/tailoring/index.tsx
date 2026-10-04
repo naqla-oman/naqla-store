@@ -113,7 +113,11 @@ export default function Tailoring({ product, service }: Props) {
           </label>
 
           {disc && (
-            <div className="guest copper"><Icon name="sparkle" size={14} /> {g(`عضوات ${disc.name}`, `أعضاء ${disc.name}`, `عضوية ${disc.name}`)}: خصم {disc.tailoringDiscount}٪ على التفصيل تلقائياً في السلة</div>
+            <div className="guest copper"><Icon name="sparkle" size={14} /> {g(
+              `للعضوات ال${disc.name.replace(/ة$/, "ات")}`,
+              `للأعضاء ال${disc.name.replace(/ية$/, "يين")}`,
+              `لأصحاب العضوية ال${disc.name}`
+            )}: خصم {disc.tailoringDiscount}٪ على التفصيل تلقائياً في السلة</div>
           )}
           {msg && (
             <div className={msg.ok ? "okmsg" : "ferr-inline"} role="status">
