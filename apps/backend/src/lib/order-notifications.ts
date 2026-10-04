@@ -29,13 +29,14 @@ function build(kind: OrderNotice, o: { name: string; number: string; total: stri
       }
     case "order_ready_pickup":
       return {
-        params: [o.name, o.number, s.location?.address ?? ""],
-        preview: `${o.name}، طلبك ${o.number} جاهز للاستلام من ${s.location?.name ?? s.name} — ${s.location?.address ?? ""}.`,
+        params: [o.name, o.number, s.location?.name ?? s.name],
+        preview: `${o.name}، طلبك ${o.number} جاهز للاستلام من ${s.location?.name ?? s.name}. نسعد بزيارتك.`,
       }
     case "order_delivered":
       return {
         params: [o.name, o.number],
-        preview: `تم توصيل طلبك ${o.number} يا ${o.name}. نتمنى أن تسعدك القطعة — شكراً لثقتك بـ${s.name}.`,
+        // «تسليم» تشمل التوصيل والاستلام من المشغل
+        preview: `تم تسليم طلبك ${o.number} يا ${o.name}. نتمنى أن تسعدك القطعة — شكراً لثقتك في ${s.name}.`,
       }
   }
 }
