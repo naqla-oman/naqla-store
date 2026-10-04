@@ -1,0 +1,287 @@
+{
+  "slug": "__SLUG__",
+  "name": "اسم المتجر",
+  "nameEn": "Store Name",
+  "shortName": "المتجر",
+  "tagline": "وصف قصير للمتجر في سطر واحد",
+  "description": "وصف المتجر لمحركات البحث وصفحات المشاركة (150 حرفاً تقريباً).",
+  "locale": "ar-OM",
+  "dir": "rtl",
+  "country": "om",
+  "currency": "omr",
+  "currencyLabel": "ر.ع",
+  "vatRate": 5,
+  "freeShippingOver": 20,
+  "cutoffHour": 15,
+  "orderPrefix": "ST-",
+  "fonts": {
+    "display": "cairo",
+    "body": "tajawal"
+  },
+  "colors": {
+    "theme": "#1f3b57",
+    "background": "#f5f6f8"
+  },
+  "contact": {
+    "whatsapp": "96890000000",
+    "phone": "+968 9XXX XXXX",
+    "email": "hello@example.om",
+    "address": "مسقط",
+    "hours": "يومياً ١٠ص – ١٠م"
+  },
+  "social": {
+    "instagram": "https://instagram.com/",
+    "snapchat": "https://snapchat.com/",
+    "tiktok": "https://tiktok.com/"
+  },
+  "nav": [
+    {
+      "label": "كل المنتجات",
+      "href": "/store"
+    },
+    {
+      "label": "القسم الأول",
+      "href": "/categories/main"
+    }
+  ],
+  "welcomeCode": null,
+  "ticker": [
+    "توصيل لكل محافظات السلطنة",
+    "دفع آمن عند الاستلام"
+  ],
+  "home": {
+    "hero": {
+      "kicker": "",
+      "title": [
+        "عنوان رئيسي",
+        "في سطرين"
+      ],
+      "text": "نص تعريفي قصير تحت العنوان.",
+      "image": "images/hero.jpg",
+      "primary": {
+        "label": "تسوّقي الآن",
+        "href": "/store"
+      }
+    },
+    "tiles": [],
+    "trust": [
+      {
+        "icon": "truck",
+        "title": "توصيل سريع",
+        "text": "لكل المحافظات"
+      },
+      {
+        "icon": "lock",
+        "title": "دفع آمن",
+        "text": "عند الاستلام"
+      }
+    ],
+    "collectionsOrder": [
+      "new",
+      "bestsellers"
+    ]
+  },
+  "features": {
+    "tailoring": false,
+    "sizeGuide": false,
+    "lengthField": false,
+    "gift": true,
+    "expressDelivery": false,
+    "pickup": true,
+    "loyalty": true,
+    "loyaltyTiers": false,
+    "cod": true,
+    "thawani": false,
+    "whatsappOrder": true,
+    "bnpl": false
+  },
+  "options": [
+    {
+      "key": "variant",
+      "title": "النوع",
+      "type": "buttons"
+    }
+  ],
+  "loyalty": {
+    "pointsPerUnit": 10,
+    "redeemPoints": 500,
+    "redeemValue": 5,
+    "tiers": [
+      {
+        "key": "silver",
+        "name": "أساسية",
+        "min": 0,
+        "perk": "10 نقاط لكل ر.ع"
+      }
+    ]
+  },
+  "checkout": {
+    "governorates": [
+      {
+        "code": "om-ma",
+        "name": "مسقط"
+      },
+      {
+        "code": "om-zu",
+        "name": "ظفار"
+      },
+      {
+        "code": "om-bs",
+        "name": "شمال الباطنة"
+      },
+      {
+        "code": "om-bj",
+        "name": "جنوب الباطنة"
+      },
+      {
+        "code": "om-da",
+        "name": "الداخلية"
+      },
+      {
+        "code": "om-ss",
+        "name": "شمال الشرقية"
+      },
+      {
+        "code": "om-sj",
+        "name": "جنوب الشرقية"
+      },
+      {
+        "code": "om-za",
+        "name": "الظاهرة"
+      },
+      {
+        "code": "om-bu",
+        "name": "البريمي"
+      },
+      {
+        "code": "om-mu",
+        "name": "مسندم"
+      },
+      {
+        "code": "om-wu",
+        "name": "الوسطى"
+      }
+    ],
+    "phone": {
+      "prefix": "+968",
+      "pattern": "^[79][0-9]{7}$",
+      "placeholder": "9XXXXXXX"
+    },
+    "shipping": {
+      "standard": {
+        "icon": "truck",
+        "eta": "standard"
+      },
+      "express": {
+        "icon": "fire",
+        "eta": "يصلك اليوم داخل مسقط"
+      },
+      "pickup": {
+        "icon": "pin",
+        "eta": "جاهز للاستلام خلال ساعتين"
+      }
+    },
+    "giftNote": "تغليف هدية مجاني مع بطاقة برسالتك"
+  },
+  "product": {
+    "lowStockAt": 3,
+    "delivery": {
+      "timezone": "Asia/Muscat",
+      "cityLabel": "داخل مسقط",
+      "othersLabel": "بقية المحافظات خلال 48 ساعة"
+    },
+    "perks": [
+      {
+        "icon": "truck",
+        "text": "توصيل خلال ٢٤–٤٨ ساعة"
+      },
+      {
+        "icon": "refresh",
+        "text": "استبدال خلال ٧ أيام"
+      },
+      {
+        "icon": "shield",
+        "text": "دفع آمن"
+      },
+      {
+        "icon": "gift",
+        "text": "تغليف هدايا مجاني"
+      }
+    ],
+    "shippingReturns": "التوصيل داخل مسقط خلال ٢٤ ساعة ولبقية المحافظات خلال ٤٨ ساعة."
+  },
+  "location": {
+    "name": "المحل الرئيسي",
+    "city": "مسقط",
+    "address": "مسقط"
+  },
+  "shipping": [
+    {
+      "code": "standard",
+      "name": "توصيل عادي",
+      "desc": "خلال 24–48 ساعة",
+      "amount": 1.5,
+      "free_over": 20
+    },
+    {
+      "code": "express",
+      "name": "توصيل سريع",
+      "desc": "داخل مسقط في اليوم نفسه",
+      "amount": 2.5,
+      "provinces": [
+        "om-ma"
+      ]
+    },
+    {
+      "code": "pickup",
+      "name": "استلام من المحل",
+      "desc": "جاهز خلال ساعتين",
+      "amount": 0
+    }
+  ],
+  "promotions": [],
+  "categories": [
+    {
+      "handle": "main",
+      "name": "القسم الأول"
+    }
+  ],
+  "collections": [
+    {
+      "handle": "new",
+      "title": "وصل حديثاً"
+    },
+    {
+      "handle": "bestsellers",
+      "title": "الأكثر مبيعاً"
+    }
+  ],
+  "tags": [],
+  "products": [
+    {
+      "handle": "sample-product",
+      "title": "منتج تجريبي",
+      "category": "main",
+      "collection": "new",
+      "description": "وصف المنتج.",
+      "price": 10,
+      "images": [
+        "images/product.jpg"
+      ],
+      "options": {
+        "variant": [
+          "عادي",
+          "كبير"
+        ]
+      },
+      "prices": {
+        "عادي": 10,
+        "كبير": 15
+      },
+      "stock": {
+        "عادي": 10,
+        "كبير": 5
+      }
+    }
+  ]
+}
