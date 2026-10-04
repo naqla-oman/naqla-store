@@ -1,4 +1,5 @@
 import { HttpTypes } from "@medusajs/types"
+import Signed from "@modules/common/components/signed"
 import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Money from "@modules/common/components/money"
@@ -55,7 +56,7 @@ export default function CartTemplate({ cart }: { cart: HttpTypes.StoreCart | nul
               {discount > 0 && (
                 <div className="trow">
                   <span>الخصم {cart.promotions?.map((p) => p.code).join("، ")}</span>
-                  <span className="off">− {formatAmount(discount)} {storeConfig.currencyLabel}</span>
+                  <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {storeConfig.currencyLabel}</span>
                 </div>
               )}
               <div className="trow"><span>التوصيل</span><span>{left > 0 ? "حسب العنوان" : "مجاني"}</span></div>

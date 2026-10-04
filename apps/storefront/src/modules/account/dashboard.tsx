@@ -3,6 +3,7 @@ import { LoyaltyData } from "@lib/data/account"
 import { orderNumber } from "@lib/util/eta"
 import { formatAmount } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
+import Signed from "@modules/common/components/signed"
 import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { ProfileForm, RedeemBox, SignOutButton } from "./account-client"
@@ -88,7 +89,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
               ))}
             </div>
             <div className="earnlist">
-              <div><span className="ic"><Icon name="bag" size={16} /></span>كل ريال تنفقينه<b>+{L.pointsPerUnit} نقاط</b></div>
+              <div><span className="ic"><Icon name="bag" size={16} /></span>كل ريال تنفقينه<b><Signed sign="+" value={L.pointsPerUnit} /> نقاط</b></div>
             </div>
             <RedeemBox available={loyalty?.available ?? 0} />
             {!!loyalty?.entries.length && (
@@ -100,7 +101,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
                       {e.kind === "redeem" ? <>استبدال — <bdi dir="ltr">{e.code}</bdi></> : <>طلب <bdi dir="ltr">{orderNumber(e.order_display_id)}</bdi></>}
                       {e.kind === "earn" && <> <span className={`pill-st ${e.status}`}>{STATUS[e.status]}</span></>}
                     </div>
-                    <span className={`pts ${e.points < 0 ? "neg" : ""}`}>{e.points > 0 ? "+" : "−"}{Math.abs(e.points)}</span>
+                    <span className={`pts ${e.points < 0 ? "neg" : ""}`}><Signed sign={e.points > 0 ? "+" : "−"} value={Math.abs(e.points)} /></span>
                   </div>
                 ))}
               </div>
