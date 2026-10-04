@@ -151,13 +151,16 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
     const headers = await getAuthHeaders()
     const { cart } = await sdk.store.cart.retrieve(
       id,
-      { fields: "*items,*shipping_methods,*shipping_methods.shipping_option.type,+metadata,*region,+total" },
+      { fields: "*items,*shipping_methods,+metadata,*region,+total" },
       headers
     )
     if (!cart.items?.length) return { ok: false, error: "سلتك فارغة" }
     if (!cart.shipping_methods?.length) return { ok: false, error: "اختاري طريقة التوصيل" }
 
-    const shippingCode = (cart.shipping_methods[0] as any)?.shipping_option?.type?.code
+    // Store API لا يوسّع shipping_option داخل طرق التوصيل، فنقرأ نوعه من خيارات السلة
+    const optionId = cart.shipping_methods[0].shipping_option_id
+    const { shipping_options } = await sdk.store.fulfillment.listCartOptions({ cart_id: id }, headers)
+    const shippingCode = (shipping_options.find((o) => o.id === optionId)?.type as any)?.code
     await sdk.store.cart.update(
       id,
       { metadata: { ...(cart.metadata ?? {}), payment_channel: pay.key, shipping_code: shippingCode ?? null } },
