@@ -86,7 +86,8 @@ export function naqlaAdminBrand(): Plugin {
           { tag: "link", attrs: { rel: "icon", type: "image/png", sizes: "16x16", href: "/naqla-brand/favicon-16.png" }, injectTo: "head" },
           { tag: "link", attrs: { rel: "apple-touch-icon", href: "/naqla-brand/apple-touch-icon.png" }, injectTo: "head" },
           { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "anonymous" }, injectTo: "head" },
-          { tag: "link", attrs: { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" }, injectTo: "head" },
+          // الخط لا يحجب العرض: يُحمَّل كـ print ثم يُفعَّل عند وصوله (شبكة بطيئة/محجوبة لا تعطّل اللوحة)
+          { tag: "link", attrs: { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap", media: "print", onload: "this.media='all'" }, injectTo: "head" },
           { tag: "meta", attrs: { name: "theme-color", content: TEAL }, injectTo: "head" },
           { tag: "style", attrs: { id: "naqla-brand" }, children: BRAND_CSS, injectTo: "head" },
           { tag: "script", children: HEAD_SCRIPT, injectTo: "head-prepend" },
