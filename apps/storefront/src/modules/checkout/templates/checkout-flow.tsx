@@ -1,5 +1,6 @@
 "use client"
 
+import { track } from "@lib/tracking/events"
 import Image from "next/image"
 import { applyCode, chooseShipping, DeliveryInput, placeOrderWith, removeCode, saveDelivery } from "@lib/data/checkout"
 import { deliveryEta, governorateName, orderNumber } from "@lib/util/eta"
@@ -112,8 +113,19 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
     if (step !== "payment" || methodValid || !sortedOptions.length || autoPicked.current) return
     autoPicked.current = true
     setBusy("ship")
-    chooseShipping(sortedOptions[0].id).then(() => { setBusy(null); router.refresh() })
+    chooseShipping(sortedOptions[0].id).then(() => {
+      setBusy(null)
+      track("add_shipping_info", { value: subtotal - discount, shipping_tier: (sortedOptions[0].type as any)?.code, items: trackItems })
+      router.refresh()
+    })
   }, [step, methodValid, sortedOptions, router])
+
+  // عناصر الطلب للتتبّع
+  const trackItems = items.map((i) => ({ id: i.variant_id ?? i.id, name: i.product_title ?? i.title, price: i.unit_price, quantity: i.quantity, variant: i.variant_title ?? undefined }))
+  // begin_checkout مرة عند فتح الدفع
+  useEffect(() => {
+    if (step === "address") track("begin_checkout", { value: subtotal - discount, items: trackItems })
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const go = (s: "address" | "payment") => {
     router.push(`/${countryCode}/checkout?step=${s}`, { scroll: false })
@@ -142,6 +154,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
     if (id === currentOptionId || busy) return
     setBusy("ship")
     const r = await chooseShipping(id)
+    if (r.ok) track("add_shipping_info", { value: subtotal - discount, shipping_tier: (shippingOptions.find((o) => o.id === id)?.type as any)?.code, items: trackItems })
     setBusy(null)
     if (!r.ok) setPlaceError(r.error)
     router.refresh()
@@ -165,6 +178,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   }
 
   const onPlace = async () => {
+    if (pay) track("add_payment_info", { value: total, payment_type: pay.key, items: trackItems })
     if (!pay) { setPlaceError(g("اختاري طريقة الدفع", "اختر طريقة الدفع")); return }
     if (!methodValid) { setPlaceError(g("اختاري طريقة التوصيل", "اختر طريقة التوصيل")); return }
     setPlaceError(null)

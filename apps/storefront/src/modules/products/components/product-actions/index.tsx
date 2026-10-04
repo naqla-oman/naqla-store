@@ -1,5 +1,6 @@
 "use client"
 
+import { itemOf, track } from "@lib/tracking/events"
 import { addToCart } from "@lib/data/cart"
 import { formatAmount } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
@@ -98,6 +99,11 @@ export default function ProductActions({ product, disabled }: Props) {
     wantsLength && len ? `الطول ${len} سم` : null,
   ].filter(Boolean).join("، ")
 
+  // view_item مرة لكل منتج (يتجدد السعر مع المتغيّر المختار عند الإضافة)
+  useEffect(() => {
+    track("view_item", { value: price, items: [itemOf(product, variant, price)] })
+  }, [product.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleAdd = async () => {
     if (!variant?.id || !canBuy) {
       boxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
@@ -111,6 +117,7 @@ export default function ProductActions({ product, disabled }: Props) {
         countryCode,
         metadata: wantsLength && len ? { length_cm: Number(len) } : undefined,
       })
+      track("add_to_cart", { value: price * qty, items: [itemOf(product, variant, price, qty)] })
       setToast({ ok: true, msg: `أُضيفت إلى السلة${selectionText ? ` — ${selectionText}` : ""}` })
     } catch (e: any) {
       setToast({ ok: false, msg: e?.message?.includes("inventory") ? "الكمية المطلوبة غير متوفرة حالياً" : g("تعذّرت الإضافة للسلة، حاولي مرة أخرى", "تعذّرت الإضافة للسلة، حاول مرة أخرى") })

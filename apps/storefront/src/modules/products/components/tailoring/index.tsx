@@ -1,5 +1,6 @@
 "use client"
 
+import { track } from "@lib/tracking/events"
 import { addToCart } from "@lib/data/cart"
 import { formatAmount } from "@lib/util/money"
 import { g } from "@lib/voice"
@@ -71,6 +72,7 @@ export default function Tailoring({ product, service }: Props) {
           },
         },
       })
+      track("add_to_cart", { value: price, items: [{ id: chosen.v!.id, name: chosen.s.title, price, quantity: 1, category: chosen.s.title }] })
       setMsg({ ok: true, t: `أُضيف «${chosen.s.title}» إلى السلة` })
       setM({})
     } catch {
