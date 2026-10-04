@@ -25,6 +25,8 @@ module.exports = defineConfig({
     }
   },
   modules: [
+    // نقاط الولاء: 10 لكل ر.ع، معلّقة حتى التوصيل، 500 نقطة = كود 5 ر.ع
+    { resolve: './src/modules/loyalty', options: { pointsPerUnit: 10, redeemPoints: 500, redeemValue: 5 } },
     {
       resolve: '@medusajs/medusa/auth',
       dependencies: [Modules.CACHE, ContainerRegistrationKeys.LOGGER, Modules.EVENT_BUS],
