@@ -2,7 +2,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { TRACKING_MODULE } from "../modules/tracking"
 import type TrackingModuleService from "../modules/tracking/service"
-import { SENDERS, type Platform, type ServerEvent, type ServerEventName } from "./server-events"
+import { SENDERS, type Platform, type SendResult, type ServerEvent, type ServerEventName } from "./server-events"
 import { client } from "./client"
 
 /**
@@ -52,8 +52,8 @@ export async function sendOrderServerEvent(container: MedusaContainer, orderId: 
       logger.info(`[tracking] ${name} ${o.id}: لا موافقة على ملفات التتبع — لم يُرسل`)
       return
     }
-    const results = await Promise.all(
-      allowed.map((p) => SENDERS[p](creds, event).catch((err) => ({ platform: p, ok: false, status: 0, response: String(err?.message ?? err) })))
+    const results: SendResult[] = await Promise.all(
+      allowed.map((p) => SENDERS[p](creds, event).catch((err): SendResult => ({ platform: p, ok: false, status: 0, response: String(err?.message ?? err) })))
     )
     for (const r of results) {
       if (r.skipped) continue
