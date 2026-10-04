@@ -44,6 +44,19 @@ export const storeConfig = {
   ],
   builtBy: { name: "نقلة للحلول الرقمية", url: "https://naqla.om" },
 
+  /* ===== الولاء (يطابق إعدادات وحدة loyalty في medusa-config) ===== */
+  loyalty: {
+    pointsPerUnit: 10,
+    redeemPoints: 500,
+    redeemValue: 5,
+    // مزايا المستويات تُعرض فقط بعد تطبيقها فعلياً (اتركيها فارغة حتى ذلك)
+    tierPerks: {
+      silver: "10 نقاط لكل ر.ع",
+      gold: "",
+      diamond: "",
+    } as Record<string, string>,
+  },
+
   /* ===== السلة والدفع ===== */
   checkout: {
     orderPrefix: "LN-",
