@@ -213,3 +213,26 @@ export async function trackOrder(number: string, phone: string): Promise<Result<
     return { ok: false, error: msg(e, "لم نجد طلباً بهذا الرقم وهذا الهاتف") }
   }
 }
+
+/* ===== منتجات المفضلة (بيانات مختصرة للبطاقات) ===== */
+
+export type WishProduct = { id: string; handle: string; title: string; thumbnail: string | null; price: number; old: number | null; category: string | null }
+
+export async function wishlistProducts(ids: string[], countryCode: string): Promise<WishProduct[]> {
+  if (!ids.length) return []
+  const { listProducts } = await import("./products")
+  const { response } = await listProducts({
+    countryCode,
+    queryParams: { id: ids.slice(0, 100), limit: 100, fields: "*variants.calculated_price,+metadata,*categories" },
+  })
+  const byId = new Map(response.products.map((p) => [p.id, p]))
+  return ids
+    .map((id) => byId.get(id))
+    .filter(Boolean)
+    .map((p: any) => {
+      const prices = (p.variants ?? []).map((v: any) => v.calculated_price?.calculated_amount).filter((x: any) => x != null)
+      const price = prices.length ? Math.min(...prices) : 0
+      const old = Number(p.metadata?.compare_at_price) || null
+      return { id: p.id, handle: p.handle, title: p.title, thumbnail: p.thumbnail, price, old: old && old > price ? old : null, category: p.categories?.[0]?.name ?? null }
+    })
+}
