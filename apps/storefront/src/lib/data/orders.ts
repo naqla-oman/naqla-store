@@ -120,7 +120,7 @@ export const retrieveConfirmedOrder = async (id: string) => {
         method: "GET",
         query: {
           fields:
-            "*items,*items.metadata,*shipping_address,*shipping_methods,*payment_collections.payment_sessions,+item_total,+total,+discount_total,+shipping_total,+created_at,+display_id",
+            "*items,*items.metadata,*shipping_address,*shipping_methods,*payment_collections.payment_sessions,+item_total,+total,+discount_total,+shipping_total,+shipping_discount_total,*promotions,*promotions.application_method,+created_at,+display_id",
         },
         headers,
         cache: "no-store",

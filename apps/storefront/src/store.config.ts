@@ -52,7 +52,7 @@ export const storeConfig = {
     // مزايا المستويات تُعرض فقط بعد تطبيقها فعلياً (اتركيها فارغة حتى ذلك)
     tierPerks: {
       silver: "10 نقاط لكل ر.ع",
-      gold: "",
+      gold: "توصيل مجاني دائماً",
       diamond: "",
     } as Record<string, string>,
   },

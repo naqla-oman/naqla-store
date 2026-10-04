@@ -37,6 +37,10 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
   const confirmed = loyalty?.confirmed ?? 0
   const prog = next && tier ? Math.min(100, ((confirmed - tier.min) / (next.min - tier.min)) * 100) : 100
   const active = orders.filter((o) => orderStage(o).c === "go").length
+  // الامتيازات الفعّالة: لمستواها وما دونه، وفقط ما له نص في الإعدادات (أي مُطبَّق فعلاً)
+  const myPerks = (loyalty?.rules.tiers ?? [])
+    .filter((t) => tier && t.min > 0 && t.min <= tier.min && L.tierPerks[t.key])
+    .map((t) => L.tierPerks[t.key])
 
   return (
     <div className="wrap">
@@ -51,6 +55,11 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
                 {tier && <span className="tier"><Icon name="sparkle" size={12} /> عضوة {tier.name} في نادي {storeConfig.shortName}</span>}
               </div>
             </div>
+            {myPerks.length > 0 && (
+              <div className="myperks" data-testid="my-perks">
+                {myPerks.map((p) => <span key={p}><Icon name="check" size={13} /> {p}</span>)}
+              </div>
+            )}
             <div className="balances">
               <div data-testid="pts-available">
                 <span>متاح للاستبدال</span>

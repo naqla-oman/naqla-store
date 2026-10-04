@@ -178,3 +178,7 @@
 .earned > svg { color: var(--copper); flex: 0 0 auto; }
 .earned .big { font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--copper); line-height: 1; }
 .earned small { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* امتياز المستوى في الملخص */
+.perktag { display: inline-block; font-size: 11px; font-weight: 700; color: #8a6414; background: linear-gradient(135deg, #f6e2a8, #e9c66f); border-radius: 999px; padding: 1px 8px; margin-inline-start: 4px; vertical-align: 1px; }
+.payopt .pr .old { color: var(--muted); font-weight: 400; margin-inline-end: 4px; }
