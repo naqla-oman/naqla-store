@@ -25,6 +25,22 @@ module.exports = defineConfig({
     }
   },
   modules: [
+    // الملفات (صور المنتجات): محلياً في static/ ويُقدَّم من الخادم. للإنتاج: MEDUSA_BACKEND_URL بالنطاق العام
+    {
+      resolve: '@medusajs/medusa/file',
+      options: {
+        providers: [
+          {
+            resolve: '@medusajs/medusa/file-local',
+            id: 'local',
+            options: {
+              upload_dir: 'static',
+              backend_url: `${process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000'}/static`,
+            },
+          },
+        ],
+      },
+    },
     // نقاط الولاء: 10 لكل ر.ع، معلّقة حتى التوصيل، 500 نقطة = كود 5 ر.ع
     { resolve: './src/modules/loyalty', options: { pointsPerUnit: 10, redeemPoints: 500, redeemValue: 5 } },
     {

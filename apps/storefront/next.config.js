@@ -11,6 +11,14 @@ const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
 /**
  * @type {import('next').NextConfig}
  */
+const BACKEND_HOST = (() => {
+  try {
+    return process.env.MEDUSA_BACKEND_URL ? new URL(process.env.MEDUSA_BACKEND_URL) : null
+  } catch {
+    return null
+  }
+})()
+
 const nextConfig = {
   reactStrictMode: true,
   logging: {
@@ -42,6 +50,10 @@ const nextConfig = {
         protocol: "https",
         hostname: "medusa-server-testing.s3.us-east-1.amazonaws.com",
       },
+      // صور المنتجات من وحدة الملفات في Medusa (<backend>/static/...)
+      ...(BACKEND_HOST && BACKEND_HOST.hostname !== "localhost"
+        ? [{ protocol: BACKEND_HOST.protocol.replace(":", ""), hostname: BACKEND_HOST.hostname, pathname: "/static/**" }]
+        : []),
       ...(S3_HOSTNAME && S3_PATHNAME
         ? [
             {
