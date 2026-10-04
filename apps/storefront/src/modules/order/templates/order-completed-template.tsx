@@ -7,6 +7,7 @@ import Signed from "@modules/common/components/signed"
 import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CopyButton from "@modules/order/components/copy-button"
+import { PurchaseEvent } from "@modules/common/components/track-events"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 import { tailoringNote } from "@lib/util/tailoring"
@@ -60,6 +61,12 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
   return (
     <div className="wrap">
       <div className="succwrap" data-testid="order-complete-container">
+        <PurchaseEvent
+          orderId={order.id}
+          value={order.total}
+          currency={order.currency_code}
+          items={items.map((i) => ({ id: i.variant_id ?? i.id, name: i.product_title ?? i.title, price: i.unit_price, quantity: i.quantity, variant: i.variant_title ?? undefined }))}
+        />
         <div className="succhero">
           <div className="confetti" aria-hidden="true">
             {Array.from({ length: 26 }, (_, i) => (

@@ -1,5 +1,6 @@
 "use client"
 
+import { track } from "@lib/tracking/events"
 import { completeProfile, requestOtp, verifyOtp } from "@lib/data/account"
 import { localWishlist } from "@lib/context/wishlist"
 import Icon from "@modules/common/components/icon"
@@ -84,6 +85,7 @@ export default function PhoneLogin() {
     setBusy(true)
     setError(null)
     const r = await completeProfile({ firstName: first, lastName: last, email }, localWishlist())
+    if (r.ok) track("sign_up", { method: "whatsapp_otp" })
     setBusy(false)
     if (!r.ok) { setError(r.error); return }
     router.refresh()

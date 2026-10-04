@@ -1,3 +1,4 @@
+import { ListEvent } from "@modules/common/components/track-events"
 import { listProductsWithSort } from "@lib/data/products"
 import { getRegion } from "@lib/data/regions"
 import ProductPreview from "@modules/products/components/product-preview"
@@ -18,6 +19,8 @@ export default async function PaginatedProducts({
   sortBy,
   page,
   collectionId,
+  q,
+  listName,
   categoryId,
   productsIds,
   countryCode,
@@ -25,6 +28,8 @@ export default async function PaginatedProducts({
   sortBy?: SortOptions
   page: number
   collectionId?: string
+  q?: string
+  listName?: string
   categoryId?: string
   productsIds?: string[]
   countryCode: string
@@ -39,6 +44,11 @@ export default async function PaginatedProducts({
 
   if (categoryId) {
     queryParams["category_id"] = [categoryId]
+  }
+
+  // بحث نصي (Medusa: q على العنوان والوصف)
+  if (q?.trim()) {
+    ;(queryParams as any).q = q.trim().slice(0, 100)
   }
 
   if (productsIds) {
@@ -66,8 +76,16 @@ export default async function PaginatedProducts({
 
   const totalPages = Math.ceil(count / PRODUCT_LIMIT)
 
+  const trackItems = products.map((p) => ({
+    id: p.id,
+    name: p.title,
+    price: p.variants?.[0]?.calculated_price?.calculated_amount ?? undefined,
+    category: p.categories?.[0]?.name ?? undefined,
+  }))
+
   return (
     <>
+      <ListEvent listName={listName ?? (q ? "search" : categoryId ? "category" : collectionId ? "collection" : "store")} items={trackItems} searchTerm={q?.trim() || undefined} />
       <ul
         className="grid grid-cols-2 w-full small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8"
         data-testid="products-list"

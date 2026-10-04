@@ -1,5 +1,6 @@
 "use client"
 
+import { track } from "@lib/tracking/events"
 import { toggleWishlist } from "@lib/data/account"
 import { createContext, useCallback, useContext, useEffect, useState } from "react"
 import { storeConfig } from "../../store.config"
@@ -31,7 +32,9 @@ export function WishlistProvider({ initial, loggedIn, children }: { initial: str
   }, [loggedIn, initial])
 
   const toggle = useCallback(async (id: string) => {
-    const next = ids.includes(id) ? ids.filter((x) => x !== id) : [id, ...ids]
+    const adding = !ids.includes(id)
+    if (adding) track("add_to_wishlist", { items: [{ id, name: "" }] })
+    const next = adding ? [id, ...ids] : ids.filter((x) => x !== id)
     setIds(next) // تحديث فوري
     if (!loggedIn) { writeLocal(next); return }
     const r = await toggleWishlist(id)
