@@ -7,6 +7,7 @@ import { formatAmount } from "@lib/util/money"
 import { orderMessage, waUrl } from "@lib/util/wa-order"
 import { HttpTypes } from "@medusajs/types"
 import Steps from "@modules/checkout/components/steps"
+import Signed from "@modules/common/components/signed"
 import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useRouter } from "next/navigation"
@@ -221,7 +222,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
           {codes.map((c) => (
             <div key={c} className="trow">
               <span>خصم {c}<button type="button" className="rmcp" onClick={() => onRemoveCode(c)} disabled={busy === "code"}>إزالة</button></span>
-              <span className="off">− {fmt(discount)}</span>
+              <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {CUR}</span>
             </div>
           ))}
           <div className="trow"><span>التوصيل</span><span>{shipping === null ? "في الخطوة التالية" : shipping === 0 ? "مجاني" : fmt(shipping)}</span></div>
@@ -256,7 +257,16 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   return (
     <div className="wrap has-costicky">
       <Steps current={step === "address" ? 1 : 2} />
-      <div className="guest"><Icon name="user" size={15} /> لا حاجة لإنشاء حساب — أكملي كضيفة</div>
+      {customer ? (
+        <div className="guest" data-testid="signed-in-note">
+          <Icon name="user" size={15} /> أنتِ داخلة بحسابك{customer.first_name ? ` يا ${customer.first_name}` : ""} — ستُضاف نقاط هذا الطلب لرصيدك
+        </div>
+      ) : (
+        <div className="guest" data-testid="guest-note">
+          <Icon name="user" size={15} /> لا حاجة لإنشاء حساب — أكملي كضيفة، أو{" "}
+          <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>ادخلي برقمك</LocalizedClientLink> لتكسبي نقاط الولاء
+        </div>
+      )}
       <button type="button" className="sumtoggle" aria-expanded={step === "payment" || sumOpen} aria-controls="sumBox" onClick={() => setSumOpen((v) => !v)}>
         <Icon name="bag" size={16} /> {items.reduce((s, i) => s + i.quantity, 0)} منتجات في طلبك <b className="num">{fmt(total)}</b> <Icon name="chevD" size={14} />
       </button>

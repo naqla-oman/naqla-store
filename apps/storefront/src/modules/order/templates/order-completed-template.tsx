@@ -3,6 +3,7 @@ import { deliveryEta, governorateName, orderNumber } from "@lib/util/eta"
 import { formatAmount } from "@lib/util/money"
 import { orderMessage, waUrl } from "@lib/util/wa-order"
 import { HttpTypes } from "@medusajs/types"
+import Signed from "@modules/common/components/signed"
 import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import CopyButton from "@modules/order/components/copy-button"
@@ -86,7 +87,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
             <Icon name="sparkle" size={22} />
             {extras._points.has_account ? (
               <div>
-                <span className="big">+{extras._points.points}</span>
+                <Signed className="big" sign="+" value={extras._points.points} />
                 <small>
                   {extras._points.status === "available"
                     ? "نقطة ولاء أُضيفت لرصيدك المتاح"
@@ -95,7 +96,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
               </div>
             ) : (
               <div>
-                <span className="big">+{extras._points.points}</span>
+                <Signed className="big" sign="+" value={extras._points.points} />
                 <small>
                   نقطة ولاء بانتظارك —{" "}
                   <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>ادخلي برقمك</LocalizedClientLink>
@@ -152,7 +153,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
             <div style={{ marginTop: 10 }}>
               <div className="kv"><span>المجموع</span><span className="num">{fmt(subtotal)}</span></div>
               {(order.discount_total ?? 0) > 0 && (
-                <div className="kv"><span>الخصم</span><span className="num" style={{ color: "var(--accent)" }}>− {fmt(order.discount_total)}</span></div>
+                <div className="kv"><span>الخصم</span><span style={{ color: "var(--accent)" }}><Signed sign="−" value={formatAmount(order.discount_total)} /> {CUR}</span></div>
               )}
               <div className="kv"><span>التوصيل</span><span>{ship?.name} · {order.shipping_total ? fmt(order.shipping_total) : "مجاني"}</span></div>
               <div className="kv"><span>الدفع</span><span>{pay?.title ?? "—"}</span></div>
