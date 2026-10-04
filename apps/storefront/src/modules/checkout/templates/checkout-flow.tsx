@@ -20,6 +20,7 @@ type Props = {
   countryCode: string
   step: "address" | "payment"
   error?: string
+  customer?: HttpTypes.StoreCustomer | null
 }
 
 const { checkout, currencyLabel: CUR } = storeConfig
@@ -45,15 +46,15 @@ function validate(f: DeliveryInput): Errors {
 
 const fmt = (n: number) => `${formatAmount(n)} ${CUR}`
 
-export default function CheckoutFlow({ cart, shippingOptions, providers, countryCode, step, error }: Props) {
+export default function CheckoutFlow({ cart, shippingOptions, providers, countryCode, step, error, customer }: Props) {
   const router = useRouter()
   const addr = cart.shipping_address
   const meta = (cart.metadata ?? {}) as Record<string, any>
 
   const [form, setForm] = useState<DeliveryInput>({
-    name: [addr?.first_name, addr?.last_name].filter(Boolean).join(" "),
-    phone: (addr?.phone ?? "").replace(checkout.phone.prefix, ""),
-    email: cart.email ?? "",
+    name: [addr?.first_name, addr?.last_name].filter(Boolean).join(" ") || [customer?.first_name, customer?.last_name].filter(Boolean).join(" "),
+    phone: (addr?.phone ?? customer?.phone ?? "").replace(checkout.phone.prefix, ""),
+    email: cart.email?.endsWith("@phone.invalid") ? "" : cart.email ?? "",
     province: addr?.province ?? "",
     city: addr?.city ?? "",
     address: addr?.address_1 && addr.address_1 !== addr.city ? addr.address_1 : "",

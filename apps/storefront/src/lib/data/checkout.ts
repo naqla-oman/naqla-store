@@ -86,6 +86,13 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
       {},
       await getAuthHeaders()
     )
+    // زبونة مسجّلة ببريد محجوز (phone.invalid): يحل بريدها الحقيقي محله
+    const auth = await getAuthHeaders()
+    if (email && "authorization" in auth) {
+      await sdk.client
+        .fetch("/store/customers/me/email", { method: "POST", headers: auth, body: { email, only_if_placeholder: true } })
+        .catch(() => null)
+    }
     await refresh()
     return { ok: true }
   } catch (e) {

@@ -173,3 +173,8 @@
 .phonechip { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 7px 14px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .phonechip svg { color: #1f9d5a; }
 .phonechip bdi { white-space: nowrap; letter-spacing: .3px; }
+
+.earned { display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, var(--copper-soft), transparent); border: 1px solid var(--line); border-radius: var(--r-md); padding: 14px; margin-top: 18px; text-align: start; }
+.earned > svg { color: var(--copper); flex: 0 0 auto; }
+.earned .big { font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--copper); line-height: 1; }
+.earned small { display: block; font-size: 12px; color: var(--muted); margin-top: 4px; }
