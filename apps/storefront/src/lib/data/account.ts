@@ -86,6 +86,20 @@ export async function completeProfile(input: { firstName: string; lastName: stri
   }
 }
 
+/* ===== طلبات الحساب ===== */
+
+/** طلبات الزبونة بلا تخزين مؤقت: حالتها تتغيّر من لوحة التحكم (شحن/توصيل/إلغاء) خارج المتجر */
+export async function listMyOrders(limit = 20) {
+  return sdk.client
+    .fetch<{ orders: import("@medusajs/types").HttpTypes.StoreOrder[] }>("/store/orders", {
+      query: { limit, order: "-created_at", fields: "id,display_id,created_at,status,total,*items,*fulfillments" },
+      headers: await getAuthHeaders(),
+      cache: "no-store",
+    })
+    .then((r) => r.orders)
+    .catch(() => [])
+}
+
 /* ===== الولاء ===== */
 
 export type LoyaltyData = {

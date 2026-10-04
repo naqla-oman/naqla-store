@@ -1,9 +1,10 @@
 import { retrieveCustomer } from "@lib/data/customer"
-import { getLoyalty } from "@lib/data/account"
-import { listOrders } from "@lib/data/orders"
+import { getLoyalty, listMyOrders } from "@lib/data/account"
 import PhoneLogin from "@modules/account/phone-login"
 import AccountDashboard from "@modules/account/dashboard"
 import { Metadata } from "next"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = { title: "حسابي", robots: { index: false } }
 
@@ -12,7 +13,7 @@ export default async function AccountPage() {
   if (!customer) return <PhoneLogin />
   const [loyalty, orders] = await Promise.all([
     getLoyalty(),
-    listOrders(20, 0, { fields: "id,display_id,created_at,status,total,*items,*fulfillments" }).catch(() => []),
+    listMyOrders(20),
   ])
   return <AccountDashboard customer={customer} loyalty={loyalty} orders={orders ?? []} />
 }
