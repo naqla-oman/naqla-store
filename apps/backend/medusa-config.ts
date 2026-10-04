@@ -1,5 +1,6 @@
 import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
 import { client } from './src/lib/client'
+import { naqlaAdminBrand } from './admin-brand/vite-plugin'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
@@ -13,6 +14,10 @@ const thawaniEnabled =
   !!process.env.THAWANI_PUBLISHABLE_KEY
 
 module.exports = defineConfig({
+  // لوحة نقلة: الهوية في رأس الصفحة فقط (admin-brand/vite-plugin.ts) — لا نسخ لكود Medusa
+  admin: {
+    vite: (config) => ({ ...config, plugins: [...(config.plugins ?? []), naqlaAdminBrand()] }),
+  },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
     http: {
