@@ -6,6 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { getAuthHeaders, getCacheTag, getCartId, removeCartId } from "./cookies"
 import { storeConfig } from "../../store.config"
+import { orderAttribution } from "../tracking/attribution"
 import { g } from "@lib/voice"
 
 /**
@@ -176,7 +177,15 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
     const shippingCode = (shipping_options.find((o) => o.id === optionId)?.type as any)?.code
     await sdk.store.cart.update(
       id,
-      { metadata: { ...(cart.metadata ?? {}), payment_channel: pay.key, shipping_code: shippingCode ?? null } },
+      {
+        metadata: {
+          ...(cart.metadata ?? {}),
+          payment_channel: pay.key,
+          shipping_code: shippingCode ?? null,
+          // مصدر الطلب (أول/آخر زيارة) + بيانات المطابقة حسب موافقة الزبون
+          attribution: await orderAttribution(),
+        },
+      },
       {},
       headers
     )

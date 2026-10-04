@@ -2,7 +2,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { TRACKING_MODULE } from "../modules/tracking"
 import type TrackingModuleService from "../modules/tracking/service"
-import { sendAll, type ServerEvent, type ServerEventName } from "./server-events"
+import { SENDERS, type Platform, type ServerEvent, type ServerEventName } from "./server-events"
 import { client } from "./client"
 
 /**
@@ -44,7 +44,17 @@ export async function sendOrderServerEvent(container: MedusaContainer, orderId: 
         ga_client_id: a.ga_client_id,
       },
     }
-    const results = await sendAll(creds, event)
+    // الموافقة: الإعلانات (Meta/Snap/TikTok) تتطلب موافقة ملفات الإعلانات، وGA4 موافقة التحليلات.
+    // طلب بلا سجل موافقة يُعامل كرفض.
+    const consent = (a.consent ?? {}) as { ads?: boolean; analytics?: boolean }
+    const allowed: Platform[] = [...(consent.ads ? (["meta", "snap", "tiktok"] as Platform[]) : []), ...(consent.analytics ? (["ga4"] as Platform[]) : [])]
+    if (!allowed.length) {
+      logger.info(`[tracking] ${name} ${o.id}: لا موافقة على ملفات التتبع — لم يُرسل`)
+      return
+    }
+    const results = await Promise.all(
+      allowed.map((p) => SENDERS[p](creds, event).catch((err) => ({ platform: p, ok: false, status: 0, response: String(err?.message ?? err) })))
+    )
     for (const r of results) {
       if (r.skipped) continue
       ;(r.ok ? logger.info : logger.warn).call(logger, `[tracking] ${name} ${r.platform} → ${r.status}${r.ok ? "" : ` ${r.response?.slice(0, 200)}`}`)
