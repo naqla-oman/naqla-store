@@ -15,28 +15,31 @@ const money = (n: number, cur: string) =>
 
 /** نص كل قالب ومتغيراته — يُستخدم للمعاينة في السجل ولتوثيق القوالب المطلوب اعتمادها */
 function build(kind: OrderNotice, o: { name: string; number: string; total: string; shipping: string; track: string }): Built {
+  // النصوص مطابقة حرفياً لقوالب Meta في docs/whatsapp-templates.md:
+  // لا يبدأ المتن ولا ينتهي بمتغير (شرط Meta)، والمتغيرات بترتيب ظهورها {{1}}، {{2}}…
   const s = storeData()
+  const place = s.location?.name ?? s.name
   switch (kind) {
     case "order_placed":
       return {
         params: [o.name, o.number, o.total, o.track],
-        preview: `مرحباً ${o.name}، تم استلام طلبك ${o.number} من ${s.name} بقيمة ${o.total}. نبدأ بتجهيزه الآن، وتتبّعيه من هنا: ${o.track}`,
+        preview: `مرحباً ${o.name}، تم استلام طلبك ${o.number} بقيمة ${o.total}. نبدأ بتجهيزه الآن، ويمكنك تتبّعه من الرابط: ${o.track} — شكراً لتسوقك من ${s.name}.`,
       }
     case "order_shipped":
       return {
         params: [o.name, o.number, o.track],
-        preview: `${o.name}، طلبك ${o.number} خرج للتوصيل مع مندوب ${s.name} وسيتصل بك قبل الوصول. التتبّع: ${o.track}`,
+        preview: `مرحباً ${o.name}، طلبك ${o.number} خرج للتوصيل وسيتصل بك المندوب قبل الوصول. التتبّع: ${o.track} — ${s.name}.`,
       }
     case "order_ready_pickup":
       return {
-        params: [o.name, o.number, s.location?.name ?? s.name],
-        preview: `${o.name}، طلبك ${o.number} جاهز للاستلام من ${s.location?.name ?? s.name}. نسعد بزيارتك.`,
+        params: [o.name, o.number, place],
+        preview: `مرحباً ${o.name}، طلبك ${o.number} جاهز للاستلام من ${place}. نسعد بزيارتك — ${s.name}.`,
       }
     case "order_delivered":
       return {
         params: [o.name, o.number],
         // «تسليم» تشمل التوصيل والاستلام من المشغل
-        preview: `تم تسليم طلبك ${o.number} يا ${o.name}. نتمنى أن تسعدك القطعة — شكراً لثقتك في ${s.name}.`,
+        preview: `مرحباً ${o.name}، تم تسليم طلبك ${o.number}. نتمنى أن تسعدك القطعة — شكراً لثقتك في ${s.name}.`,
       }
   }
 }
