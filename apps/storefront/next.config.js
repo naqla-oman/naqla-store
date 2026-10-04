@@ -36,6 +36,8 @@ const BACKEND_HOST = (() => {
 
 const nextConfig = {
   reactStrictMode: true,
+  // مجلد بناء لكل متجر حتى لا يتصادم متجران يعملان من نفس المجلد (store:dev يضبطه)
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // ملفات العميل خارج مجلد التطبيق (clients/)
   experimental: { externalDir: true },
   turbopack: { resolveAlias: TURBO_ALIASES },

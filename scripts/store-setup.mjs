@@ -1,0 +1,86 @@
+// pnpm store:setup <slug> — قاعدة بيانات جديدة + migrate + البذرة + الصور + مستخدم أدمن
+// يحفظ بيئة المتجر في .stores/<slug>.env (خارج Git) لتشغيله بـ pnpm store:dev <slug>
+import { randomBytes } from "node:crypto"
+import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { join } from "node:path"
+import { BACKEND, CLIENTS, STORES, c, fail, listStoreEnvs, readEnv, run, slugArg, storeEnvFile } from "./lib.mjs"
+
+const slug = slugArg()
+if (!existsSync(join(CLIENTS, slug, "store.json"))) fail(`لا يوجد clients/${slug}/store.json — ابدئي بـ pnpm store:new ${slug}`)
+const envFile = storeEnvFile(slug)
+if (existsSync(envFile) && !process.argv.includes("--force")) {
+  fail(`المتجر مُعدّ مسبقاً (${envFile}). لإعادة الإعداد على قاعدة جديدة: pnpm store:setup ${slug} --force`)
+}
+
+// قاعدة البيانات: نفس خادم/مستخدم DATABASE_URL في apps/backend/.env باسم naqla_<slug>
+const base = readEnv(join(BACKEND, ".env")).DATABASE_URL || process.env.DATABASE_URL
+if (!base) fail("DATABASE_URL غير موجود في apps/backend/.env (يُستخدم خادمه ومستخدمه لإنشاء قاعدة المتجر)")
+const dbName = `naqla_${slug.replace(/-/g, "_")}`
+const dbUrl = (() => { const u = new URL(base); u.pathname = `/${dbName}`; return u.toString() })()
+
+// المنافذ: محفوظة إن أُعدّ سابقاً، وإلا التالي غير المستخدم (9000/8000، 9001/8001…)
+const prev = readEnv(envFile)
+const taken = new Set(listStoreEnvs().filter((f) => f !== `${slug}.env`).map((f) => readEnv(join(STORES, f)).BACKEND_PORT))
+let i = 0
+while (taken.has(String(9000 + i))) i++
+const backendPort = prev.BACKEND_PORT || String(9000 + i)
+const storefrontPort = prev.STOREFRONT_PORT || String(8000 + Number(backendPort) - 9000)
+const backendUrl = `http://localhost:${backendPort}`
+const storefrontUrl = `http://localhost:${storefrontPort}`
+
+const env = {
+  STORE: slug,
+  DATABASE_URL: dbUrl,
+  MEDUSA_BACKEND_URL: backendUrl,
+  STOREFRONT_URL: storefrontUrl,
+  STORE_CORS: storefrontUrl,
+  ADMIN_CORS: `${backendUrl}`,
+  AUTH_CORS: `${storefrontUrl},${backendUrl}`,
+}
+
+console.log(c.b(`\n▶ إعداد المتجر «${slug}» — القاعدة ${dbName}، الخلفية ${backendPort}، الواجهة ${storefrontPort}\n`))
+
+console.log(c.d("1/3 إنشاء قاعدة البيانات…"))
+await run("npx", ["medusa", "db:create", "--db", dbName, "--no-interactive"], { cwd: BACKEND, env: { ...env, DATABASE_URL: base } }).catch((e) => {
+  if (!/already exists/i.test(e.out ?? "")) fail(`تعذّر إنشاء القاعدة:\n${e.out ?? e.message}`)
+})
+
+console.log(c.d("2/3 الترحيلات + البذرة + الدفع + الضريبة + الصور + المستويات…"))
+const out = await run("npx", ["medusa", "db:migrate"], { cwd: BACKEND, env }).catch((e) => fail(`فشل الترحيل:\n${(e.out ?? e.message).slice(-3000)}`))
+const pk = (out.match(/Publishable key: (pk_[a-f0-9]+)/) || [])[1] || prev.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+if (!pk) fail("لم يُعثر على مفتاح النشر في مخرجات البذرة — هل كانت القاعدة مستخدمة سابقاً؟ استخدمي قاعدة جديدة")
+for (const line of out.split("\n").filter((l) => /checkout-setup|product-images|loyalty-tiers|tax-inclusive|Seeded/.test(l))) {
+  console.log("  " + line.replace(/\x1b\[[0-9;]*m/g, "").replace(/^\s*info:\s*/, ""))
+}
+
+console.log(c.d("3/3 مستخدم الأدمن…"))
+const adminEmail = prev.ADMIN_EMAIL || `admin@${slug}.local`
+const adminPassword = prev.ADMIN_PASSWORD || randomBytes(9).toString("base64url")
+await run("npx", ["medusa", "user", "-e", adminEmail, "-p", adminPassword], { cwd: BACKEND, env }).catch((e) => {
+  if (!/already exists|exists/i.test(e.out ?? "")) fail(`تعذّر إنشاء الأدمن:\n${e.out ?? e.message}`)
+})
+
+mkdirSync(STORES, { recursive: true })
+writeFileSync(
+  envFile,
+  [
+    `# بيئة المتجر «${slug}» — أنشأها store:setup (لا تُرفع إلى Git)`,
+    ...Object.entries(env).map(([k, v]) => `${k}=${v}`),
+    `BACKEND_PORT=${backendPort}`,
+    `STOREFRONT_PORT=${storefrontPort}`,
+    `NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=${pk}`,
+    `NEXT_PUBLIC_BASE_URL=${storefrontUrl}`,
+    `ADMIN_EMAIL=${adminEmail}`,
+    `ADMIN_PASSWORD=${adminPassword}`,
+    "",
+  ].join("\n")
+)
+
+console.log(c.g(`\n✔ المتجر «${slug}» جاهز`))
+console.log(`
+  التشغيل:        ${c.b(`pnpm store:dev ${slug}`)}
+  المتجر:         ${storefrontUrl}
+  لوحة التحكم:    ${backendUrl}/app
+  الأدمن:         ${adminEmail}  /  ${adminPassword}
+  البيئة:         ${envFile}
+`)

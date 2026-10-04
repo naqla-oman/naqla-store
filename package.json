@@ -13,7 +13,10 @@
     "test": "turbo test",
     "backend:seed": "turbo seed --filter=@naqla/backend",
     "backend:dev": "turbo dev --filter=@naqla/backend",
-    "storefront:dev": "turbo dev --filter=@naqla/storefront"
+    "storefront:dev": "turbo dev --filter=@naqla/storefront",
+    "store:new": "node scripts/store-new.mjs",
+    "store:setup": "node scripts/store-setup.mjs",
+    "store:dev": "node scripts/store-dev.mjs"
   },
   "pnpm": {
     "overrides": {
