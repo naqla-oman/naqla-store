@@ -9,14 +9,14 @@ const COLS = [
   { title: "خدمة العملاء", links: [
     { label: "تتبّع طلبك", href: "/track" },
     { label: "سياسة الاستبدال والإرجاع", href: "/pages/returns" },
-    { label: "دليل المقاسات", href: "/pages/size-guide" },
+    ...(c.features.sizeGuide ? [{ label: "دليل المقاسات", href: "/pages/size-guide" }] : []),
     { label: "الأسئلة الشائعة", href: "/pages/faq" },
   ] },
   { title: `عن ${c.shortName}`, links: [
     { label: "قصتنا", href: "/pages/about" },
     { label: "فروعنا", href: "/pages/stores" },
-    { label: "برنامج الولاء", href: "/account" },
-    { label: "بطاقات الهدايا", href: "/store?q=هدية" },
+    ...(c.features.loyalty ? [{ label: "برنامج الولاء", href: "/account" }] : []),
+    ...(c.features.gift ? [{ label: "بطاقات الهدايا", href: "/store?q=هدية" }] : []),
   ] },
 ]
 

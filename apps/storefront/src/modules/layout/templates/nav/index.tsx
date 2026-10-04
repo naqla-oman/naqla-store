@@ -14,7 +14,9 @@ export default async function Nav() {
       <div className="announce hidden small:flex">
         <span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {storeConfig.freeShippingOver} ر.ع</span>
         <span><Icon name="refresh" size={14} /> استبدال مجاني خلال ١٤ يوماً</span>
-        <span><Icon name="gift" size={14} /> خصم ١٠٪ على طلبك الأول بكود LAYAN10</span>
+        {storeConfig.welcomeCode && (
+          <span><Icon name="gift" size={14} /> {storeConfig.welcomeCode.text} بكود {storeConfig.welcomeCode.code}</span>
+        )}
       </div>
       <div className="announce small:hidden"><span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {storeConfig.freeShippingOver} ر.ع</span></div>
       <header className="hdr">
