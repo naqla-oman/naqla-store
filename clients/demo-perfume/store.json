@@ -1,0 +1,536 @@
+{
+  "slug": "demo-perfume",
+  "name": "دار عبق للعطور",
+  "nameEn": "Dar Abaq Perfumes",
+  "shortName": "عبق",
+  "tagline": "عطور ودهن عود وبخور بروح عُمانية",
+  "description": "دار عبق: عطور ودهن عود وبخور مختارة بعناية من مسقط، بأحجام تناسب كل مناسبة، ونوصلها إلى بابك في كل محافظات السلطنة.",
+  "locale": "ar-OM",
+  "dir": "rtl",
+  "country": "om",
+  "currency": "omr",
+  "currencyLabel": "ر.ع",
+  "vatRate": 5,
+  "freeShippingOver": 25,
+  "cutoffHour": 15,
+  "orderPrefix": "AB-",
+  "fonts": {
+    "display": "el-messiri",
+    "body": "tajawal"
+  },
+  "colors": {
+    "theme": "#5b1f3a",
+    "background": "#f8f3ee"
+  },
+  "contact": {
+    "whatsapp": "96891111111",
+    "phone": "+968 9111 1111",
+    "email": "hello@abaq.om",
+    "address": "مسقط، مطرح — سوق الظلام",
+    "hours": "يومياً ٩ص – ١١م"
+  },
+  "social": {
+    "instagram": "https://instagram.com/",
+    "snapchat": "https://snapchat.com/",
+    "tiktok": "https://tiktok.com/"
+  },
+  "nav": [
+    {
+      "label": "كل العطور",
+      "href": "/store"
+    },
+    {
+      "label": "نسائية",
+      "href": "/categories/women"
+    },
+    {
+      "label": "رجالية",
+      "href": "/categories/men"
+    },
+    {
+      "label": "دهن العود",
+      "href": "/categories/oud-oils"
+    },
+    {
+      "label": "بخور",
+      "href": "/categories/bakhoor"
+    },
+    {
+      "label": "العروض",
+      "href": "/collections/sale",
+      "accent": true
+    }
+  ],
+  "welcomeCode": {
+    "code": "ABAQ10",
+    "text": "خصم ١٠٪ على أول طلب"
+  },
+  "ticker": [
+    "توصيل مجاني للطلبات فوق ٢٥ ر.ع",
+    "عيّنة مجانية مع كل طلب",
+    "خصم ١٠٪ على أول طلب بكود ABAQ10",
+    "تغليف هدايا فاخر"
+  ],
+  "home": {
+    "hero": {
+      "kicker": "مجموعة الشتاء العُمانية",
+      "title": [
+        "عطرٌ يحكي",
+        "عن مسقط"
+      ],
+      "text": "عطور ودهن عود وبخور مختارة بعناية — بأحجام تجربة وأحجام كاملة، مع عيّنة مجانية في كل طلب.",
+      "image": "images/hero.jpg",
+      "primary": {
+        "label": "اكتشفي العطور",
+        "href": "/store"
+      },
+      "secondary": {
+        "label": "دهن العود",
+        "href": "/categories/oud-oils"
+      }
+    },
+    "tiles": [
+      {
+        "image": "images/tile-oud.jpg",
+        "title": "دهن العود",
+        "text": "من ٣ مل حتى ١٢ مل",
+        "href": "/categories/oud-oils"
+      },
+      {
+        "image": "images/tile-bakhoor.jpg",
+        "title": "بخور الدار",
+        "text": "خلطات تقليدية للمجالس",
+        "href": "/categories/bakhoor"
+      }
+    ],
+    "trust": [
+      {
+        "icon": "truck",
+        "title": "توصيل ٢٤–٤٨ ساعة",
+        "text": "لكل محافظات السلطنة"
+      },
+      {
+        "icon": "gift",
+        "title": "تغليف هدايا",
+        "text": "مع بطاقة برسالتك"
+      },
+      {
+        "icon": "sparkle",
+        "title": "عيّنة مجانية",
+        "text": "مع كل طلب"
+      },
+      {
+        "icon": "lock",
+        "title": "دفع آمن",
+        "text": "عند الاستلام أو واتساب"
+      }
+    ],
+    "collectionsOrder": [
+      "bestsellers",
+      "new",
+      "sale"
+    ]
+  },
+  "features": {
+    "tailoring": false,
+    "sizeGuide": false,
+    "lengthField": false,
+    "gift": true,
+    "expressDelivery": false,
+    "pickup": true,
+    "loyalty": true,
+    "loyaltyTiers": false,
+    "cod": true,
+    "thawani": false,
+    "whatsappOrder": true,
+    "bnpl": false
+  },
+  "options": [
+    {
+      "key": "volume",
+      "title": "الحجم",
+      "type": "buttons"
+    }
+  ],
+  "loyalty": {
+    "pointsPerUnit": 10,
+    "redeemPoints": 500,
+    "redeemValue": 5,
+    "tiers": [
+      {
+        "key": "silver",
+        "name": "عضوية عبق",
+        "min": 0,
+        "perk": "10 نقاط لكل ر.ع"
+      }
+    ]
+  },
+  "checkout": {
+    "governorates": [
+      {
+        "code": "om-ma",
+        "name": "مسقط"
+      },
+      {
+        "code": "om-zu",
+        "name": "ظفار"
+      },
+      {
+        "code": "om-bs",
+        "name": "شمال الباطنة"
+      },
+      {
+        "code": "om-bj",
+        "name": "جنوب الباطنة"
+      },
+      {
+        "code": "om-da",
+        "name": "الداخلية"
+      },
+      {
+        "code": "om-ss",
+        "name": "شمال الشرقية"
+      },
+      {
+        "code": "om-sj",
+        "name": "جنوب الشرقية"
+      },
+      {
+        "code": "om-za",
+        "name": "الظاهرة"
+      },
+      {
+        "code": "om-bu",
+        "name": "البريمي"
+      },
+      {
+        "code": "om-mu",
+        "name": "مسندم"
+      },
+      {
+        "code": "om-wu",
+        "name": "الوسطى"
+      }
+    ],
+    "phone": {
+      "prefix": "+968",
+      "pattern": "^[79][0-9]{7}$",
+      "placeholder": "9XXXXXXX"
+    },
+    "shipping": {
+      "standard": {
+        "icon": "truck",
+        "eta": "standard"
+      },
+      "express": {
+        "icon": "fire",
+        "eta": "يصلك اليوم داخل مسقط"
+      },
+      "pickup": {
+        "icon": "pin",
+        "eta": "جاهز للاستلام من محل مطرح خلال ساعة"
+      }
+    },
+    "giftNote": "علبة هدايا فاخرة + بطاقة برسالتك"
+  },
+  "product": {
+    "lowStockAt": 3,
+    "delivery": {
+      "timezone": "Asia/Muscat",
+      "cityLabel": "داخل مسقط",
+      "othersLabel": "بقية المحافظات خلال 48 ساعة"
+    },
+    "perks": [
+      {
+        "icon": "truck",
+        "text": "توصيل خلال ٢٤–٤٨ ساعة"
+      },
+      {
+        "icon": "sparkle",
+        "text": "عيّنة مجانية مع كل طلب"
+      },
+      {
+        "icon": "shield",
+        "text": "منتجات أصلية مختومة"
+      },
+      {
+        "icon": "gift",
+        "text": "تغليف هدايا مجاني"
+      }
+    ],
+    "shippingReturns": "التوصيل داخل مسقط خلال ٢٤ ساعة ولبقية المحافظات خلال ٤٨ ساعة. يُقبل الإرجاع للعبوات المختومة خلال ٧ أيام.",
+    "craftNote": "تُعبّأ كل قارورة في دار عبق بمسقط."
+  },
+  "location": {
+    "name": "محل عبق — مطرح",
+    "city": "مسقط",
+    "address": "مطرح، سوق الظلام"
+  },
+  "shipping": [
+    {
+      "code": "standard",
+      "name": "توصيل عادي",
+      "desc": "خلال 24–48 ساعة",
+      "amount": 1.5,
+      "free_over": 25
+    },
+    {
+      "code": "pickup",
+      "name": "استلام من المحل",
+      "desc": "مطرح — جاهز خلال ساعة",
+      "amount": 0
+    }
+  ],
+  "promotions": [
+    {
+      "code": "ABAQ10",
+      "type": "percentage",
+      "value": 10,
+      "description": "خصم ١٠٪ على أول طلب"
+    }
+  ],
+  "categories": [
+    {
+      "handle": "women",
+      "name": "عطور نسائية"
+    },
+    {
+      "handle": "men",
+      "name": "عطور رجالية"
+    },
+    {
+      "handle": "oud-oils",
+      "name": "دهن العود"
+    },
+    {
+      "handle": "bakhoor",
+      "name": "بخور"
+    }
+  ],
+  "collections": [
+    {
+      "handle": "bestsellers",
+      "title": "الأكثر مبيعاً"
+    },
+    {
+      "handle": "new",
+      "title": "وصل حديثاً"
+    },
+    {
+      "handle": "sale",
+      "title": "العروض"
+    }
+  ],
+  "tags": [
+    {
+      "value": "gift",
+      "label": "هدية"
+    },
+    {
+      "value": "eid",
+      "label": "العيد"
+    }
+  ],
+  "products": [
+    {
+      "handle": "jabal-rose",
+      "title": "ورد الجبل الأخضر",
+      "category": "women",
+      "collection": "bestsellers",
+      "description": "عطر زهري بورد الجبل الأخضر الطائفي مع لمسة مسك أبيض وفانيليا خفيفة. يدوم طويلاً ويناسب الدوام والمناسبات.",
+      "price": 18,
+      "images": [
+        "images/rose-1.jpg",
+        "images/rose-2.jpg"
+      ],
+      "options": {
+        "volume": [
+          "50 مل",
+          "100 مل"
+        ]
+      },
+      "prices": {
+        "50 مل": 18,
+        "100 مل": 29
+      },
+      "stock": {
+        "50 مل": 12,
+        "100 مل": 6
+      },
+      "tags": [
+        "gift"
+      ]
+    },
+    {
+      "handle": "night-musk",
+      "title": "مسك الليل",
+      "category": "women",
+      "collection": "new",
+      "description": "مسك ناعم دافئ مع العنبر وخشب الصندل، ثابت على البشرة والملابس.",
+      "price": 22,
+      "images": [
+        "images/musk-1.jpg",
+        "images/musk-2.jpg"
+      ],
+      "options": {
+        "volume": [
+          "50 مل",
+          "100 مل"
+        ]
+      },
+      "prices": {
+        "50 مل": 22,
+        "100 مل": 35
+      },
+      "stock": {
+        "50 مل": 8,
+        "100 مل": 2
+      },
+      "tags": []
+    },
+    {
+      "handle": "saffron-amber",
+      "title": "عنبر الزعفران",
+      "category": "women",
+      "collection": "bestsellers",
+      "description": "زعفران فاخر مع عنبر وتوابل دافئة — عطر مسائي للمناسبات.",
+      "price": 24,
+      "images": [
+        "images/saffron-1.jpg",
+        "images/saffron-2.jpg"
+      ],
+      "options": {
+        "volume": [
+          "50 مل",
+          "100 مل"
+        ]
+      },
+      "prices": {
+        "50 مل": 24,
+        "100 مل": 38
+      },
+      "stock": {
+        "50 مل": 0,
+        "100 مل": 5
+      },
+      "tags": [
+        "eid"
+      ]
+    },
+    {
+      "handle": "muscat-oud",
+      "title": "عود مسقط",
+      "category": "men",
+      "collection": "bestsellers",
+      "description": "عود كمبودي مع الجلد والهيل، فخم وعميق ويدوم طوال اليوم.",
+      "price": 25,
+      "images": [
+        "images/oud-1.jpg",
+        "images/oud-2.jpg"
+      ],
+      "options": {
+        "volume": [
+          "50 مل",
+          "100 مل"
+        ]
+      },
+      "prices": {
+        "50 مل": 25,
+        "100 مل": 42
+      },
+      "stock": {
+        "50 مل": 10,
+        "100 مل": 7
+      },
+      "tags": [
+        "eid"
+      ]
+    },
+    {
+      "handle": "dhofar-frankincense",
+      "title": "لبان ظفار",
+      "category": "men",
+      "collection": "new",
+      "description": "لبان حوجري من ظفار مع الحمضيات والأرز — منعش وعُماني الروح.",
+      "price": 19,
+      "images": [
+        "images/frank-1.jpg",
+        "images/frank-2.jpg"
+      ],
+      "options": {
+        "volume": [
+          "50 مل",
+          "100 مل"
+        ]
+      },
+      "prices": {
+        "50 مل": 19,
+        "100 مل": 31
+      },
+      "stock": {
+        "50 مل": 9,
+        "100 مل": 9
+      },
+      "tags": []
+    },
+    {
+      "handle": "royal-oud-oil",
+      "title": "دهن عود ملكي",
+      "category": "oud-oils",
+      "collection": "bestsellers",
+      "description": "دهن عود معتّق مركّز — قطرة واحدة تكفي. يُستخدم على البشرة أو مع العطر لثبات أطول.",
+      "price": 15,
+      "images": [
+        "images/oudoil-1.jpg",
+        "images/oudoil-2.jpg"
+      ],
+      "options": {
+        "volume": [
+          "3 مل",
+          "6 مل",
+          "12 مل"
+        ]
+      },
+      "prices": {
+        "3 مل": 15,
+        "6 مل": 28,
+        "12 مل": 52
+      },
+      "stock": {
+        "3 مل": 20,
+        "6 مل": 6,
+        "12 مل": 2
+      },
+      "tags": [
+        "gift"
+      ]
+    },
+    {
+      "handle": "dar-bakhoor",
+      "title": "بخور الدار",
+      "category": "bakhoor",
+      "collection": "sale",
+      "description": "خلطة بخور تقليدية بالعود والمسك والورد — للمجالس والضيافة.",
+      "price": 9,
+      "images": [
+        "images/bakhoor-1.jpg",
+        "images/bakhoor-2.jpg"
+      ],
+      "options": {
+        "volume": [
+          "50 غ",
+          "100 غ"
+        ]
+      },
+      "prices": {
+        "50 غ": 9,
+        "100 غ": 16
+      },
+      "stock": {
+        "50 غ": 25,
+        "100 غ": 14
+      },
+      "tags": []
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+/* ===== هوية «دار عبق» — عنابي وذهبي ===== */
+:root {
+  --bg: #f8f3ee;
+  --surface: #ffffff;
+  --surface-2: #fbf7f3;
+  --ink: #241419;
+  --ink-2: #5a4650;
+  --muted: #7d6b72;
+  --accent: #5b1f3a;
+  --accent-2: #43152b;
+  --accent-soft: #f3e6ec;
+  --accent-ink: #ffffff;
+  --copper: #b8893b;
+  --copper-ink: #ffffff;
+  --copper-soft: #f5ecdc;
+  --line: #eadfd8;
+  --footer: #1c0d14;
+  --footer-ink: #f6eef1;
+  --footer-muted: #b49aa6;
+  --hero: #3a1226;
+  --shadow: 0 12px 34px rgba(20, 40, 32, 0.12);
+  --shadow-sm: 0 4px 14px rgba(20, 40, 32, 0.08);
+  --r-lg: 24px;
+  --r-md: 18px;
+  --r-sm: 14px;
+  --h-ctl: 44px;
+  --h-ctl-sm: 40px;
+  --h-ctl-lg: 52px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #150b10;
+  --surface: #20121a;
+  --surface-2: #1a0e15;
+  --ink: #f6eef1;
+  --ink-2: #dacbd2;
+  --muted: #ad97a2;
+  --accent: #e7a3c0;
+  --accent-2: #f2c6d8;
+  --accent-soft: #3a1a29;
+  --accent-ink: #1c0d14;
+  --copper: #d9ab5e;
+  --copper-ink: #1c120a;
+  --copper-soft: #33281a;
+  --line: #3d2430;
+  --footer: #0e060a;
+  --footer-ink: #f6eef1;
+  --footer-muted: #b49aa6;
+  --hero: #0f060a;
+  --shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.35);
+  color-scheme: dark;
+}
