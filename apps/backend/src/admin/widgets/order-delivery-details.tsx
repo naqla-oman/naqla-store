@@ -16,6 +16,34 @@ const Row = ({ label, children }: { label: string; children: React.ReactNode }) 
   </div>
 )
 
+
+type Visit = Record<string, string | number | undefined> | null | undefined
+
+/** وصف الزيارة: utm أولاً، وإلا المنصة من معرّف النقرة، وإلا المرجع، وإلا «مباشر» */
+const CLICK: [string, string][] = [["gclid", "إعلانات Google"], ["fbclid", "Meta (فيسبوك/إنستغرام)"], ["ScCid", "سناب شات"], ["ttclid", "تيك توك"]]
+function describeVisit(v: Visit) {
+  if (!v) return null
+  const click = CLICK.find(([k]) => v[k])
+  const src = v.utm_source ? `${v.utm_source}${v.utm_medium ? ` / ${v.utm_medium}` : ""}` : click ? click[1] : v.ref ? String(v.ref) : "مباشر"
+  return {
+    src,
+    campaign: v.utm_campaign ? String(v.utm_campaign) : null,
+    click: click ? click[1] : null,
+    landing: v.landing ? String(v.landing) : null,
+    date: v.ts ? new Date(Number(v.ts)).toLocaleDateString("ar-OM", { day: "numeric", month: "short" }) : null,
+  }
+}
+
+const VisitRow = ({ label, v }: { label: string; v: ReturnType<typeof describeVisit> }) =>
+  v ? (
+    <Row label={label}>
+      <Text size="small" leading="compact" weight="plus">{v.src}</Text>
+      {v.campaign && <Text size="xsmall" className="text-ui-fg-subtle">الحملة: <span dir="ltr">{v.campaign}</span></Text>}
+      {v.click && v.src !== v.click && <Text size="xsmall" className="text-ui-fg-subtle">نقرة إعلان: {v.click}</Text>}
+      {(v.landing || v.date) && <Text size="xsmall" className="text-ui-fg-muted"><span dir="ltr">{v.landing}</span>{v.date ? ` · ${v.date}` : ""}</Text>}
+    </Row>
+  ) : null
+
 const OrderDeliveryDetailsWidget = ({ data: order }: DetailWidgetProps<AdminOrder>) => {
   const meta = (order.metadata ?? {}) as Record<string, any>
   const addr = order.shipping_address
@@ -95,6 +123,25 @@ const OrderDeliveryDetailsWidget = ({ data: order }: DetailWidgetProps<AdminOrde
           </div>
         )
       })}
+      {meta.attribution && (
+        <div data-testid="order-source">
+          <div className="px-6 pt-4">
+            <Text size="small" weight="plus">مصدر الطلب</Text>
+          </div>
+          <VisitRow label="آخر زيارة" v={describeVisit(meta.attribution.last)} />
+          {JSON.stringify(meta.attribution.first) !== JSON.stringify(meta.attribution.last) && (
+            <VisitRow label="أول زيارة" v={describeVisit(meta.attribution.first)} />
+          )}
+          {!meta.attribution.first && !meta.attribution.last && (
+            <Row label="الزيارة"><Text size="small" leading="compact">مباشر (بلا حملة)</Text></Row>
+          )}
+          <Row label="موافقة التتبع">
+            <Text size="small" leading="compact">
+              {meta.attribution.consent?.ads ? "إعلانات ✓" : "إعلانات ✗"} · {meta.attribution.consent?.analytics ? "تحليلات ✓" : "تحليلات ✗"}
+            </Text>
+          </Row>
+        </div>
+      )}
       {phone && (
         <div className="px-6 py-3">
           <a
