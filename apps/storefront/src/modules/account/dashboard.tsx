@@ -15,7 +15,7 @@ type Props = {
   orders: HttpTypes.StoreOrder[]
 }
 
-const { loyalty: L, checkout, currencyLabel: CUR } = storeConfig
+const { loyalty: L, checkout, currencyLabel: CUR, features: F } = storeConfig
 const dateFmt = new Intl.DateTimeFormat("ar-OM", { day: "numeric", month: "long", timeZone: storeConfig.product.delivery.timezone })
 const STATUS: Record<string, string> = { pending: "معلّقة حتى التوصيل", available: "متاحة", canceled: "ملغاة" }
 
@@ -52,14 +52,15 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
               <div className="av">{name.slice(0, 1)}</div>
               <div>
                 <b className="hi">أهلاً {name}</b>
-                {tier && <span className="tier"><Icon name="sparkle" size={12} /> عضوة {tier.name} في نادي {storeConfig.shortName}</span>}
+                {F.loyaltyTiers && tier && <span className="tier"><Icon name="sparkle" size={12} /> عضوة {tier.name} في نادي {storeConfig.shortName}</span>}
               </div>
             </div>
-            {myPerks.length > 0 && (
+            {F.loyaltyTiers && myPerks.length > 0 && (
               <div className="myperks" data-testid="my-perks">
                 {myPerks.map((p) => <span key={p}><Icon name="check" size={13} /> {p}</span>)}
               </div>
             )}
+            {F.loyalty && (<>
             <div className="balances">
               <div data-testid="pts-available">
                 <span>متاح للاستبدال</span>
@@ -72,21 +73,26 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
                 <small>تُتاح عند استلام طلبك</small>
               </div>
             </div>
+            </>)}
+            {F.loyaltyTiers && (<>
             <div className="pbar"><i style={{ width: `${prog}%` }} /></div>
             <div className="pl">
               <span>{tier?.name}</span>
               <span>{next ? `تبقّى ${next.min - confirmed} نقطة مؤكَّدة للعضوية ال${next.name}` : "أعلى مستوى — شكراً لوفائك"}</span>
             </div>
+            </>)}
           </div>
 
           <div className="stats">
             <div><b>{orders.length}</b><span>طلبات</span></div>
             <div><b>{active}</b><span>طلب نشط</span></div>
-            <div><b>{confirmed}</b><span>نقاط مؤكَّدة</span></div>
+            {F.loyalty && <div><b>{confirmed}</b><span>نقاط مؤكَّدة</span></div>}
           </div>
 
+          {F.loyalty && (
           <div className="panelbox" style={{ marginTop: 16 }}>
             <h3>برنامج الولاء</h3>
+            {F.loyaltyTiers && (
             <div className="tiers">
               {(loyalty?.rules.tiers ?? []).map((t) => (
                 <div key={t.key} className={`t-${t.key} ${t.key === tier?.key ? "on" : ""}`}>
@@ -97,6 +103,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
                 </div>
               ))}
             </div>
+            )}
             <div className="earnlist">
               <div><span className="ic"><Icon name="bag" size={16} /></span>كل ريال تنفقينه<b><Signed sign="+" value={L.pointsPerUnit} /> نقاط</b></div>
             </div>
@@ -116,6 +123,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
               </div>
             )}
           </div>
+          )}
         </div>
 
         <div>

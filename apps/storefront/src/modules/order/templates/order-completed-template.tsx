@@ -84,7 +84,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
           )}
         </div>
 
-        {extras._points?.points > 0 && (
+        {storeConfig.features.loyalty && extras._points?.points > 0 && (
           <div className="earned" data-testid="success-points">
             <Icon name="sparkle" size={22} />
             {extras._points.has_account ? (
