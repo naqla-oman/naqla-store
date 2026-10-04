@@ -1,7 +1,8 @@
 {
   "slug": "demo-perfume",
+  "voice": "neutral",
   "name": "دار عبق للعطور",
-  "nameEn": "Dar Abaq Perfumes",
+  "nameEn": "ABAQ",
   "shortName": "عبق",
   "tagline": "عطور ودهن عود وبخور بروح عُمانية",
   "description": "دار عبق: عطور ودهن عود وبخور مختارة بعناية من مسقط، بأحجام تناسب كل مناسبة، ونوصلها إلى بابك في كل محافظات السلطنة.",
@@ -16,11 +17,30 @@
   "orderPrefix": "AB-",
   "fonts": {
     "display": "el-messiri",
-    "body": "tajawal"
+    "body": "ibm-plex-sans-arabic",
+    "latin": "tenor-sans"
   },
   "colors": {
-    "theme": "#5b1f3a",
-    "background": "#f8f3ee"
+    "theme": "#2F6E70",
+    "background": "#F8FBFA"
+  },
+  "brand": {
+    "logo": "logo.svg",
+    "logoDark": "logo-on-dark.svg",
+    "logoOnDark": "logo-on-dark.svg",
+    "wordmark": true
+  },
+  "defaultTheme": "light",
+  "icons": {
+    "svg": "icons/favicon.svg",
+    "apple": "icons/apple-touch-icon.png",
+    "icon192": "icons/icon-192.png",
+    "icon512": "icons/icon-512.png",
+    "maskable": "icons/icon-maskable-512.png"
+  },
+  "decor": {
+    "type": "wave",
+    "color": "#A9C9C3"
   },
   "contact": {
     "whatsapp": "96891111111",
@@ -61,6 +81,7 @@
       "accent": true
     }
   ],
+  "searchPlaceholder": "ابحث عن عطر، دهن عود، بخور…",
   "welcomeCode": {
     "code": "ABAQ10",
     "text": "خصم ١٠٪ على أول طلب"
@@ -81,7 +102,7 @@
       "text": "عطور ودهن عود وبخور مختارة بعناية — بأحجام تجربة وأحجام كاملة، مع عيّنة مجانية في كل طلب.",
       "image": "images/hero.jpg",
       "primary": {
-        "label": "اكتشفي العطور",
+        "label": "اكتشف العطور",
         "href": "/store"
       },
       "secondary": {
@@ -139,11 +160,12 @@
     "expressDelivery": false,
     "pickup": true,
     "loyalty": true,
-    "loyaltyTiers": false,
+    "loyaltyTiers": true,
     "cod": true,
     "thawani": false,
     "whatsappOrder": true,
-    "bnpl": false
+    "bnpl": false,
+    "reviews": true
   },
   "options": [
     {
@@ -159,9 +181,18 @@
     "tiers": [
       {
         "key": "silver",
-        "name": "عضوية عبق",
+        "name": "فضية",
         "min": 0,
         "perk": "10 نقاط لكل ر.ع"
+      },
+      {
+        "key": "gold",
+        "name": "ذهبية",
+        "min": 1000,
+        "perk": "توصيل مجاني دائماً",
+        "group": "عضوية عبق الذهبية",
+        "freeShipping": true,
+        "promoCode": "ABAQ-GOLD-SHIPPING"
       }
     ]
   },
@@ -259,7 +290,11 @@
       }
     ],
     "shippingReturns": "التوصيل داخل مسقط خلال ٢٤ ساعة ولبقية المحافظات خلال ٤٨ ساعة. يُقبل الإرجاع للعبوات المختومة خلال ٧ أيام.",
-    "craftNote": "تُعبّأ كل قارورة في دار عبق بمسقط."
+    "craftNote": "تُعبّأ كل قارورة في دار عبق بمسقط.",
+    "availability": {
+      "inStock": "متوفر في المحل — جرّبه قبل الشراء",
+      "outOfStock": "سنعيد توفيره قريباً"
+    }
   },
   "location": {
     "name": "محل عبق — مطرح",
@@ -335,6 +370,7 @@
     {
       "handle": "jabal-rose",
       "title": "ورد الجبل الأخضر",
+      "title_en": "Jabal Rose",
       "category": "women",
       "collection": "bestsellers",
       "description": "عطر زهري بورد الجبل الأخضر الطائفي مع لمسة مسك أبيض وفانيليا خفيفة. يدوم طويلاً ويناسب الدوام والمناسبات.",
@@ -364,6 +400,7 @@
     {
       "handle": "night-musk",
       "title": "مسك الليل",
+      "title_en": "Night Musk",
       "category": "women",
       "collection": "new",
       "description": "مسك ناعم دافئ مع العنبر وخشب الصندل، ثابت على البشرة والملابس.",
@@ -391,6 +428,7 @@
     {
       "handle": "saffron-amber",
       "title": "عنبر الزعفران",
+      "title_en": "Saffron Amber",
       "category": "women",
       "collection": "bestsellers",
       "description": "زعفران فاخر مع عنبر وتوابل دافئة — عطر مسائي للمناسبات.",
@@ -420,6 +458,7 @@
     {
       "handle": "muscat-oud",
       "title": "عود مسقط",
+      "title_en": "Muscat Oud",
       "category": "men",
       "collection": "bestsellers",
       "description": "عود كمبودي مع الجلد والهيل، فخم وعميق ويدوم طوال اليوم.",
@@ -449,6 +488,7 @@
     {
       "handle": "dhofar-frankincense",
       "title": "لبان ظفار",
+      "title_en": "Dhofar Frankincense",
       "category": "men",
       "collection": "new",
       "description": "لبان حوجري من ظفار مع الحمضيات والأرز — منعش وعُماني الروح.",
@@ -476,6 +516,7 @@
     {
       "handle": "royal-oud-oil",
       "title": "دهن عود ملكي",
+      "title_en": "Royal Oud Oil",
       "category": "oud-oils",
       "collection": "bestsellers",
       "description": "دهن عود معتّق مركّز — قطرة واحدة تكفي. يُستخدم على البشرة أو مع العطر لثبات أطول.",
@@ -508,6 +549,7 @@
     {
       "handle": "dar-bakhoor",
       "title": "بخور الدار",
+      "title_en": "Dar Bakhoor",
       "category": "bakhoor",
       "collection": "sale",
       "description": "خلطة بخور تقليدية بالعود والمسك والورد — للمجالس والضيافة.",

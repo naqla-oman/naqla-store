@@ -1,5 +1,6 @@
 {
   "slug": "__SLUG__",
+  "voice": "neutral",
   "name": "اسم المتجر",
   "nameEn": "Store Name",
   "shortName": "المتجر",
@@ -22,6 +23,11 @@
     "theme": "#1f3b57",
     "background": "#f5f6f8"
   },
+  "brand": {
+    "logo": "logo.svg",
+    "wordmark": false
+  },
+  "defaultTheme": "light",
   "contact": {
     "whatsapp": "96890000000",
     "phone": "+968 9XXX XXXX",
@@ -44,6 +50,7 @@
       "href": "/categories/main"
     }
   ],
+  "searchPlaceholder": "ابحث في المتجر…",
   "welcomeCode": null,
   "ticker": [
     "توصيل لكل محافظات السلطنة",
@@ -93,7 +100,8 @@
     "cod": true,
     "thawani": false,
     "whatsappOrder": true,
-    "bnpl": false
+    "bnpl": false,
+    "reviews": false
   },
   "options": [
     {
@@ -208,7 +216,11 @@
         "text": "تغليف هدايا مجاني"
       }
     ],
-    "shippingReturns": "التوصيل داخل مسقط خلال ٢٤ ساعة ولبقية المحافظات خلال ٤٨ ساعة."
+    "shippingReturns": "التوصيل داخل مسقط خلال ٢٤ ساعة ولبقية المحافظات خلال ٤٨ ساعة.",
+    "availability": {
+      "inStock": "متوفر في المحل",
+      "outOfStock": "سنعيد توفيره قريباً"
+    }
   },
   "location": {
     "name": "المحل الرئيسي",

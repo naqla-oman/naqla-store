@@ -1,5 +1,6 @@
 {
   "slug": "layan",
+  "voice": "f",
   "name": "بوتيك ليان",
   "nameEn": "Layan Boutique",
   "shortName": "ليان",
@@ -22,6 +23,11 @@
     "theme": "#0f4a3c",
     "background": "#f6f1ea"
   },
+  "brand": {
+    "logo": "logo.svg",
+    "wordmark": false
+  },
+  "defaultTheme": "light",
   "contact": {
     "whatsapp": "96890000000",
     "phone": "+968 9XXX XXXX",
@@ -61,6 +67,7 @@
       "accent": true
     }
   ],
+  "searchPlaceholder": "ابحثي عن عباية، فستان، وشاح…",
   "welcomeCode": {
     "code": "LAYAN10",
     "text": "خصم ١٠٪ على طلبك الأول"
@@ -144,7 +151,8 @@
     "cod": true,
     "thawani": true,
     "whatsappOrder": true,
-    "bnpl": false
+    "bnpl": false,
+    "reviews": true
   },
   "options": [
     {
@@ -389,6 +397,10 @@
           ]
         ]
       }
+    },
+    "availability": {
+      "inStock": "متوفر في المشغل — جرّبيها قبل الشراء",
+      "outOfStock": "سنعيد توفيره قريباً"
     }
   },
   "location": {
