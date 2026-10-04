@@ -63,10 +63,13 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
           </div>
           <div className="ring"><Icon name="check" size={40} /></div>
           <h1>تم استلام طلبك!</h1>
-          <p>
-            شكراً لتسوقك من {storeConfig.shortName} — سنتواصل معك على واتساب لتأكيد الطلب
-            {phone && <> على <bdi dir="ltr" style={{ whiteSpace: "nowrap" }}>{checkout.phone.prefix} {phone}</bdi></>}.
-          </p>
+          <p>شكراً لتسوقك من {storeConfig.shortName} — سنتواصل معك على واتساب لتأكيد الطلب</p>
+          {phone && (
+            <div className="phonechip">
+              <Icon name="whatsapp" size={15} />
+              <bdi dir="ltr">{checkout.phone.prefix} {phone.replace(/^(\d{4})(\d{4})$/, "$1 $2")}</bdi>
+            </div>
+          )}
           <div className="ordrow">
             <div className="ordernum" data-testid="order-number">رقم الطلب: <bdi dir="ltr">{number}</bdi></div>
             <CopyButton text={number} />
