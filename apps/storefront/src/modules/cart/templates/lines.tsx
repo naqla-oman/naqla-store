@@ -9,6 +9,7 @@ import Money from "@modules/common/components/money"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { g } from "@lib/voice"
+import { tailoringNote } from "@lib/util/tailoring"
 
 const maxQty = (i: HttpTypes.StoreCartLineItem) => {
   const v = i.variant
@@ -55,6 +56,7 @@ export default function CartLines({ items }: { items: HttpTypes.StoreCartLineIte
               <div className="info">
                 <LocalizedClientLink href={`/products/${i.product_handle}`} className="cname">{i.product_title}</LocalizedClientLink>
                 <div className="opt">{i.variant_title?.replace(" / ", " · ")}{len ? ` · طول ${len} سم` : ""}</div>
+                {tailoringNote(i.metadata) && <div className="opt tnote" data-testid="tailoring-note">{tailoringNote(i.metadata)}</div>}
                 <div className="row">
                   <div className="qty" aria-label="الكمية">
                     <button type="button" aria-label="إنقاص" disabled={i.quantity <= 1} onClick={() => run(i.id, () => updateLineItem({ lineId: i.id, quantity: i.quantity - 1 }))}><Icon name="minus" /></button>

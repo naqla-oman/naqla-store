@@ -173,3 +173,14 @@
 /* لون نفد مخزونه */
 .dot.out { opacity: .45; background-blend-mode: luminosity; position: relative; }
 .dot.out::after { content: ""; position: absolute; inset: 45% -2px; background: var(--muted); transform: rotate(-45deg); border-radius: 2px; }
+
+/* التفصيل الخاص */
+.tailor { margin-top: 14px; }
+.tailor .pill.on { border-color: var(--accent); color: var(--accent); }
+.tailor-panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px; margin-top: 10px; }
+.tailor-panel .label { font-size: 13px; font-weight: 700; color: var(--ink); }
+.tailor-opts .payopt { margin-top: 8px; }
+.tailor-m { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 10px; }
+.tailor-m .field input:disabled { opacity: .45; }
+.tailor-contact { display: flex; gap: 8px; align-items: center; margin-top: 12px; font-size: 13.5px; cursor: pointer; }
+.tailor-contact input { width: 18px; height: 18px; accent-color: var(--accent); }

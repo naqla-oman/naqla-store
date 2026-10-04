@@ -9,6 +9,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import CopyButton from "@modules/order/components/copy-button"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
+import { tailoringNote } from "@lib/util/tailoring"
 
 type Props = {
   order: HttpTypes.StoreOrder
@@ -148,6 +149,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
                   <div>
                     {i.product_title}
                     <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? ` · طول ${len} سم` : ""}</div>
+                    {tailoringNote(i.metadata) && <div className="q tnote">{tailoringNote(i.metadata)}</div>}
                   </div>
                   <span className="pr">{formatAmount(i.unit_price * i.quantity)}</span>
                 </div>

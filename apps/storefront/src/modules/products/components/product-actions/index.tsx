@@ -278,7 +278,6 @@ export default function ProductActions({ product, disabled }: Props) {
 
       {cfg.atelier.categories.includes(category) && (
         <div className="atelier">
-          <a className="pill" href={waAtelier("custom")} target="_blank" rel="noopener noreferrer"><Icon name="scissors" size={14} /> تفصيل على مقاسك</a>
           <a className="pill" href={waAtelier("fitting")} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> {g("احجزي قياساً في المشغل", "احجز قياساً في المشغل")}</a>
         </div>
       )}
