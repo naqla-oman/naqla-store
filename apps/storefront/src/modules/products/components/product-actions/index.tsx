@@ -7,7 +7,7 @@ import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Money from "@modules/common/components/money"
 import DeliveryEta from "@modules/products/components/delivery-eta"
-import { buildMatrix, variantPricing } from "@modules/products/lib/variants"
+import { buildMatrix, Selection, variantPricing } from "@modules/products/lib/variants"
 import { useParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { storeConfig } from "../../../../store.config"
@@ -26,12 +26,7 @@ export default function ProductActions({ product, disabled }: Props) {
   const countryCode = useParams().countryCode as string
   const m = useMemo(() => buildMatrix(product), [product])
   const category = product.categories?.[0]?.handle ?? ""
-  const singleSize = m.sizes.length <= 1
-
-  const [color, setColor] = useState<string | undefined>(m.colors[0])
-  const [size, setSize] = useState<string | undefined>(
-    () => m.sizes.find((s) => m.stock(s, m.colors[0]) > 0) ?? m.sizes[0]
-  )
+  const [sel, setSel] = useState<Selection>(() => m.initial())
   const [qty, setQty] = useState(1)
   const [len, setLen] = useState("")
   const [adding, setAdding] = useState(false)
@@ -41,12 +36,13 @@ export default function ProductActions({ product, disabled }: Props) {
   const buyRef = useRef<HTMLDivElement>(null)
   const boxRef = useRef<HTMLDivElement>(null)
 
-  const variant = m.find(size, color)
-  const left = m.stock(size, color)
+  const variant = m.find(sel)
+  const left = variant ? m.stock(sel) : 0
   const { price, old } = variantPricing(product, variant)
   const lowStock = left > 0 && left <= cfg.lowStockAt
   const canBuy = !!variant && left > 0 && !disabled
-  const hasGuide = !!cfg.sizeGuides[category] && !singleSize
+  // دليل المقاسات يرافق أول خيار من نوع أزرار له أكثر من قيمة، إن وُجد جدول لقسم المنتج
+  const guideKey = cfg.sizeGuides[category] ? m.defs.find((d) => d.type === "buttons" && d.values.length > 1)?.key : undefined
   const wantsLength = cfg.lengthField.categories.includes(category)
   const sold = Number((product.metadata as any)?.sold_week) || 0
 
@@ -83,17 +79,21 @@ export default function ProductActions({ product, disabled }: Props) {
     return () => clearTimeout(t)
   }, [toast])
 
-  const pickColor = (c: string) => {
-    setColor(c)
-    if (size && m.stock(size, c) === 0) {
-      const alt = m.sizes.find((s) => m.stock(s, c) > 0)
-      if (alt) setSize(alt)
+  // اختيار قيمة: إن نفدت التركيبة الناتجة نعدّل بقية الخيارات إلى أقرب تركيبة متوفرة
+  const pick = (key: string, value: string) => {
+    let next: Selection = { ...sel, [key]: value }
+    if (m.stock(next) === 0) {
+      for (const d of m.defs) {
+        if (d.key === key) continue
+        const alt = d.values.find((v) => m.stock({ ...next, [d.key]: v }) > 0)
+        if (alt) next = { ...next, [d.key]: alt }
+      }
     }
+    setSel(next)
   }
 
   const selectionText = [
-    !singleSize && size ? `المقاس ${size}` : null,
-    color ? `اللون ${color}` : null,
+    ...m.defs.filter((d) => d.values.length > 1 || m.defs.length > 1).map((d) => (sel[d.key] ? `${d.title} ${sel[d.key]}` : null)),
     wantsLength && len ? `الطول ${len} سم` : null,
   ].filter(Boolean).join("، ")
 
@@ -160,73 +160,70 @@ export default function ProductActions({ product, disabled }: Props) {
       <DeliveryEta />
 
       <div className="selbox" ref={boxRef}>
-        {m.colors.length > 0 && (
-          <>
-            <div className="label"><span>اللون: <b>{color}</b></span></div>
-            <div className="opts" role="radiogroup" aria-label="اللون">
-              {m.colors.map((c) => {
-                const sw = cfg.swatches[c] ?? ["#cccccc", "#999999"]
-                return (
-                  <button
-                    key={c}
-                    type="button"
-                    role="radio"
-                    aria-checked={c === color}
-                    aria-label={c}
-                    title={c}
-                    className={`dot ${c === color ? "on" : ""}`}
-                    style={{ background: `linear-gradient(150deg, ${sw[0]}, ${sw[1]})` }}
-                    onClick={() => pickColor(c)}
-                    disabled={disabled}
-                  />
-                )
-              })}
-            </div>
-          </>
-        )}
-
-        {m.sizes.length > 0 && (
-          <>
-            <div className="label">
-              <span>
-                المقاس: <b>{size}</b>
-                {lowStock && <span className="lowstock"> · بقي {left} فقط</span>}
-              </span>
-              {hasGuide && (
-                <a
-                  href="#size-guide"
-                  onClick={() => { const d = document.getElementById("size-guide") as HTMLDetailsElement | null; if (d) d.open = true }}
-                >
-                  <Icon name="ruler" size={13} /> دليل المقاسات
-                </a>
+        {m.defs.map((d) => {
+          const single = d.values.length <= 1
+          return (
+            <div key={d.key}>
+              <div className="label">
+                <span>
+                  {d.title}: <b>{sel[d.key]}</b>
+                  {d.key === m.defs[m.defs.length - 1].key && lowStock && <span className="lowstock"> · بقي {left} فقط</span>}
+                </span>
+                {d.key === guideKey && (
+                  <a
+                    href="#size-guide"
+                    onClick={() => { const g = document.getElementById("size-guide") as HTMLDetailsElement | null; if (g) g.open = true }}
+                  >
+                    <Icon name="ruler" size={13} /> دليل المقاسات
+                  </a>
+                )}
+              </div>
+              {!single && (
+                <div className="opts" role="radiogroup" aria-label={d.title}>
+                  {d.values.map((v) => {
+                    const st = m.stock({ ...sel, [d.key]: v })
+                    const on = v === sel[d.key]
+                    // دوائر ألوان فقط لخيار من نوع لون
+                    if (d.type === "color") {
+                      const sw = d.swatches?.[v]
+                      return (
+                        <button
+                          key={v}
+                          type="button"
+                          role="radio"
+                          aria-checked={on}
+                          aria-label={v}
+                          title={st === 0 ? `${v} — نفد` : v}
+                          className={`dot ${on ? "on" : ""} ${st === 0 ? "out" : ""}`}
+                          style={{ background: sw ? `linear-gradient(150deg, ${sw[0]}, ${sw[1]})` : "linear-gradient(150deg, var(--line), var(--muted))" }}
+                          onClick={() => pick(d.key, v)}
+                          disabled={disabled}
+                        />
+                      )
+                    }
+                    return (
+                      <button
+                        key={v}
+                        type="button"
+                        role="radio"
+                        aria-checked={on}
+                        className={`size ${on ? "on" : ""} ${st === 0 ? "out" : st <= cfg.lowStockAt ? "low" : ""}`}
+                        title={st === 0 ? "نفد — اطلبي إشعاراً عند التوفر" : st <= cfg.lowStockAt ? `بقي ${st} فقط` : undefined}
+                        onClick={() => pick(d.key, v)}
+                        disabled={disabled}
+                      >
+                        {v}
+                      </button>
+                    )
+                  })}
+                </div>
               )}
             </div>
-            {!singleSize && (
-              <div className="opts" role="radiogroup" aria-label="المقاس">
-                {m.sizes.map((s) => {
-                  const st = m.stock(s, color)
-                  return (
-                    <button
-                      key={s}
-                      type="button"
-                      role="radio"
-                      aria-checked={s === size}
-                      className={`size ${s === size ? "on" : ""} ${st === 0 ? "out" : st <= cfg.lowStockAt ? "low" : ""}`}
-                      title={st === 0 ? "نفد — اطلبي إشعاراً عند التوفر" : st <= cfg.lowStockAt ? `بقي ${st} فقط` : undefined}
-                      onClick={() => setSize(s)}
-                      disabled={disabled}
-                    >
-                      {s}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </>
-        )}
+          )
+        })}
 
         {variant && left === 0 && (
-          <div className="notice warn"><Icon name="bell" size={15} /> {singleSize ? "هذا اللون" : `المقاس ${size}`} نفد حالياً — نخبرك فور توفره</div>
+          <div className="notice warn"><Icon name="bell" size={15} /> هذا الاختيار نفد حالياً — نخبرك فور توفره</div>
         )}
 
         {wantsLength && (
@@ -266,7 +263,7 @@ export default function ProductActions({ product, disabled }: Props) {
           )}
         </div>
 
-        {canBuy && (
+        {canBuy && storeConfig.features.whatsappOrder && (
           <a className="btn wa block warow" href={waOrder()} target="_blank" rel="noopener noreferrer">
             <Icon name="whatsapp" size={18} /> اطلبي عبر واتساب
           </a>

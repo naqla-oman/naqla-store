@@ -21,7 +21,7 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ path: 
   try {
     const info = await stat(file)
     const body = await readFile(file)
-    return new Response(body, {
+    return new Response(new Uint8Array(body), {
       headers: {
         "Content-Type": TYPES[extname(rel).toLowerCase()],
         "Content-Length": String(info.size),

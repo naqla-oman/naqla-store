@@ -2,25 +2,33 @@ import { HttpTypes } from "@medusajs/types"
 import { storeConfig } from "../../../store.config"
 
 /**
- * خيارات Medusa v2.21 مشتركة بين المنتجات (خيار «المقاس» يحمل قيم كل المنتجات)،
- * لذلك نستخرج المقاسات والألوان من متغيّرات المنتج نفسه لا من قيم الخيار.
+ * خيارات المنتج بشكل عام: أي عدد من الخيارات المعرّفة في store.json → options
+ * (المقاس/اللون للأزياء، الحجم للعطور، الوزن/النكهة للحلويات…).
+ * خيارات Medusa v2.21 مشتركة بين المنتجات، لذلك نستخرج القيم من متغيّرات المنتج نفسه.
  */
 
 type Variant = HttpTypes.StoreProductVariant
+export type Selection = Record<string, string | undefined>
 
-const { size: SIZE_TITLE, color: COLOR_TITLE } = storeConfig.product.optionTitles
-
-export type VariantMatrix = {
-  sizeOptionId?: string
-  colorOptionId?: string
-  sizes: string[]
-  colors: string[]
-  find: (size?: string, color?: string) => Variant | undefined
-  stock: (size?: string, color?: string) => number
+export type OptionDef = {
+  key: string
+  title: string
+  type: "buttons" | "color"
+  swatches?: Record<string, [string, string]>
+  optionId: string
+  values: string[]
 }
 
-const valueOf = (v: Variant, optionId?: string) =>
-  optionId ? v.options?.find((o) => o.option_id === optionId)?.value : undefined
+export type VariantMatrix = {
+  defs: OptionDef[]
+  find: (sel: Selection) => Variant | undefined
+  /** أكبر مخزون بين المتغيّرات المطابقة للاختيار (الجزئي أو الكامل) */
+  stock: (sel: Selection) => number
+  /** أول تركيبة متوفرة (أو الأولى إن نفد الكل) */
+  initial: () => Selection
+}
+
+const valueOf = (v: Variant, optionId: string) => v.options?.find((o) => o.option_id === optionId)?.value
 
 /** الكمية المتاحة لمتغيّر واحد (غير المُدار مخزونه أو المسموح طلبه مسبقاً = متوفر دائماً) */
 export const availableQty = (v?: Variant) => {
@@ -31,31 +39,39 @@ export const availableQty = (v?: Variant) => {
 
 export function buildMatrix(product: HttpTypes.StoreProduct): VariantMatrix {
   const variants = product.variants ?? []
-  const sizeOptionId = product.options?.find((o) => o.title === SIZE_TITLE)?.id
-  const colorOptionId = product.options?.find((o) => o.title === COLOR_TITLE)?.id
+  const used = (product.options ?? []).filter((o) => variants.some((v) => valueOf(v, o.id)))
 
-  const uniq = (optionId?: string) =>
-    Array.from(new Set(variants.map((v) => valueOf(v, optionId)).filter(Boolean) as string[]))
+  // ترتيب store.options أولاً، ثم أي خيار أُضيف من اللوحة باسم آخر (يُعرض كأزرار)
+  const conf = storeConfig.options
+  const defs: OptionDef[] = used
+    .map((o) => {
+      const c = conf.find((x) => x.title === o.title)
+      return {
+        key: c?.key ?? o.id,
+        title: o.title,
+        type: c?.type ?? ("buttons" as const),
+        swatches: c?.swatches,
+        optionId: o.id,
+        values: Array.from(new Set(variants.map((v) => valueOf(v, o.id)).filter(Boolean) as string[])),
+      }
+    })
+    .sort((a, b) => {
+      const ia = conf.findIndex((x) => x.key === a.key)
+      const ib = conf.findIndex((x) => x.key === b.key)
+      return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib)
+    })
 
-  const sizes = uniq(sizeOptionId)
-  const colors = uniq(colorOptionId)
+  const matches = (v: Variant, sel: Selection) => defs.every((d) => !sel[d.key] || valueOf(v, d.optionId) === sel[d.key])
 
-  const find = (size?: string, color?: string) =>
-    variants.find(
-      (v) =>
-        (!sizeOptionId || !sizes.length || valueOf(v, sizeOptionId) === size) &&
-        (!colorOptionId || !colors.length || valueOf(v, colorOptionId) === color)
-    ) ?? (variants.length === 1 ? variants[0] : undefined)
+  const find = (sel: Selection) =>
+    variants.length === 1 ? variants[0] : defs.every((d) => sel[d.key]) ? variants.find((v) => matches(v, sel)) : undefined
 
-  // مخزون مقاس عبر كل الألوان إن لم يُحدد لون، أو لتركيبة محددة
-  const stock = (size?: string, color?: string) => {
-    if (color !== undefined) return availableQty(find(size, color))
-    return variants
-      .filter((v) => !sizeOptionId || valueOf(v, sizeOptionId) === size)
-      .reduce((s, v) => Math.max(s, availableQty(v)), 0)
-  }
+  const stock = (sel: Selection) => variants.filter((v) => matches(v, sel)).reduce((s, v) => Math.max(s, availableQty(v)), 0)
 
-  return { sizeOptionId, colorOptionId, sizes, colors, find, stock }
+  const selOf = (v?: Variant): Selection => Object.fromEntries(defs.map((d) => [d.key, v ? valueOf(v, d.optionId) : d.values[0]]))
+  const initial = () => selOf(variants.find((v) => availableQty(v) > 0) ?? variants[0])
+
+  return { defs, find, stock, initial }
 }
 
 /** سعر المتغيّر بعد الخصم وقبله (السعر الأصلي من price list أو من metadata.compare_at_price) */
