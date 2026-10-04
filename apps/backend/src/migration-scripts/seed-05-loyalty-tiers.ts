@@ -58,7 +58,8 @@ export default async function loyalty_tiers({ container }: { container: MedusaCo
             application_method: {
               type: "percentage",
               target_type: "shipping_methods",
-              allocation: "each",
+              // 100٪ على كل رسوم التوصيل (each يتطلب max_quantity)
+              allocation: "across",
               value: 100,
               description: `توصيل مجاني — امتياز ${tiers.find((t) => t.key === key)?.name ?? key}`,
             } as any,
