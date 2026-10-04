@@ -204,8 +204,10 @@
         "key": "diamond",
         "name": "ماسية",
         "min": 2500,
-        "perk": "",
-        "group": "عضوات ماسيات"
+        "perk": "خصم 15٪ على التفصيل الخاص",
+        "group": "عضوات ماسيات",
+        "tailoringDiscount": 15,
+        "promoCode": "LAYAN-DIAMOND-TAILORING"
       }
     ]
   },
@@ -1008,5 +1010,56 @@
         "beaded-embroidered-shayla"
       ]
     }
-  ]
+  ],
+  "tailoring": {
+    "handle": "custom-tailoring",
+    "title": "تفصيل خاص",
+    "description": "خدمة التفصيل على المقاس في مشغل ليان: تُخاط القطعة على مقاساتك أو يُعدَّل مقاسها.",
+    "image": "images/n-mod5.jpg",
+    "services": [
+      {
+        "key": "abaya",
+        "title": "تفصيل عباية",
+        "price": 15,
+        "categories": [
+          "abayas"
+        ]
+      },
+      {
+        "key": "dress",
+        "title": "تفصيل فستان",
+        "price": 20,
+        "categories": [
+          "dresses"
+        ]
+      },
+      {
+        "key": "alteration",
+        "title": "تعديل مقاس",
+        "price": 5,
+        "categories": [
+          "abayas",
+          "dresses"
+        ]
+      }
+    ],
+    "measurements": [
+      {
+        "key": "length",
+        "label": "الطول"
+      },
+      {
+        "key": "chest",
+        "label": "الصدر"
+      },
+      {
+        "key": "shoulder",
+        "label": "الكتف"
+      },
+      {
+        "key": "sleeve",
+        "label": "الكم"
+      }
+    ]
+  }
 }

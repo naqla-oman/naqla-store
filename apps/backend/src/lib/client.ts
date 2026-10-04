@@ -31,7 +31,7 @@ export type ClientProduct = {
   /** اسم لاتيني اختياري يُعرض تحت اسم المنتج (fonts.latin) */
   title_en?: string
 }
-export type ClientTier = { key: string; name: string; min: number; perk?: string; group?: string; freeShipping?: boolean; promoCode?: string }
+export type ClientTier = { key: string; name: string; min: number; perk?: string; group?: string; freeShipping?: boolean; promoCode?: string; tailoringDiscount?: number }
 export type ClientShipping = { code: string; name: string; desc: string; amount: number; free_over?: number; provinces?: string[] }
 export type ClientStore = {
   slug: string
