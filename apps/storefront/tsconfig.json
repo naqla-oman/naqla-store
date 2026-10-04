@@ -39,10 +39,8 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
-    ".next-layan/types/**/*.ts",
     ".next/types/**/*.ts",
-    "next-env.d.ts",
-    ".next-demo-perfume/types/**/*.ts"
+    "next-env.d.ts"
   ],
   "exclude": [
     "node_modules",
