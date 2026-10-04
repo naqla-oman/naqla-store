@@ -30,6 +30,8 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
   const isWa = pay?.key === "whatsapp" || via === "whatsapp"
   const items = order.items ?? []
   const subtotal = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
+  const shipDiscount = (order as any).shipping_discount_total ?? 0
+  const itemDiscount = Math.max(0, (order.discount_total ?? 0) - shipDiscount)
   const ship = order.shipping_methods?.[0]
   const placedAt = new Intl.DateTimeFormat("ar-OM", {
     timeZone: storeConfig.product.delivery.timezone,
@@ -152,10 +154,10 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
             })}
             <div style={{ marginTop: 10 }}>
               <div className="kv"><span>المجموع</span><span className="num">{fmt(subtotal)}</span></div>
-              {(order.discount_total ?? 0) > 0 && (
-                <div className="kv"><span>الخصم</span><span style={{ color: "var(--accent)" }}><Signed sign="−" value={formatAmount(order.discount_total)} /> {CUR}</span></div>
+              {itemDiscount > 0 && (
+                <div className="kv"><span>الخصم</span><span style={{ color: "var(--accent)" }}><Signed sign="−" value={formatAmount(itemDiscount)} /> {CUR}</span></div>
               )}
-              <div className="kv"><span>التوصيل</span><span>{ship?.name} · {order.shipping_total ? fmt(order.shipping_total) : "مجاني"}</span></div>
+              <div className="kv"><span>التوصيل</span><span>{ship?.name} · {order.shipping_total ? fmt(order.shipping_total) : shipDiscount > 0 ? "مجاني — امتياز العضوية" : "مجاني"}</span></div>
               <div className="kv"><span>الدفع</span><span>{pay?.title ?? "—"}</span></div>
               <div className="kv"><span>العنوان</span><span>{pickup ? "استلام من المشغل" : `${governorateName(addr?.province)} — ${addr?.city ?? ""}`}</span></div>
               {extras.gift && (

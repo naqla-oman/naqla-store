@@ -27,7 +27,7 @@ export default function CartTemplate({ cart }: { cart: HttpTypes.StoreCart | nul
   }
 
   const subtotal = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
-  const discount = cart.discount_total ?? 0
+  const discount = Math.max(0, (cart.discount_total ?? 0) - ((cart as any).shipping_discount_total ?? 0))
   const freeOver = storeConfig.freeShippingOver
   const left = Math.max(0, freeOver - (subtotal - discount))
 

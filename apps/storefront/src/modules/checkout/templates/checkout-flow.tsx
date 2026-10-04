@@ -81,7 +81,11 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   // ---- الأرقام ----
   const items = cart.items ?? []
   const subtotal = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
-  const discount = cart.discount_total ?? 0
+  // خصم التوصيل (امتياز المستوى) منفصل عن خصم المنتجات حتى لا يظهر مرتين
+  const shipDiscount = (cart as any).shipping_discount_total ?? 0
+  const discount = Math.max(0, (cart.discount_total ?? 0) - shipDiscount)
+  const perkPromo = (cart.promotions ?? []).find((p: any) => p.is_automatic && p.application_method?.target_type === "shipping_methods")
+  const perkLabel = (perkPromo as any)?.application_method?.description as string | undefined
   const method = cart.shipping_methods?.[0]
   const currentOptionId = method?.shipping_option_id
   const methodValid = !!currentOptionId && shippingOptions.some((o) => o.id === currentOptionId)
@@ -90,7 +94,8 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   const currentOption = shippingOptions.find((o) => o.id === currentOptionId)
   const shipCode = (currentOption?.type as any)?.code as string | undefined
   const pay = payments.find((p) => p.id === payId)
-  const codes = (cart.promotions ?? []).map((p) => p.code).filter(Boolean) as string[]
+  // الأكواد التي أدخلتها الزبونة فقط (العروض التلقائية كامتياز المستوى لا تُزال)
+  const codes = (cart.promotions ?? []).filter((p: any) => !p.is_automatic).map((p) => p.code).filter(Boolean) as string[]
 
   const sortedOptions = useMemo(() => {
     const order = Object.keys(checkout.shipping)
@@ -219,13 +224,13 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
 
         <div style={{ marginTop: 14 }}>
           <div className="trow"><span>المجموع</span><span>{fmt(subtotal)}</span></div>
-          {codes.map((c) => (
+          {discount > 0 && codes.map((c) => (
             <div key={c} className="trow">
               <span>خصم {c}<button type="button" className="rmcp" onClick={() => onRemoveCode(c)} disabled={busy === "code"}>إزالة</button></span>
               <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {CUR}</span>
             </div>
           ))}
-          <div className="trow"><span>التوصيل</span><span>{shipping === null ? "في الخطوة التالية" : shipping === 0 ? "مجاني" : fmt(shipping)}</span></div>
+          <div className="trow"><span>التوصيل</span><span data-testid="sum-shipping">{shipping === null ? "في الخطوة التالية" : shipping === 0 && shipDiscount > 0 ? <>مجاني <span className="perktag">{perkLabel?.replace("توصيل مجاني — ", "") ?? "امتياز العضوية"}</span></> : shipping === 0 ? "مجاني" : fmt(shipping)}</span></div>
           <div className="trow final"><span>الإجمالي</span><span>{fmt(total)}</span></div>
         </div>
 
@@ -361,7 +366,9 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                     <button key={o.id} type="button" role="radio" aria-checked={on} className={`payopt ${on ? "on" : ""}`} onClick={() => onShip(o.id)} disabled={busy === "ship"}>
                       <span className="ic"><Icon name={checkout.shipping[c]?.icon ?? "truck"} /></span>
                       <span className="t"><b>{o.name}</b><span>{c === "standard" ? deliveryEta(c, form.province) : (o.type as any)?.description}</span></span>
-                      <span className={`pr ${o.amount === 0 ? "free" : ""}`}>{o.amount === 0 ? "مجاني" : fmt(o.amount ?? 0)}</span>
+                      <span className={`pr ${o.amount === 0 || perkPromo ? "free" : ""}`}>
+                        {o.amount === 0 ? "مجاني" : perkPromo ? <><s className="old">{formatAmount(o.amount ?? 0)}</s> مجاني</> : fmt(o.amount ?? 0)}
+                      </span>
                       <span className="mark" aria-hidden="true" />
                     </button>
                   )
