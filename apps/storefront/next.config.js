@@ -12,10 +12,12 @@ const ALIASES = {
   "@client-font-display": path.join(__dirname, "src/fonts/display", `${CLIENT.fonts.display}.ts`),
   "@client-font-body": path.join(__dirname, "src/fonts/body", `${CLIENT.fonts.body}.ts`),
 }
-// Turbopack يقبل مسارات نسبية من جذر التطبيق
-const TURBO_ALIASES = Object.fromEntries(
-  Object.entries(ALIASES).map(([k, v]) => [k, "./" + path.relative(__dirname, v).split(path.sep).join("/")])
-)
+// Turbopack: مسارات نسبية من جذر التطبيق، ولا يطابق البادئات إلا بصيغة النجمة (@client/*)
+const rel = (v) => "./" + path.relative(__dirname, v).split(path.sep).join("/")
+const TURBO_ALIASES = {
+  ...Object.fromEntries(Object.entries(ALIASES).map(([k, v]) => [k, rel(v)])),
+  "@client/*": rel(CLIENT_DIR) + "/*",
+}
 
 /**
  * Medusa Cloud-related environment variables
