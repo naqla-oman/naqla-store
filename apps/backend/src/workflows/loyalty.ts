@@ -61,7 +61,7 @@ const setOrderPointsStatusStep = createStep("set-order-points-status", async ({ 
   }
   const prev = entry.status
   await loyalty.updateLoyaltyEntries({ id: entry.id, status })
-  return new StepResponse<any, { id: string; prev: string } | undefined>({ id: entry.id, status }, { id: entry.id, prev })
+  return new StepResponse<any, { id: string; prev: string } | undefined>({ id: entry.id, status, customer_id: entry.customer_id }, { id: entry.id, prev })
 }, async (comp, { container }) => {
   if (comp) await container.resolve<LoyaltyModuleService>(LOYALTY_MODULE).updateLoyaltyEntries({ id: comp.id, status: comp.prev as any })
 })

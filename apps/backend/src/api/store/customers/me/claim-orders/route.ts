@@ -1,6 +1,7 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError, Modules } from "@medusajs/framework/utils"
 import { awardOrderPointsWorkflow } from "../../../../../workflows/loyalty"
+import { syncLoyaltyTierWorkflow } from "../../../../../workflows/sync-loyalty-tier"
 import { claimOrdersByPhone } from "../../../../../lib/claim-orders"
 
 /** POST /store/customers/me/claim-orders — بعد كل دخول: نسب طلبات الضيف الجديدة بنفس الرقم */
@@ -17,5 +18,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
   for (const o of orders) {
     await awardOrderPointsWorkflow(req.scope).run({ input: { order_id: o.id } })
   }
+  // الطلبات المنسوبة المسلَّمة تضيف نقاطاً مؤكَّدة قد ترفع المستوى
+  await syncLoyaltyTierWorkflow(req.scope).run({ input: { customer_id: customer.id } })
   res.json({ claimed_orders: claimed.length })
 }
