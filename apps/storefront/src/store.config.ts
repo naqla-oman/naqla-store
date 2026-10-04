@@ -21,6 +21,7 @@ type Features = {
   thawani: boolean
   whatsappOrder: boolean
   bnpl: boolean
+  reviews: boolean
 }
 
 type ClientStore = {
@@ -126,12 +127,15 @@ export const storeConfig = {
     loyaltyTiers: on("loyalty") && on("loyaltyTiers"),
     whatsappOrder: on("whatsappOrder"),
     bnpl: on("bnpl"),
+    reviews: on("reviews"),
   },
 
   /** خيارات المنتج لنشاط العميل بترتيبها (المقاس/اللون، الحجم، الوزن/النكهة…) */
   options: c.options,
 
   loyalty: {
+    /** أول مستوى بتوصيل مجاني دائماً (لتلميح الدخول في الدفع) — فقط إن كانت المستويات مفعّلة */
+    freeShippingTier: on("loyalty") && on("loyaltyTiers") ? c.loyalty.tiers.find((t) => (t as any).freeShipping) ?? null : null,
     pointsPerUnit: c.loyalty.pointsPerUnit,
     redeemPoints: c.loyalty.redeemPoints,
     redeemValue: c.loyalty.redeemValue,
