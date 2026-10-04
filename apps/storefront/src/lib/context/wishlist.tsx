@@ -2,8 +2,10 @@
 
 import { toggleWishlist } from "@lib/data/account"
 import { createContext, useCallback, useContext, useEffect, useState } from "react"
+import { storeConfig } from "../../store.config"
 
-const KEY = "layan:wishlist"
+// مفتاح لكل متجر حتى لا تختلط مفضلات المتاجر على نفس المتصفح
+const KEY = `${storeConfig.slug}:wishlist`
 
 type Ctx = { ids: string[]; has: (id: string) => boolean; toggle: (id: string) => Promise<void>; loggedIn: boolean }
 const WishlistContext = createContext<Ctx>({ ids: [], has: () => false, toggle: async () => {}, loggedIn: false })

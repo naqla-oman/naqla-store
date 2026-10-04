@@ -215,7 +215,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
           <div className="field" style={{ marginTop: 6 }}>
             <label htmlFor="coupon">كود الخصم</label>
             <div className="coupon">
-              <input id="coupon" value={code} onChange={(e) => setCode(e.target.value)} placeholder="مثال: LAYAN10" autoComplete="off" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onApply() } }} />
+              <input id="coupon" value={code} onChange={(e) => setCode(e.target.value)} placeholder={storeConfig.welcomeCode ? `مثال: ${storeConfig.welcomeCode.code}` : "أدخلي الكود"} autoComplete="off" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onApply() } }} />
               <button type="button" className="btn ghost" onClick={onApply} disabled={!code.trim() || busy === "code"}>{busy === "code" ? "…" : "تطبيق"}</button>
             </div>
             {codeMsg && !codeMsg.ok && <div className="ferr-inline" role="alert">{codeMsg.text}</div>}
@@ -325,6 +325,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                 <label htmlFor="fNote">ملاحظات للمندوب (اختياري)</label>
                 <input id="fNote" value={form.note} onChange={(e) => set("note", e.target.value)} placeholder="مثال: الاتصال قبل الوصول" />
               </div>
+              {storeConfig.features.gift && (<>
               <button type="button" className={`giftrow ${form.gift ? "on" : ""}`} role="switch" aria-checked={form.gift} onClick={() => set("gift", !form.gift)}>
                 <Icon name="gift" size={22} />
                 <span><b>هذه هدية</b><span className="d">{checkout.giftNote}</span></span>
@@ -336,6 +337,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                   <textarea id="fGift" value={form.giftMessage} maxLength={200} onChange={(e) => set("giftMessage", e.target.value)} placeholder="مثال: كل عام وأنتِ بخير يا أمي" />
                 </div>
               )}
+              </>)}
               {formError && <div className="alert" role="alert"><Icon name="x" size={15} /> {formError}</div>}
               <div style={{ marginTop: 18 }}>
                 <button type="submit" className="btn block lg" disabled={busy === "address"} data-testid="to-payment">
