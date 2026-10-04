@@ -13,14 +13,17 @@ import {
   deleteShippingOptionsWorkflow,
   updateRegionsWorkflow,
 } from "@medusajs/medusa/core-flows"
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
+import { client, feature } from "../lib/client"
 
 type Shipping = { code: string; name: string; desc: string; amount: number; free_over?: number; provinces?: string[] }
 type Promo = { code: string; type: "percentage" | "fixed"; value: number; description?: string }
 
-const OFFLINE_PROVIDERS = ["pp_cod_offline", "pp_whatsapp_offline"]
-const THAWANI_PROVIDER = "pp_thawani_thawani"
+// مزوّد الدفع ← مفتاح تشغيله في store.json → features
+const PROVIDER_FEATURE: Record<string, string> = {
+  pp_cod_offline: "cod",
+  pp_whatsapp_offline: "whatsappOrder",
+  pp_thawani_thawani: "thawani",
+}
 
 export default async function checkout_setup({ container }: { container: MedusaContainer }) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
@@ -29,9 +32,13 @@ export default async function checkout_setup({ container }: { container: MedusaC
   const payment = container.resolve(Modules.PAYMENT)
   const promotion = container.resolve(Modules.PROMOTION)
 
-  const dataFile = process.env.STORE_DATA || "layan"
-  const data = JSON.parse(readFileSync(join(process.cwd(), "data", `${dataFile}.json`), "utf-8"))
-  const S = data.store as { currency: string; country: string; shipping: Shipping[]; promotions?: Promo[] }
+  const data = client()
+  const S = {
+    currency: data.currency,
+    country: data.country,
+    shipping: data.shipping.filter((sh) => !(sh.code === "express" && !feature("expressDelivery"))) as Shipping[],
+    promotions: (data.promotions ?? []) as Promo[],
+  }
 
   const { data: regions } = await query.graph({ entity: "region", fields: ["id", "currency_code"] })
   const region = regions.find((r) => r.currency_code === S.currency)
@@ -42,7 +49,8 @@ export default async function checkout_setup({ container }: { container: MedusaC
 
   // ---------- طرق الدفع ----------
   const registered = (await payment.listPaymentProviders({})).map((p) => p.id)
-  const wanted = [...OFFLINE_PROVIDERS, THAWANI_PROVIDER].filter((id) => registered.includes(id))
+  // المفعّل في store.json والمسجّل فعلاً في الخادم (ثواني يتطلب أيضاً THAWANI_ENABLED)
+  const wanted = Object.keys(PROVIDER_FEATURE).filter((id) => feature(PROVIDER_FEATURE[id]) && registered.includes(id))
   await updateRegionsWorkflow(container).run({
     input: { selector: { id: region.id }, update: { payment_providers: wanted } },
   })

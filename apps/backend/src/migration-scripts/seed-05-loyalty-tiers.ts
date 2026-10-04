@@ -1,6 +1,6 @@
 /**
  * امتيازات مستويات الولاء عبر مجموعات العملاء.
- * - مجموعة لكل مستوى فوق الأساسي (metadata.loyalty_tier) من data/<client>.json → store.tier_perks
+ * - مجموعة لكل مستوى له group في clients/<STORE>/store.json → loyalty.tiers
  * - free_shipping: عرض تلقائي يجعل كل طرق التوصيل مجانية لأعضاء هذا المستوى وما فوقه
  * - يزامن عضوية الزبونات الحاليات حسب نقاطهن المؤكَّدة
  * آمن للتكرار: لا يُنشئ ما هو موجود.
@@ -11,10 +11,8 @@ import { createCustomerGroupsWorkflow, createPromotionsWorkflow } from "@medusaj
 import { LOYALTY_MODULE } from "../modules/loyalty"
 import type LoyaltyModuleService from "../modules/loyalty/service"
 import { syncLoyaltyTierWorkflow } from "../workflows/sync-loyalty-tier"
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
+import { client, feature } from "../lib/client"
 
-type Perks = Record<string, { group: string; free_shipping?: boolean; promo_code?: string }>
 
 export default async function loyalty_tiers({ container }: { container: MedusaContainer }) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
@@ -22,9 +20,15 @@ export default async function loyalty_tiers({ container }: { container: MedusaCo
   const promotion = container.resolve(Modules.PROMOTION)
   const loyalty = container.resolve<LoyaltyModuleService>(LOYALTY_MODULE)
 
-  const data = JSON.parse(readFileSync(join(process.cwd(), "data", `${process.env.STORE_DATA || "layan"}.json`), "utf-8"))
-  const perks = (data.store.tier_perks ?? {}) as Perks
+  if (!feature("loyalty") || !feature("loyaltyTiers")) {
+    logger.info("loyalty-tiers: المستويات مُطفأة في store.json — لا شيء")
+    return
+  }
   const tiers = loyalty.options.tiers
+  // { gold: { group, free_shipping, promo_code } } من loyalty.tiers
+  const perks = Object.fromEntries(
+    client().loyalty.tiers.filter((t) => t.group).map((t) => [t.key, { group: t.group!, free_shipping: t.freeShipping, promo_code: t.promoCode }])
+  )
 
   // ---- المجموعات ----
   const existing = await customers.listCustomerGroups({}, { take: 100 })
