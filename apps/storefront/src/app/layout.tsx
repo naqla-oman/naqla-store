@@ -6,6 +6,7 @@ import "styles/globals.css"
 import "styles/theme.css"
 import "styles/product.css"
 import "styles/checkout.css"
+import "styles/account.css"
 
 const display = Alexandria({
   subsets: ["arabic", "latin"],
