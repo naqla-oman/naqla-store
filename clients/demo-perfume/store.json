@@ -595,5 +595,6 @@
       "reviews": 29,
       "sold_week": 5
     }
-  ]
+  ],
+  "returnDays": 7
 }

@@ -41,6 +41,10 @@ type ClientStore = {
   freeShippingOver: number
   cutoffHour: number
   orderPrefix: string
+  /** مدة الإرجاع بالأيام (تدخل في hasMerchantReturnPolicy للسيو) */
+  returnDays?: number
+  shipping: { code: string; name: string; amount: number; free_over?: number; provinces?: string[] }[]
+  location: { name: string; city: string; address: string }
   fonts: { display: string; body: string; latin?: string }
   /** الشعار: wordmark = الكلمة كاملة في الملف (تُعرض وحدها)، وإلا علامة مربعة + الاسم نصاً */
   brand?: { logo?: string; logoDark?: string; logoOnDark?: string; wordmark?: boolean }
@@ -143,6 +147,13 @@ export const storeConfig = {
   welcomeCode: c.welcomeCode ?? null,
   home: c.home,
   builtBy: { name: "نقلة للحلول الرقمية", url: "https://naqla.om" },
+  // للسيو (JSON-LD): التوصيل حسب مفاتيح التشغيل، والإرجاع، والمحل
+  seo: {
+    returnDays: c.returnDays ?? 0,
+    shipping: c.shipping.filter((sh) => !(sh.code === "express" && !on("expressDelivery")) && !(sh.code === "pickup" && !on("pickup"))),
+    location: c.location,
+    country: c.country,
+  },
 
   features: {
     tailoring: on("tailoring"),

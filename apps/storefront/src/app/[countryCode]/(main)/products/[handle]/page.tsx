@@ -1,5 +1,7 @@
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
+import { findRedirect } from "@lib/data/seo"
+import { breadcrumbs, jsonLdScript, offerExtras } from "@lib/seo/jsonld"
 import { listProducts } from "@lib/data/products"
 import { getRegion, listRegions } from "@lib/data/regions"
 import ProductTemplate from "@modules/products/templates"
@@ -85,12 +87,16 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   }).then(({ response }) => response.products[0])
 
   if (!product) {
+    // رابط قديم بعد تغيير الرابط ← 301 للجديد
+    const to = await findRedirect(`/products/${handle}`)
+    if (to) permanentRedirect(`/${params.countryCode}${to}`)
     notFound()
   }
 
-  const description = (product.description || product.title).slice(0, 160)
+  const meta = (product.metadata ?? {}) as Record<string, any>
+  const description = (meta.seo_description || product.description || product.title).slice(0, 160)
   return {
-    title: product.title,
+    title: meta.seo_title || product.title,
     description,
     alternates: { canonical: `/${params.countryCode}/products/${handle}` },
     openGraph: {
@@ -119,6 +125,8 @@ export default async function ProductPage(props: Props) {
   }).then(({ response }) => response.products[0])
 
   if (!pricedProduct) {
+    const to = await findRedirect(`/products/${params.handle}`)
+    if (to) permanentRedirect(`/${params.countryCode}${to}`)
     notFound()
   }
 
@@ -141,13 +149,28 @@ export default async function ProductPage(props: Props) {
       priceCurrency: currency.toUpperCase(),
       price: price.toFixed(3),
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+      seller: { "@id": `${getBaseURL()}/#org` },
+      ...offerExtras(price),
     },
     // لا aggregateRating: التقييمات حالياً بيانات مزروعة لا تقييمات حقيقية (إرشادات Google)
   }
 
   return (
     <>
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
+    <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(jsonLd)} />
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={jsonLdScript(
+        breadcrumbs([
+          { name: "الرئيسية", path: `/${params.countryCode}` },
+          ...(pricedProduct.categories?.[0]
+            ? [{ name: pricedProduct.categories[0].name, path: `/${params.countryCode}/categories/${pricedProduct.categories[0].handle}` }]
+            : []),
+          { name: pricedProduct.title, path: `/${params.countryCode}/products/${pricedProduct.handle}` },
+        ])
+      )}
+    />
     <ProductTemplate
       product={pricedProduct}
       region={region}
