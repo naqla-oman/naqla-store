@@ -58,3 +58,8 @@ Thumbs.db
 # Naqla
 apps/backend/.env
 apps/storefront/.env.local
+
+# بيئات المتاجر المحلية (أسرار: قاعدة البيانات ومفتاح النشر وكلمة مرور الأدمن)
+.stores/
+# مجلدات بناء Next لكل متجر عند التشغيل جنباً إلى جنب
+apps/storefront/.next-*/
