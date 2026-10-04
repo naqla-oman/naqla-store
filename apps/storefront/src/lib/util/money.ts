@@ -32,3 +32,10 @@ export const convertToLocale = ({
     maximumFractionDigits,
   }).format(amount)
 }
+
+/** الرقم فقط بثلاث منازل (للعرض مع وحدة العملة بخط أصغر) */
+export const formatAmount = (amount: number, digits = 3) =>
+  new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  }).format(amount)

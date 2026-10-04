@@ -1,15 +1,15 @@
 import React, { Suspense } from "react"
-
-import ImageGallery from "@modules/products/components/image-gallery"
-import ProductActions from "@modules/products/components/product-actions"
-import ProductOnboardingCta from "@modules/products/components/product-onboarding-cta"
-import ProductTabs from "@modules/products/components/product-tabs"
-import RelatedProducts from "@modules/products/components/related-products"
-import ProductInfo from "@modules/products/templates/product-info"
-import SkeletonRelatedProducts from "@modules/skeletons/templates/skeleton-related-products"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
-
+import Icon from "@modules/common/components/icon"
+import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import ImageGallery from "@modules/products/components/image-gallery"
+import ProductActions from "@modules/products/components/product-actions"
+import ProductDetails from "@modules/products/components/product-details"
+import CompleteLook from "@modules/products/components/complete-look"
+import RelatedProducts from "@modules/products/components/related-products"
+import ProductInfo from "@modules/products/templates/product-info"
+import { variantPricing } from "@modules/products/lib/variants"
 import ProductActionsWrapper from "./product-actions-wrapper"
 
 type ProductTemplateProps = {
@@ -19,53 +19,49 @@ type ProductTemplateProps = {
   images: HttpTypes.StoreProductImage[]
 }
 
-const ProductTemplate: React.FC<ProductTemplateProps> = ({
-  product,
-  region,
-  countryCode,
-  images,
-}) => {
-  if (!product || !product.id) {
-    return notFound()
-  }
+const TAG: Record<string, string> = { new: "جديد", bestsellers: "الأكثر مبيعاً" }
+
+const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, images }) => {
+  if (!product || !product.id) return notFound()
+
+  const category = product.categories?.[0]
+  const { price, old } = variantPricing(product)
+  const pct = old ? Math.round((1 - price / old) * 100) : 0
+  const tag = product.collection?.handle ? TAG[product.collection.handle] : null
+  const badge = pct > 0 ? <span className="ptag red">-{pct}%</span> : tag ? <span className="ptag">{tag}</span> : null
 
   return (
-    <>
-      <div
-        className="content-container  flex flex-col small:flex-row small:items-start py-6 relative"
-        data-testid="product-container"
-      >
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-6">
+    <div className="wrap" data-testid="product-container">
+      <nav className="crumbs" aria-label="مسار التصفح">
+        <LocalizedClientLink href="/">الرئيسية</LocalizedClientLink>
+        <Icon name="chevL" size={12} />
+        {category && (
+          <>
+            <LocalizedClientLink href={`/categories/${category.handle}`}>{category.name}</LocalizedClientLink>
+            <Icon name="chevL" size={12} />
+          </>
+        )}
+        <b aria-current="page">{product.title}</b>
+      </nav>
+
+      <div className="pview">
+        <ImageGallery images={images} title={product.title} badge={badge} />
+        <div className="pinfo">
           <ProductInfo product={product} />
-          <ProductTabs product={product} />
-        </div>
-        <div className="block w-full relative">
-          <ImageGallery images={images} />
-        </div>
-        <div className="flex flex-col small:sticky small:top-48 small:py-0 small:max-w-[300px] w-full py-8 gap-y-12">
-          <ProductOnboardingCta />
-          <Suspense
-            fallback={
-              <ProductActions
-                disabled={true}
-                product={product}
-                region={region}
-              />
-            }
-          >
+          <Suspense fallback={<ProductActions disabled product={product} region={region} />}>
             <ProductActionsWrapper id={product.id} region={region} />
           </Suspense>
+          <ProductDetails product={product} />
         </div>
       </div>
-      <div
-        className="content-container my-16 small:my-32"
-        data-testid="related-products-container"
-      >
-        <Suspense fallback={<SkeletonRelatedProducts />}>
-          <RelatedProducts product={product} countryCode={countryCode} />
-        </Suspense>
-      </div>
-    </>
+
+      <Suspense fallback={null}>
+        <CompleteLook product={product} region={region} />
+      </Suspense>
+      <Suspense fallback={null}>
+        <RelatedProducts product={product} region={region} />
+      </Suspense>
+    </div>
   )
 }
 

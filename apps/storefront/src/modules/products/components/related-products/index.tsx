@@ -1,69 +1,25 @@
 import { listProducts } from "@lib/data/products"
-import { getRegion } from "@lib/data/regions"
 import { HttpTypes } from "@medusajs/types"
-import Product from "../product-preview"
+import ProductPreview from "../product-preview"
 
-type RelatedProductsProps = {
-  product: HttpTypes.StoreProduct
-  countryCode: string
-}
+/** «قد يعجبك أيضاً»: من نفس القسم */
+export default async function RelatedProducts({ product, region }: { product: HttpTypes.StoreProduct; region: HttpTypes.StoreRegion }) {
+  const categoryId = product.categories?.[0]?.id
+  if (!categoryId) return null
 
-export default async function RelatedProducts({
-  product,
-  countryCode,
-}: RelatedProductsProps) {
-  const region = await getRegion(countryCode)
-
-  if (!region) {
-    return null
-  }
-
-  // edit this function to define your related products logic
-  const queryParams: HttpTypes.StoreProductListParams = {}
-  if (region?.id) {
-    queryParams.region_id = region.id
-  }
-  if (product.collection_id) {
-    queryParams.collection_id = [product.collection_id]
-  }
-  if (product.tags) {
-    queryParams.tag_id = product.tags
-      .map((t) => t.id)
-      .filter(Boolean) as string[]
-  }
-  queryParams.is_giftcard = false
-
-  const products = await listProducts({
-    queryParams,
-    countryCode,
-  }).then(({ response }) => {
-    return response.products.filter(
-      (responseProduct) => responseProduct.id !== product.id
-    )
+  const { response } = await listProducts({
+    regionId: region.id,
+    queryParams: { category_id: [categoryId], fields: "*variants.calculated_price,+metadata,*categories,*collection", limit: 5 },
   })
-
-  if (!products.length) {
-    return null
-  }
+  const products = response.products.filter((p) => p.id !== product.id).slice(0, 4)
+  if (!products.length) return null
 
   return (
-    <div className="product-page-constraint">
-      <div className="flex flex-col items-center text-center mb-16">
-        <span className="text-base-regular text-gray-600 mb-6">
-          Related products
-        </span>
-        <p className="text-2xl-regular text-ui-fg-base max-w-lg">
-          You might also want to check out these products.
-        </p>
+    <section>
+      <div className="sechead"><div><h2>قد يعجبك أيضاً</h2><p>من {product.categories?.[0]?.name}</p></div></div>
+      <div className="pgrid">
+        {products.map((p) => <ProductPreview key={p.id} product={p} region={region} />)}
       </div>
-
-      <ul className="grid grid-cols-2 small:grid-cols-3 medium:grid-cols-4 gap-x-6 gap-y-8">
-        {products.map((product) => (
-          <li key={product.id}>
-            <Product region={region} product={product} />
-          </li>
-        ))}
-      </ul>
-    </div>
+    </section>
   )
 }

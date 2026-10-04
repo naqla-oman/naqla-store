@@ -1,40 +1,32 @@
 import { HttpTypes } from "@medusajs/types"
-import { Heading, Text } from "@medusajs/ui"
-import LocalizedClientLink from "@modules/common/components/localized-client-link"
+import Icon from "@modules/common/components/icon"
+import ShareButton from "@modules/products/components/share-button"
 
-type ProductInfoProps = {
-  product: HttpTypes.StoreProduct
-}
+/** رأس المنتج: القسم، العنوان مع المشاركة، والتقييم */
+export default function ProductInfo({ product }: { product: HttpTypes.StoreProduct }) {
+  const meta = (product.metadata || {}) as Record<string, any>
+  const rating = Number(meta.rating) || 0
+  const reviews = Number(meta.reviews) || 0
+  const category = product.categories?.[0]
 
-const ProductInfo = ({ product }: ProductInfoProps) => {
   return (
-    <div id="product-info">
-      <div className="flex flex-col gap-y-4 lg:max-w-[500px] mx-auto">
-        {product.collection && (
-          <LocalizedClientLink
-            href={`/collections/${product.collection.handle}`}
-            className="text-medium text-ui-fg-muted hover:text-ui-fg-subtle"
-          >
-            {product.collection.title}
-          </LocalizedClientLink>
-        )}
-        <Heading
-          level="h2"
-          className="text-3xl leading-10 text-ui-fg-base"
-          data-testid="product-title"
-        >
-          {product.title}
-        </Heading>
-
-        <Text
-          className="text-medium text-ui-fg-subtle whitespace-pre-line"
-          data-testid="product-description"
-        >
-          {product.description}
-        </Text>
+    <div>
+      {category && <div className="pcat">{category.name}</div>}
+      <div className="titlerow">
+        <h1 data-testid="product-title">{product.title}</h1>
+        <ShareButton title={product.title} />
       </div>
+      {rating > 0 && (
+        <div className="raterow">
+          <span className="stars" aria-label={`التقييم ${rating} من 5`}>
+            {Array.from({ length: 5 }, (_, i) => (
+              <Icon key={i} name="star" size={13} className={i < Math.round(rating) ? "fill-current" : "opacity-30"} />
+            ))}
+            <b className="num">{rating.toFixed(1)}</b>
+          </span>
+          {reviews > 0 && <span className="muted">({reviews} تقييماً)</span>}
+        </div>
+      )}
     </div>
   )
 }
-
-export default ProductInfo

@@ -4,6 +4,7 @@ import { Alexandria, IBM_Plex_Sans_Arabic } from "next/font/google"
 import { storeConfig } from "../store.config"
 import "styles/globals.css"
 import "styles/theme.css"
+import "styles/product.css"
 
 const display = Alexandria({
   subsets: ["arabic", "latin"],

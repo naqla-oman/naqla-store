@@ -1,41 +1,137 @@
-import { HttpTypes } from "@medusajs/types"
-import { Container } from "@medusajs/ui"
-import Image from "next/image"
+"use client"
 
-type ImageGalleryProps = {
+import Image from "next/image"
+import { HttpTypes } from "@medusajs/types"
+import Icon from "@modules/common/components/icon"
+import { useCallback, useEffect, useRef, useState } from "react"
+
+type Props = {
   images: HttpTypes.StoreProductImage[]
+  title: string
+  badge?: React.ReactNode
 }
 
-const ImageGallery = ({ images }: ImageGalleryProps) => {
+/** معرض المنتج: صورة رئيسية (سحب على الجوال) + مصغّرات + عارض بملء الشاشة مع تكبير */
+export default function ImageGallery({ images, title, badge }: Props) {
+  const list = images.length ? images : []
+  const [shot, setShot] = useState(0)
+  const [open, setOpen] = useState(false)
+  const [zoom, setZoom] = useState(false)
+  const startX = useRef<number | null>(null)
+  const moved = useRef(false)
+  const n = list.length
+
+  const go = useCallback((d: number) => { setShot((i) => (i + d + n) % n); setZoom(false) }, [n])
+
+  // السحب: في الاتجاه من اليمين لليسار تكون الصورة التالية بالسحب نحو اليمين
+  const onDown = (e: React.PointerEvent) => { startX.current = e.clientX; moved.current = false }
+  const onUp = (e: React.PointerEvent) => {
+    if (startX.current === null) return
+    const dx = e.clientX - startX.current
+    startX.current = null
+    if (Math.abs(dx) > 40 && n > 1) { moved.current = true; go(dx > 0 ? 1 : -1) }
+  }
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false)
+      if (e.key === "ArrowLeft") go(1)
+      if (e.key === "ArrowRight") go(-1)
+    }
+    document.addEventListener("keydown", onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => { document.removeEventListener("keydown", onKey); document.body.style.overflow = prev }
+  }, [open, go])
+
+  if (!n) return <div className="gallery"><div className="main"><div className="gthumb" /></div></div>
+
   return (
-    <div className="flex items-start relative">
-      <div className="flex flex-col flex-1 small:mx-16 gap-y-4">
-        {images.map((image, index) => {
-          return (
-            <Container
-              key={image.id}
-              className="relative aspect-[29/34] w-full overflow-hidden bg-ui-bg-subtle"
-              id={image.id}
-            >
-              {!!image.url && (
-                <Image
-                  src={image.url}
-                  priority={index <= 2 ? true : false}
-                  className="absolute inset-0 rounded-rounded"
-                  alt={`Product image ${index + 1}`}
-                  fill
-                  sizes="(max-width: 576px) 280px, (max-width: 768px) 360px, (max-width: 992px) 480px, 800px"
-                  style={{
-                    objectFit: "cover",
-                  }}
-                />
-              )}
-            </Container>
-          )
-        })}
+    <>
+      <div className="gallery">
+        <div
+          className="main"
+          role="button"
+          tabIndex={0}
+          aria-label="عرض الصورة بحجم كامل"
+          onPointerDown={onDown}
+          onPointerUp={onUp}
+          onClick={() => { if (!moved.current) setOpen(true) }}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setOpen(true) } }}
+        >
+          <div className="gthumb">
+            {list.map((img, i) => (
+              <Image
+                key={img.id}
+                src={img.url}
+                alt={i === 0 ? title : `${title} — صورة ${i + 1}`}
+                fill
+                priority={i === 0}
+                sizes="(max-width: 900px) 100vw, 50vw"
+                className={i === shot ? "on" : ""}
+                draggable={false}
+              />
+            ))}
+          </div>
+          {badge}
+          {n > 1 && <div className="dots" aria-hidden="true">{list.map((img, i) => <i key={img.id} className={i === shot ? "on" : ""} />)}</div>}
+          <span className="zoomhint"><Icon name="zoom" size={13} /> اضغطي للتكبير</span>
+        </div>
+        {n > 1 && (
+          <div className="thumbs" role="tablist" aria-label="صور المنتج">
+            {list.map((img, i) => (
+              <button
+                key={img.id}
+                type="button"
+                role="tab"
+                aria-selected={i === shot}
+                aria-label={`الصورة ${i + 1}`}
+                className={i === shot ? "on" : ""}
+                onClick={() => setShot(i)}
+              >
+                <Image src={img.url} alt="" fill sizes="96px" />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+
+      {open && (
+        <div className="lightbox" role="dialog" aria-modal="true" aria-label={title}>
+          <div className="top">
+            <span>{title} <span className="num">({shot + 1}/{n})</span></span>
+            <button type="button" className="iconbtn" aria-label="إغلاق" onClick={() => setOpen(false)} autoFocus><Icon name="x" /></button>
+          </div>
+          <div className="stage" onPointerDown={onDown} onPointerUp={(e) => { if (!zoom) onUp(e) }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={list[shot].url}
+              alt={title}
+              className={zoom ? "zoomed" : ""}
+              onDoubleClick={() => setZoom((z) => !z)}
+              draggable={false}
+            />
+            {n > 1 && (
+              <>
+                <button type="button" className="nav prev" aria-label="السابق" onClick={() => go(-1)}><Icon name="chevR" /></button>
+                <button type="button" className="nav next" aria-label="التالي" onClick={() => go(1)}><Icon name="chevL" /></button>
+              </>
+            )}
+          </div>
+          <div className="hint">اضغطي مرتين للتكبير · اسحبي للتنقل</div>
+          {n > 1 && (
+            <div className="strip">
+              {list.map((img, i) => (
+                <button key={img.id} type="button" className={i === shot ? "on" : ""} aria-label={`الصورة ${i + 1}`} onClick={() => { setShot(i); setZoom(false) }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={img.url} alt="" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </>
   )
 }
-
-export default ImageGallery
