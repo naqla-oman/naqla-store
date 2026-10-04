@@ -11,6 +11,7 @@ import { buildMatrix, Selection, variantPricing } from "@modules/products/lib/va
 import { useParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { storeConfig } from "../../../../store.config"
+import { g } from "@lib/voice"
 
 type Props = {
   product: HttpTypes.StoreProduct
@@ -112,7 +113,7 @@ export default function ProductActions({ product, disabled }: Props) {
       })
       setToast({ ok: true, msg: `أُضيفت إلى السلة${selectionText ? ` — ${selectionText}` : ""}` })
     } catch (e: any) {
-      setToast({ ok: false, msg: e?.message?.includes("inventory") ? "الكمية المطلوبة غير متوفرة حالياً" : "تعذّرت الإضافة للسلة، حاولي مرة أخرى" })
+      setToast({ ok: false, msg: e?.message?.includes("inventory") ? "الكمية المطلوبة غير متوفرة حالياً" : g("تعذّرت الإضافة للسلة، حاولي مرة أخرى", "تعذّرت الإضافة للسلة، حاول مرة أخرى") })
     } finally {
       setAdding(false)
     }
@@ -144,7 +145,7 @@ export default function ProductActions({ product, disabled }: Props) {
         )}
         <span className="vat">
           السعر شامل ضريبة القيمة المضافة
-          {sold >= 5 && <span className="hot"><Icon name="fire" size={12} /> اشترتها {sold} زبونة هذا الأسبوع</span>}
+          {sold >= 5 && <span className="hot"><Icon name="fire" size={12} /> {g("اشترتها", "اشتراها", "طُلب")} {sold} {g("زبونة", "عميلاً", "مرة")} هذا الأسبوع</span>}
         </span>
       </div>
 
@@ -208,7 +209,7 @@ export default function ProductActions({ product, disabled }: Props) {
                         role="radio"
                         aria-checked={on}
                         className={`size ${on ? "on" : ""} ${st === 0 ? "out" : st <= cfg.lowStockAt ? "low" : ""}`}
-                        title={st === 0 ? "نفد — اطلبي إشعاراً عند التوفر" : st <= cfg.lowStockAt ? `بقي ${st} فقط` : undefined}
+                        title={st === 0 ? g("نفد — اطلبي إشعاراً عند التوفر", "نفد — اطلب إشعاراً عند التوفر") : st <= cfg.lowStockAt ? `بقي ${st} فقط` : undefined}
                         onClick={() => pick(d.key, v)}
                         disabled={disabled}
                       >
@@ -253,7 +254,7 @@ export default function ProductActions({ product, disabled }: Props) {
           </div>
           {variant && left === 0 ? (
             <a className="btn copper block" href={waNotify()} target="_blank" rel="noopener noreferrer">
-              <Icon name="bell" size={17} /> أعلميني عند التوفر
+              <Icon name="bell" size={17} /> {g("أعلميني عند التوفر", "أعلمني عند التوفر", "أعلموني عند التوفر")}
             </a>
           ) : (
             <button type="button" className="btn block" onClick={handleAdd} disabled={!canBuy || adding} data-testid="add-product-button">
@@ -265,12 +266,12 @@ export default function ProductActions({ product, disabled }: Props) {
 
         {canBuy && storeConfig.features.whatsappOrder && (
           <a className="btn wa block warow" href={waOrder()} target="_blank" rel="noopener noreferrer">
-            <Icon name="whatsapp" size={18} /> اطلبي عبر واتساب
+            <Icon name="whatsapp" size={18} /> {g("اطلبي عبر واتساب", "اطلب عبر واتساب")}
           </a>
         )}
 
         <div className="stockrow">
-          <span><i className={left > 0 ? "" : "off"} />{left > 0 ? "متوفر في المشغل — جرّبيها قبل الشراء" : "سنعيد توفيره قريباً"}</span>
+          <span><i className={left > 0 ? "" : "off"} />{left > 0 ? cfg.availability.inStock : cfg.availability.outOfStock}</span>
           <span><Icon name="shield" size={13} /> دفع آمن · استبدال 14 يوماً</span>
         </div>
       </div>
@@ -278,7 +279,7 @@ export default function ProductActions({ product, disabled }: Props) {
       {cfg.atelier.categories.includes(category) && (
         <div className="atelier">
           <a className="pill" href={waAtelier("custom")} target="_blank" rel="noopener noreferrer"><Icon name="scissors" size={14} /> تفصيل على مقاسك</a>
-          <a className="pill" href={waAtelier("fitting")} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> احجزي قياساً في المشغل</a>
+          <a className="pill" href={waAtelier("fitting")} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> {g("احجزي قياساً في المشغل", "احجز قياساً في المشغل")}</a>
         </div>
       )}
 

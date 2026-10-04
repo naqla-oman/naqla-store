@@ -3,6 +3,7 @@
 import Icon from "@modules/common/components/icon"
 import { useEffect, useState } from "react"
 import { storeConfig } from "../../../../store.config"
+import { g } from "@lib/voice"
 
 const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
 const { timezone, cityLabel, othersLabel } = storeConfig.product.delivery
@@ -26,7 +27,7 @@ function compute() {
   const left = storeConfig.cutoffHour * 60 - (h * 60 + m)
   if (left > 0) {
     return {
-      title: `اطلبي خلال ${Math.floor(left / 60)} س و ${left % 60} د`,
+      title: `${g("اطلبي", "اطلب")} خلال ${Math.floor(left / 60)} س و ${left % 60} د`,
       sub: `تصلك غداً ${DAYS[(day + 1) % 7]} ${cityLabel} · ${othersLabel}`,
     }
   }

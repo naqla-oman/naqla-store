@@ -3,9 +3,10 @@ import Brand from "@modules/common/components/brand"
 import Icon from "@modules/common/components/icon"
 import BottomTabs from "@modules/layout/components/bottom-tabs"
 import { storeConfig as c } from "../../../../store.config"
+import { g } from "@lib/voice"
 
 const COLS = [
-  { title: "تسوّقي", links: c.nav.map((n) => ({ label: n.label, href: n.href })) },
+  { title: g("تسوّقي", "تسوّق"), links: c.nav.map((n) => ({ label: n.label, href: n.href })) },
   { title: "خدمة العملاء", links: [
     { label: "تتبّع طلبك", href: "/track" },
     { label: "سياسة الاستبدال والإرجاع", href: "/pages/returns" },
@@ -49,7 +50,7 @@ export default function Footer() {
               </div>
             ))}
             <div className="fcontact">
-              <h4>تواصلي معنا</h4>
+              <h4>{g("تواصلي معنا", "تواصل معنا")}</h4>
               <div><Icon name="pin" size={16} /><span><b>{c.contact.address}</b>{c.contact.hours}</span></div>
               <div><Icon name="phone" size={16} /><span><b dir="ltr">{c.contact.phone}</b>{c.contact.email}</span></div>
               <a href={`https://wa.me/${c.contact.whatsapp}`} target="_blank" rel="noreferrer" className="btn wa sm mt-2"><Icon name="whatsapp" size={16} /> راسلينا على واتساب</a>

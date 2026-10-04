@@ -6,6 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import { revalidateTag } from "next/cache"
 import { getAuthHeaders, getCacheTag, getCartId, removeCartId } from "./cookies"
 import { storeConfig } from "../../store.config"
+import { g } from "@lib/voice"
 
 /**
  * إجراءات خطوات الدفع. كل إجراء يعيد { ok, error } بدل رمي استثناء،
@@ -50,10 +51,10 @@ const cartIdOrFail = async () => {
 /** الخطوة 2: حفظ بيانات التوصيل (يتحقق من الحقول على الخادم أيضاً) */
 export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> {
   const name = input.name.trim().replace(/\s+/g, " ")
-  if (name.split(" ").length < 2) return { ok: false, error: "أدخلي اسمك الكامل" }
+  if (name.split(" ").length < 2) return { ok: false, error: g("أدخلي اسمك الكامل", "أدخل اسمك الكامل") }
   if (!phoneRe.test(input.phone)) return { ok: false, error: "رقم الهاتف غير صحيح" }
-  if (!checkout.governorates.some((g) => g.code === input.province)) return { ok: false, error: "اختاري المحافظة" }
-  if (!input.city.trim()) return { ok: false, error: "أدخلي الولاية" }
+  if (!checkout.governorates.some((g) => g.code === input.province)) return { ok: false, error: g("اختاري المحافظة", "اختر المحافظة") }
+  if (!input.city.trim()) return { ok: false, error: g("أدخلي الولاية", "أدخل الولاية") }
   const email = input.email.trim().toLowerCase()
   if (email && !emailRe.test(email)) return { ok: false, error: "البريد الإلكتروني غير صحيح" }
 
@@ -96,7 +97,7 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
     await refresh()
     return { ok: true }
   } catch (e) {
-    return fail(e, "تعذّر حفظ العنوان، حاولي مرة أخرى")
+    return fail(e, g("تعذّر حفظ العنوان، حاولي مرة أخرى", "تعذّر حفظ العنوان، حاول مرة أخرى"))
   }
 }
 
@@ -115,7 +116,7 @@ export async function chooseShipping(optionId: string): Promise<ActionResult> {
 /** تطبيق كود خصم: نتحقق أن Medusa قبله فعلاً (يتجاهل الأكواد غير الصالحة بصمت) */
 export async function applyCode(raw: string): Promise<ActionResult> {
   const code = raw.trim().toUpperCase()
-  if (!code) return { ok: false, error: "أدخلي كود الخصم" }
+  if (!code) return { ok: false, error: g("أدخلي كود الخصم", "أدخل كود الخصم") }
   try {
     const id = await cartIdOrFail()
     const { cart } = await sdk.store.cart.update(
@@ -156,7 +157,7 @@ export type PlaceResult = { orderId: string; displayId: number; redirectUrl?: st
  */
 export async function placeOrderWith(providerId: string, countryCode: string): Promise<ActionResult<PlaceResult>> {
   const pay = checkout.payments.find((p) => p.id === providerId)
-  if (!pay) return { ok: false, error: "اختاري طريقة الدفع" }
+  if (!pay) return { ok: false, error: g("اختاري طريقة الدفع", "اختر طريقة الدفع") }
 
   try {
     const id = await cartIdOrFail()
@@ -167,7 +168,7 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
       headers
     )
     if (!cart.items?.length) return { ok: false, error: "سلتك فارغة" }
-    if (!cart.shipping_methods?.length) return { ok: false, error: "اختاري طريقة التوصيل" }
+    if (!cart.shipping_methods?.length) return { ok: false, error: g("اختاري طريقة التوصيل", "اختر طريقة التوصيل") }
 
     // Store API لا يوسّع shipping_option داخل طرق التوصيل، فنقرأ نوعه من خيارات السلة
     const optionId = cart.shipping_methods[0].shipping_option_id
@@ -203,13 +204,13 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
       const session = payment_collection.payment_sessions?.find((s) => s.provider_id === providerId)
       const url = session?.data?.checkout_url as string | undefined
       await refresh()
-      if (!url) return { ok: false, error: "تعذّر فتح صفحة ثواني، اختاري طريقة دفع أخرى" }
+      if (!url) return { ok: false, error: g("تعذّر فتح صفحة ثواني، اختاري طريقة دفع أخرى", "تعذّر فتح صفحة ثواني، اختر طريقة دفع أخرى") }
       return { ok: true, data: { orderId: "", displayId: 0, redirectUrl: url } }
     }
 
     const res = await sdk.store.cart.complete(id, {}, headers)
     if (res.type !== "order") {
-      return { ok: false, error: (res as any).error?.message ? "تعذّر تأكيد الطلب، راجعي البيانات وحاولي مجدداً" : "تعذّر تأكيد الطلب" }
+      return { ok: false, error: (res as any).error?.message ? g("تعذّر تأكيد الطلب، راجعي البيانات وحاولي مجدداً", "تعذّر تأكيد الطلب، راجع البيانات وحاول مجدداً") : "تعذّر تأكيد الطلب" }
     }
     await removeCartId()
     await refresh()
@@ -218,6 +219,6 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
   } catch (e) {
     const msg = String((e as any)?.message ?? "")
     if (/inventory|stock/i.test(msg)) return { ok: false, error: "بعض المنتجات لم تعد متوفرة بالكمية المطلوبة" }
-    return fail(e, "تعذّر تأكيد الطلب، حاولي مرة أخرى")
+    return fail(e, g("تعذّر تأكيد الطلب، حاولي مرة أخرى", "تعذّر تأكيد الطلب، حاول مرة أخرى"))
   }
 }

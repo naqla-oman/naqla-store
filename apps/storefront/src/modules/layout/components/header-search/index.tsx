@@ -2,6 +2,7 @@
 import { useRouter, useParams } from "next/navigation"
 import { useState } from "react"
 import Icon from "@modules/common/components/icon"
+import { storeConfig } from "../../../../store.config"
 
 export default function HeaderSearch({ className = "" }: { className?: string }) {
   const [q, setQ] = useState("")
@@ -17,7 +18,7 @@ export default function HeaderSearch({ className = "" }: { className?: string })
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder="ابحثي عن عباية، فستان، وشاح…"
+        placeholder={storeConfig.searchPlaceholder}
         aria-label="بحث"
         autoComplete="off"
       />

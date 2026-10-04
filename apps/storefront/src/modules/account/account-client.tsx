@@ -7,6 +7,7 @@ import CopyButton from "@modules/order/components/copy-button"
 import { useParams, useRouter } from "next/navigation"
 import { FormEvent, useState } from "react"
 import { storeConfig } from "../../store.config"
+import { g } from "@lib/voice"
 
 const { redeemPoints: NEED, redeemValue } = storeConfig.loyalty
 
@@ -32,7 +33,7 @@ export function RedeemBox({ available }: { available: number }) {
       <div className="redeem">
         <Icon name="sparkle" size={22} />
         <div>
-          <b>استبدلي {NEED} نقطة بكود خصم {redeemValue} {storeConfig.currencyLabel}</b>
+          <b>{g("استبدلي", "استبدل")} {NEED} نقطة بكود خصم {redeemValue} {storeConfig.currencyLabel}</b>
           <span>{can ? "متاح الآن — يُستخدم مرة واحدة على أي طلب" : `تبقّى ${NEED - available} نقطة متاحة`}</span>
         </div>
         <button type="button" className={`btn sm ${can ? "" : "ghost"}`} onClick={go} disabled={!can || busy} data-testid="redeem">

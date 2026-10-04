@@ -8,6 +8,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Money from "@modules/common/components/money"
 import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
+import { g } from "@lib/voice"
 
 const maxQty = (i: HttpTypes.StoreCartLineItem) => {
   const v = i.variant
@@ -30,7 +31,7 @@ export default function CartLines({ items }: { items: HttpTypes.StoreCartLineIte
         await fn()
         router.refresh()
       } catch {
-        setError("تعذّر تحديث السلة، حاولي مرة أخرى")
+        setError(g("تعذّر تحديث السلة، حاولي مرة أخرى", "تعذّر تحديث السلة، حاول مرة أخرى"))
       } finally {
         setBusy(null)
       }

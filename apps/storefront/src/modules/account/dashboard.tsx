@@ -8,6 +8,7 @@ import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { ProfileForm, RedeemBox, SignOutButton } from "./account-client"
 import { storeConfig } from "../../store.config"
+import { g } from "@lib/voice"
 
 type Props = {
   customer: HttpTypes.StoreCustomer
@@ -29,7 +30,7 @@ function orderStage(o: HttpTypes.StoreOrder) {
 
 /** لوحة الحساب — مطابقة لصفحة «حسابي» في الديمو */
 export default function AccountDashboard({ customer, loyalty, orders }: Props) {
-  const name = customer.first_name || "زبونتنا"
+  const name = customer.first_name || g("زبونتنا", "عميلنا", "عزيزنا")
   const phone = (customer.phone ?? "").replace(checkout.phone.prefix, "")
   const email = customer.email?.endsWith("@phone.invalid") ? "" : customer.email ?? ""
   const tier = loyalty?.tier
@@ -52,7 +53,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
               <div className="av">{name.slice(0, 1)}</div>
               <div>
                 <b className="hi">أهلاً {name}</b>
-                {F.loyaltyTiers && tier && <span className="tier"><Icon name="sparkle" size={12} /> عضوة {tier.name} في نادي {storeConfig.shortName}</span>}
+                {F.loyaltyTiers && tier && <span className="tier"><Icon name="sparkle" size={12} /> {g("عضوة", "عضو", "عضوية")} {tier.name} في نادي {storeConfig.shortName}</span>}
               </div>
             </div>
             {F.loyaltyTiers && myPerks.length > 0 && (
@@ -155,7 +156,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
           <div className="rowlinks">
             <LocalizedClientLink href="/track" className="rowlink"><span className="ic"><Icon name="truck" /></span><div>تتبّع طلب<span className="sub">برقم الطلب والهاتف</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
             <LocalizedClientLink href="/account/wishlist" className="rowlink"><span className="ic"><Icon name="heart" /></span><div>المفضلة<span className="sub">{((customer.metadata as any)?.wishlist ?? []).length} منتجات</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
-            <a href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="rowlink"><span className="ic"><Icon name="whatsapp" /></span><div>تواصلي معنا عبر واتساب<span className="sub">{storeConfig.contact.hours}</span></div><span className="chev"><Icon name="chevL" /></span></a>
+            <a href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="rowlink"><span className="ic"><Icon name="whatsapp" /></span><div>{g("تواصلي معنا عبر واتساب", "تواصل معنا عبر واتساب")}<span className="sub">{storeConfig.contact.hours}</span></div><span className="chev"><Icon name="chevL" /></span></a>
           </div>
 
           <div style={{ marginTop: 16 }}>

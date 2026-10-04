@@ -4,6 +4,7 @@ import Image from "next/image"
 import { HttpTypes } from "@medusajs/types"
 import Icon from "@modules/common/components/icon"
 import { useCallback, useEffect, useRef, useState } from "react"
+import { g } from "@lib/voice"
 
 type Props = {
   images: HttpTypes.StoreProductImage[]
@@ -76,7 +77,7 @@ export default function ImageGallery({ images, title, badge }: Props) {
           </div>
           {badge}
           {n > 1 && <div className="dots" aria-hidden="true">{list.map((img, i) => <i key={img.id} className={i === shot ? "on" : ""} />)}</div>}
-          <span className="zoomhint"><Icon name="zoom" size={13} /> اضغطي للتكبير</span>
+          <span className="zoomhint"><Icon name="zoom" size={13} /> {g("اضغطي للتكبير", "اضغط للتكبير")}</span>
         </div>
         {n > 1 && (
           <div className="thumbs" role="tablist" aria-label="صور المنتج">
@@ -119,7 +120,7 @@ export default function ImageGallery({ images, title, badge }: Props) {
               </>
             )}
           </div>
-          <div className="hint">اضغطي مرتين للتكبير · اسحبي للتنقل</div>
+          <div className="hint">{g("اضغطي مرتين للتكبير · اسحبي للتنقل", "اضغط مرتين للتكبير · اسحب للتنقل")}</div>
           {n > 1 && (
             <div className="strip">
               {list.map((img, i) => (

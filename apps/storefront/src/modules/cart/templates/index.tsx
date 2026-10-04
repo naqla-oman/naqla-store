@@ -7,6 +7,7 @@ import Steps from "@modules/checkout/components/steps"
 import { formatAmount } from "@lib/util/money"
 import CartLines from "./lines"
 import { storeConfig } from "../../../store.config"
+import { g } from "@lib/voice"
 
 /** صفحة السلة — الخطوة الأولى (مطابقة لسلة الديمو) */
 export default function CartTemplate({ cart }: { cart: HttpTypes.StoreCart | null }) {
@@ -20,7 +21,7 @@ export default function CartTemplate({ cart }: { cart: HttpTypes.StoreCart | nul
         <div className="empty">
           <Icon name="bag" size={46} />
           <p>سلتك فارغة بعد</p>
-          <LocalizedClientLink href="/store" className="btn">ابدئي التسوق</LocalizedClientLink>
+          <LocalizedClientLink href="/store" className="btn">{g("ابدئي التسوق", "ابدأ التسوق")}</LocalizedClientLink>
         </div>
       </div>
     )
@@ -39,9 +40,9 @@ export default function CartTemplate({ cart }: { cart: HttpTypes.StoreCart | nul
         <div className="panelbox">
           <div className="shipbar">
             {left > 0 ? (
-              <>أضيفي <b>{formatAmount(left)} {storeConfig.currencyLabel}</b> لتحصلي على توصيل مجاني</>
+              <>{g("أضيفي", "أضف")} <b>{formatAmount(left)} {storeConfig.currencyLabel}</b> {g("لتحصلي على توصيل مجاني", "لتحصل على توصيل مجاني")}</>
             ) : (
-              <><Icon name="check" size={14} /> حصلتِ على التوصيل المجاني</>
+              <><Icon name="check" size={14} /> {g("حصلتِ على التوصيل المجاني", "حصلت على التوصيل المجاني", "طلبك مؤهّل للتوصيل المجاني")}</>
             )}
             <div className="bar"><i style={{ width: `${Math.min(100, ((subtotal - discount) / freeOver) * 100)}%` }} /></div>
           </div>

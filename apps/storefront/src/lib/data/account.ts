@@ -5,6 +5,7 @@ import { revalidateTag } from "next/cache"
 import { getAuthHeaders, getCacheTag, setAuthToken } from "./cookies"
 import { transferCart } from "./customer"
 import { storeConfig } from "../../store.config"
+import { g } from "@lib/voice"
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
 
@@ -44,7 +45,7 @@ export async function requestOtp(phone: string): Promise<Result> {
     await sdk.client.fetch("/auth/customer/phone-auth", { method: "POST", body: { phone: full(phone) } })
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: msg(e, "تعذّر إرسال الرمز، حاولي بعد قليل") }
+    return { ok: false, error: msg(e, g("تعذّر إرسال الرمز، حاولي بعد قليل", "تعذّر إرسال الرمز، حاول بعد قليل")) }
   }
 }
 
@@ -66,7 +67,7 @@ export async function verifyOtp(phone: string, otp: string, localWishlist: strin
 
 /** الخطوة 3 (أول مرة فقط): إنشاء الحساب بالاسم والبريد الاختياري */
 export async function completeProfile(input: { firstName: string; lastName: string; email: string }, localWishlist: string[] = []): Promise<Result> {
-  if (!input.firstName.trim()) return { ok: false, error: "أدخلي اسمك" }
+  if (!input.firstName.trim()) return { ok: false, error: g("أدخلي اسمك", "أدخل اسمك") }
   try {
     await sdk.client.fetch("/store/phone-account", {
       method: "POST",
@@ -150,7 +151,7 @@ export async function updateEmail(email: string, onlyIfPlaceholder = false): Pro
 }
 
 export async function updateName(firstName: string, lastName: string): Promise<Result> {
-  if (!firstName.trim()) return { ok: false, error: "أدخلي اسمك" }
+  if (!firstName.trim()) return { ok: false, error: g("أدخلي اسمك", "أدخل اسمك") }
   try {
     await sdk.store.customer.update({ first_name: firstName.trim(), last_name: lastName.trim() }, {}, await getAuthHeaders())
     await refreshCustomer()
@@ -214,7 +215,7 @@ export type TrackedOrder = {
 }
 
 export async function trackOrder(number: string, phone: string): Promise<Result<TrackedOrder>> {
-  if (!number.trim()) return { ok: false, error: "أدخلي رقم الطلب" }
+  if (!number.trim()) return { ok: false, error: g("أدخلي رقم الطلب", "أدخل رقم الطلب") }
   if (!phoneRe.test(phone)) return { ok: false, error: "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7" }
   try {
     const { order } = await sdk.client.fetch<{ order: TrackedOrder }>("/store/track", {
