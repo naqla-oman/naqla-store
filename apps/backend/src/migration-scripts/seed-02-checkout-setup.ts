@@ -107,7 +107,7 @@ export default async function checkout_setup({ container }: { container: MedusaC
               value: p.value,
               currency_code: S.currency,
               description: p.description,
-            },
+            } as any, // description يُخزَّن في Medusa لكنه غير مُعرَّف في النوع
           },
         ],
       },

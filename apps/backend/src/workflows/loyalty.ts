@@ -22,13 +22,13 @@ const awardOrderPointsStep = createStep("award-order-points", async ({ order_id 
     filters: { id: order_id },
   })
   const order: any = data[0]
-  if (!order?.customer_id || !order.customer?.has_account) return new StepResponse(null)
+  if (!order?.customer_id || !order.customer?.has_account) return new StepResponse<any, string | undefined>(null, undefined)
 
   const [existing] = await loyalty.listLoyaltyEntries({ order_id, kind: "earn" })
-  if (existing) return new StepResponse(existing)
+  if (existing) return new StepResponse<any, string | undefined>(existing, undefined)
 
   const points = loyalty.pointsFor(order.item_total)
-  if (!points) return new StepResponse(null)
+  if (!points) return new StepResponse<any, string | undefined>(null, undefined)
 
   const delivered = (order.fulfillments ?? []).some((f: any) => f.delivered_at)
   const entry = await loyalty.createLoyaltyEntries({
@@ -39,7 +39,7 @@ const awardOrderPointsStep = createStep("award-order-points", async ({ order_id 
     status: order.status === "canceled" ? "canceled" : delivered ? "available" : "pending",
     points,
   })
-  return new StepResponse(entry, entry.id)
+  return new StepResponse<any, string | undefined>(entry, entry.id)
 }, async (id, { container }) => {
   if (id) await container.resolve<LoyaltyModuleService>(LOYALTY_MODULE).deleteLoyaltyEntries(id)
 })
@@ -56,10 +56,12 @@ const setOrderPointsStatusStep = createStep("set-order-points-status", async ({ 
   const loyalty = container.resolve<LoyaltyModuleService>(LOYALTY_MODULE)
   const [entry] = await loyalty.listLoyaltyEntries({ order_id, kind: "earn" })
   // لا نعيد تفعيل نقاط طلب ملغى، ولا نعدّل ما هو بالحالة المطلوبة
-  if (!entry || entry.status === status || entry.status === "canceled") return new StepResponse(null)
+  if (!entry || entry.status === status || entry.status === "canceled") {
+    return new StepResponse<any, { id: string; prev: string } | undefined>(null, undefined)
+  }
   const prev = entry.status
   await loyalty.updateLoyaltyEntries({ id: entry.id, status })
-  return new StepResponse({ id: entry.id, status }, { id: entry.id, prev })
+  return new StepResponse<any, { id: string; prev: string } | undefined>({ id: entry.id, status }, { id: entry.id, prev })
 }, async (comp, { container }) => {
   if (comp) await container.resolve<LoyaltyModuleService>(LOYALTY_MODULE).updateLoyaltyEntries({ id: comp.id, status: comp.prev as any })
 })
