@@ -1,0 +1,18 @@
+{
+  "display": [
+    "alexandria",
+    "cairo",
+    "changa",
+    "el-messiri",
+    "noto-kufi-arabic",
+    "reem-kufi"
+  ],
+  "body": [
+    "almarai",
+    "cairo",
+    "ibm-plex-sans-arabic",
+    "noto-sans-arabic",
+    "readex-pro",
+    "tajawal"
+  ]
+}
