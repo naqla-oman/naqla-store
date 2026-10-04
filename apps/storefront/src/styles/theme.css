@@ -167,3 +167,13 @@ footer.site a { color: inherit; text-decoration: none; }
 /* زر الواجهة الرئيسي: رمز خاص لكل عميل في theme.css (--hero-cta / --hero-cta-ink)، وإلا لون الهوية الأساسي */
 .btn.hero-cta { background: var(--hero-cta, var(--accent)); color: var(--hero-cta-ink, var(--accent-ink)); border-color: transparent; }
 .btn.hero-cta:hover { filter: brightness(1.06); }
+
+/* شريط الموافقة على ملفات التتبع */
+.consent { position: fixed; inset-inline: 12px; bottom: calc(78px + env(safe-area-inset-bottom, 0px)); z-index: 80; display: flex; justify-content: center; pointer-events: none; }
+@media (min-width: 1024px) { .consent { bottom: 20px; } }
+.consent-in { pointer-events: auto; max-width: 720px; width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); box-shadow: var(--shadow); padding: 14px 16px; }
+.consent-in p { margin: 0; font-size: 13px; color: var(--ink-2); line-height: 1.7; }
+.consent-in p svg { color: var(--accent); vertical-align: -3px; }
+.consent-opts { display: grid; gap: 6px; margin-top: 10px; font-size: 13px; }
+.consent-opts input { accent-color: var(--accent); margin-inline-end: 6px; }
+.consent-acts { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }

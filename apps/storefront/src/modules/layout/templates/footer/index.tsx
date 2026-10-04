@@ -1,3 +1,4 @@
+import PrivacyLink from "@modules/common/components/privacy-link"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Brand from "@modules/common/components/brand"
 import Icon from "@modules/common/components/icon"
@@ -70,6 +71,7 @@ export default function Footer() {
           </div>
           <div className="fbottom">
             <span>© {new Date().getFullYear()} {c.name} — جميع الحقوق محفوظة.</span>
+            <PrivacyLink />
             <span className="flex gap-4"><LocalizedClientLink href="/pages/terms">الشروط والأحكام</LocalizedClientLink><LocalizedClientLink href="/pages/privacy">سياسة الخصوصية</LocalizedClientLink></span>
             <span>صُنع بشغف بواسطة <a href={c.builtBy.url} target="_blank" rel="noreferrer"><b>{c.builtBy.name}</b></a></span>
           </div>
