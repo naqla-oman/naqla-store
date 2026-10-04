@@ -58,7 +58,10 @@ export default function CartTemplate({ cart }: { cart: HttpTypes.StoreCart | nul
                 <div className="trow">
                   <span>
                     {/* أكواد الزبونة فقط؛ العروض التلقائية (امتيازات المستوى) باسم عام */}
-                    {(cart.promotions ?? []).filter((p: any) => !p.is_automatic).map((p) => p.code).join("، ") || "خصم امتياز عضويتك"}
+                    {(() => {
+                      const codes = (cart.promotions ?? []).filter((p: any) => !p.is_automatic).map((p) => p.code).join("، ")
+                      return codes ? `الخصم ${codes}` : "خصم امتياز عضويتك"
+                    })()}
                   </span>
                   <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {storeConfig.currencyLabel}</span>
                 </div>
