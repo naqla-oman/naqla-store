@@ -42,7 +42,17 @@
         "description": "خصم ١٠٪ على الطلب"
       }
     ],
-    "order_prefix": "LN-"
+    "order_prefix": "LN-",
+    "tier_perks": {
+      "gold": {
+        "group": "عضوات ذهبيات",
+        "free_shipping": true,
+        "promo_code": "LAYAN-GOLD-SHIPPING"
+      },
+      "diamond": {
+        "group": "عضوات ماسيات"
+      }
+    }
   },
   "categories": [
     {
