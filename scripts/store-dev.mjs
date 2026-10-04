@@ -19,7 +19,8 @@ writeFileSync(
 )
 
 const start = (name, cmd, args, cwd, extra = {}) => {
-  const p = spawn(cmd, args, { cwd, env: { ...env, ...extra }, stdio: ["ignore", "pipe", "pipe"] })
+  // مجموعة عمليات مستقلة: Medusa وNext يشغّلان الخادم كعملية فرعية، فالإيقاف يجب أن يشمل المجموعة كلها
+  const p = spawn(cmd, args, { cwd, env: { ...env, ...extra }, stdio: ["ignore", "pipe", "pipe"], detached: true })
   const tag = name === "backend" ? c.y(`[${slug}:backend]`) : c.g(`[${slug}:store]`)
   const out = (d) => d.toString().split("\n").filter(Boolean).forEach((l) => {
     console.log(`${tag} ${l}`)
@@ -36,4 +37,6 @@ const procs = [
   // مجلد بناء لكل منفذ حتى لا يتصادم متجران يعملان من المجلد نفسه
   start("store", "npx", ["next", "dev", "--turbopack", "-p", env.STOREFRONT_PORT], STOREFRONT, { NEXT_DIST_DIR: `.next-${env.STOREFRONT_PORT}`, NEXT_TSCONFIG: TSCONFIG }),
 ]
-for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => { procs.forEach((p) => p.kill(sig)); process.exit(0) })
+const stopAll = (sig = "SIGTERM") => procs.forEach((p) => { try { process.kill(-p.pid, sig) } catch { /* انتهت */ } })
+for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => { stopAll(sig); process.exit(0) })
+process.on("exit", () => stopAll())
