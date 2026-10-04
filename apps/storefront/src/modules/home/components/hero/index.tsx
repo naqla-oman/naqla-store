@@ -21,7 +21,7 @@ const Hero = () => {
             </h1>
             <p>{hero.text}</p>
             <div className="acts">
-              <LocalizedClientLink href={hero.primary.href} className="btn lg copper">{hero.primary.label} <Icon name="arrowL" size={16} /></LocalizedClientLink>
+              <LocalizedClientLink href={hero.primary.href} className="btn lg hero-cta">{hero.primary.label} <Icon name="arrowL" size={16} /></LocalizedClientLink>
               {hero.secondary && (
                 <LocalizedClientLink href={hero.secondary.href} className="btn lg ghost !bg-white/10 !text-white !border-white/25">{hero.secondary.label}</LocalizedClientLink>
               )}

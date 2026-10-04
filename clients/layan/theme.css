@@ -21,6 +21,9 @@
   --footer-ink: #eef2ee;
   --footer-muted: #93a39a;
   --hero: #0f2d26;
+  /* زر الواجهة الرئيسي */
+  --hero-cta: var(--copper);
+  --hero-cta-ink: var(--copper-ink);
   --shadow: 0 12px 34px rgba(20, 40, 32, 0.12);
   --shadow-sm: 0 4px 14px rgba(20, 40, 32, 0.08);
   --r-lg: 24px;

@@ -17,6 +17,8 @@
   --footer: #0f1a25;
   --footer-ink: #eef2f6;
   --footer-muted: #93a1b0;
+  /* اختياري: زر الواجهة الرئيسي (الافتراضي --accent)
+  --hero-cta: ...; --hero-cta-ink: ...; */
   --hero: #1b2f44;
   --shadow: 0 12px 34px rgba(20, 40, 32, 0.12);
   --shadow-sm: 0 4px 14px rgba(20, 40, 32, 0.08);
