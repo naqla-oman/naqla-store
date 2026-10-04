@@ -103,7 +103,7 @@ async function getCountryCode(
 /**
  * Middleware to handle region selection and onboarding status.
  */
-export async function middleware(request: NextRequest) {
+async function baseMiddleware(request: NextRequest) {
   let redirectUrl = request.nextUrl.href
 
   let response = NextResponse.redirect(redirectUrl, 307)
@@ -156,6 +156,31 @@ export async function middleware(request: NextRequest) {
   }
 
   return response
+}
+
+/* ===== مصدر الطلب: أول زيارة وآخر زيارة (كوكيز الطرف الأول) ===== */
+const ATTR_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid", "ScCid", "ttclid"] as const
+const DAY = 86400
+
+function withAttribution(request: NextRequest, response: NextResponse) {
+  const q = request.nextUrl.searchParams
+  const found = Object.fromEntries(ATTR_KEYS.filter((k) => q.get(k)).map((k) => [k, q.get(k)!.slice(0, 200)]))
+  if (!Object.keys(found).length) return response
+  let ref: string | undefined
+  try { ref = request.headers.get("referer") ? new URL(request.headers.get("referer")!).hostname : undefined } catch { ref = undefined }
+  const value = Buffer.from(JSON.stringify({ ...found, landing: request.nextUrl.pathname, ref, ts: Date.now() })).toString("base64url")
+  const opts = { path: "/", sameSite: "lax" as const, httpOnly: false, secure: request.nextUrl.protocol === "https:" }
+  // أول زيارة لا تُستبدل؛ آخر زيارة تُحدَّث مع كل زيارة جاءت من حملة
+  if (!request.cookies.get("_attr_first")) response.cookies.set("_attr_first", value, { ...opts, maxAge: 90 * DAY })
+  response.cookies.set("_attr_last", value, { ...opts, maxAge: 30 * DAY })
+  // _fbc بصيغة Meta: fb.1.<ms>.<fbclid>
+  if (found.fbclid) response.cookies.set("_fbc", `fb.1.${Date.now()}.${found.fbclid}`, { ...opts, maxAge: 90 * DAY })
+  return response
+}
+
+export async function middleware(request: NextRequest) {
+  const response = await baseMiddleware(request)
+  return withAttribution(request, response as NextResponse)
 }
 
 export const config = {
