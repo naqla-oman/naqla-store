@@ -1,30 +1,43 @@
-import { retrieveCart } from "@lib/data/cart"
-import { retrieveCustomer } from "@lib/data/customer"
-import PaymentWrapper from "@modules/checkout/components/payment-wrapper"
-import CheckoutForm from "@modules/checkout/templates/checkout-form"
-import CheckoutSummary from "@modules/checkout/templates/checkout-summary"
+import { listCartOptions, retrieveCart } from "@lib/data/cart"
+import { listCartPaymentMethods } from "@lib/data/payment"
+import { CART_FIELDS } from "@lib/util/cart-fields"
+import CheckoutFlow from "@modules/checkout/templates/checkout-flow"
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { redirect } from "next/navigation"
 
 export const metadata: Metadata = {
-  title: "Checkout",
+  title: "إتمام الطلب",
+  robots: { index: false },
 }
 
-export default async function Checkout() {
-  const cart = await retrieveCart()
+type Props = {
+  params: Promise<{ countryCode: string }>
+  searchParams: Promise<{ step?: string; error?: string }>
+}
 
-  if (!cart) {
-    return notFound()
-  }
+export default async function Checkout(props: Props) {
+  const { countryCode } = await props.params
+  const { step, error } = await props.searchParams
+  const cart = await retrieveCart(undefined, CART_FIELDS)
 
-  const customer = await retrieveCustomer()
+  if (!cart?.items?.length) redirect(`/${countryCode}/cart`)
+
+  const hasAddress = !!cart.shipping_address?.province && !!cart.shipping_address?.phone
+  const current = step === "payment" && hasAddress ? "payment" : "address"
+
+  const [{ shipping_options }, providers] = await Promise.all([
+    hasAddress ? listCartOptions() : Promise.resolve({ shipping_options: [] }),
+    cart.region_id ? listCartPaymentMethods(cart.region_id) : Promise.resolve([]),
+  ])
 
   return (
-    <div className="grid grid-cols-1 small:grid-cols-[1fr_416px] content-container gap-x-40 py-12">
-      <PaymentWrapper cart={cart}>
-        <CheckoutForm cart={cart} customer={customer} />
-      </PaymentWrapper>
-      <CheckoutSummary cart={cart} />
-    </div>
+    <CheckoutFlow
+      cart={cart}
+      shippingOptions={shipping_options ?? []}
+      providers={(providers ?? []).map((p) => p.id)}
+      countryCode={countryCode}
+      step={current}
+      error={error}
+    />
   )
 }

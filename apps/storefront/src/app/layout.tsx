@@ -5,6 +5,7 @@ import { storeConfig } from "../store.config"
 import "styles/globals.css"
 import "styles/theme.css"
 import "styles/product.css"
+import "styles/checkout.css"
 
 const display = Alexandria({
   subsets: ["arabic", "latin"],

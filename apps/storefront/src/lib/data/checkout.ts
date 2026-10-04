@@ -1,0 +1,208 @@
+"use server"
+
+import { sdk } from "@lib/config"
+import { getBaseURL } from "@lib/util/env"
+import { HttpTypes } from "@medusajs/types"
+import { revalidateTag } from "next/cache"
+import { getAuthHeaders, getCacheTag, getCartId, removeCartId } from "./cookies"
+import { storeConfig } from "../../store.config"
+
+/**
+ * إجراءات خطوات الدفع. كل إجراء يعيد { ok, error } بدل رمي استثناء،
+ * لتعرض الواجهة رسالة عربية واضحة في مكانها.
+ */
+export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
+
+export type DeliveryInput = {
+  name: string
+  phone: string // 8 أرقام بدون البادئة
+  province: string // رمز المحافظة مثل om-ma
+  city: string
+  address: string
+  note: string
+  gift: boolean
+  giftMessage: string
+}
+
+const { checkout } = storeConfig
+const phoneRe = new RegExp(checkout.phone.pattern)
+
+const refresh = async () => {
+  revalidateTag(await getCacheTag("carts"))
+  revalidateTag(await getCacheTag("fulfillment"))
+  revalidateTag(await getCacheTag("shippingOptions"))
+}
+
+const fail = (e: unknown, fallback: string): ActionResult<never> => {
+  const msg = (e as any)?.message as string | undefined
+  console.error("[checkout]", msg)
+  return { ok: false, error: fallback }
+}
+
+const cartIdOrFail = async () => {
+  const id = await getCartId()
+  if (!id) throw new Error("no-cart")
+  return id
+}
+
+/** الخطوة 2: حفظ بيانات التوصيل (يتحقق من الحقول على الخادم أيضاً) */
+export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> {
+  const name = input.name.trim().replace(/\s+/g, " ")
+  if (name.split(" ").length < 2) return { ok: false, error: "أدخلي اسمك الكامل" }
+  if (!phoneRe.test(input.phone)) return { ok: false, error: "رقم الهاتف غير صحيح" }
+  if (!checkout.governorates.some((g) => g.code === input.province)) return { ok: false, error: "اختاري المحافظة" }
+  if (!input.city.trim()) return { ok: false, error: "أدخلي الولاية" }
+
+  try {
+    const id = await cartIdOrFail()
+    const [first, ...rest] = name.split(" ")
+    const address = {
+      first_name: first,
+      last_name: rest.join(" "),
+      phone: `${checkout.phone.prefix}${input.phone}`,
+      country_code: storeConfig.locale.split("-")[1].toLowerCase(),
+      province: input.province,
+      city: input.city.trim(),
+      address_1: input.address.trim() || input.city.trim(),
+    }
+    const { cart } = await sdk.store.cart.retrieve(id, { fields: "metadata" }, await getAuthHeaders())
+    await sdk.store.cart.update(
+      id,
+      {
+        shipping_address: address,
+        billing_address: address,
+        metadata: {
+          ...(cart.metadata ?? {}),
+          gift: input.gift,
+          gift_message: input.gift ? input.giftMessage.trim().slice(0, 200) : "",
+          courier_note: input.note.trim().slice(0, 200),
+        },
+      },
+      {},
+      await getAuthHeaders()
+    )
+    await refresh()
+    return { ok: true }
+  } catch (e) {
+    return fail(e, "تعذّر حفظ العنوان، حاولي مرة أخرى")
+  }
+}
+
+/** اختيار طريقة التوصيل */
+export async function chooseShipping(optionId: string): Promise<ActionResult> {
+  try {
+    const id = await cartIdOrFail()
+    await sdk.store.cart.addShippingMethod(id, { option_id: optionId }, {}, await getAuthHeaders())
+    await refresh()
+    return { ok: true }
+  } catch (e) {
+    return fail(e, "طريقة التوصيل هذه غير متاحة لعنوانك")
+  }
+}
+
+/** تطبيق كود خصم: نتحقق أن Medusa قبله فعلاً (يتجاهل الأكواد غير الصالحة بصمت) */
+export async function applyCode(raw: string): Promise<ActionResult> {
+  const code = raw.trim().toUpperCase()
+  if (!code) return { ok: false, error: "أدخلي كود الخصم" }
+  try {
+    const id = await cartIdOrFail()
+    const { cart } = await sdk.store.cart.update(
+      id,
+      { promo_codes: [code] },
+      { fields: "*promotions" },
+      await getAuthHeaders()
+    )
+    await refresh()
+    const applied = cart.promotions?.some((p) => p.code?.toUpperCase() === code)
+    return applied ? { ok: true } : { ok: false, error: "الكود غير صالح أو منتهي" }
+  } catch (e) {
+    return fail(e, "الكود غير صالح أو منتهي")
+  }
+}
+
+export async function removeCode(code: string): Promise<ActionResult> {
+  try {
+    const id = await cartIdOrFail()
+    await sdk.client.fetch(`/store/carts/${id}/promotions`, {
+      method: "DELETE",
+      body: { promo_codes: [code] },
+      headers: await getAuthHeaders(),
+    })
+    await refresh()
+    return { ok: true }
+  } catch (e) {
+    return fail(e, "تعذّرت إزالة الكود")
+  }
+}
+
+export type PlaceResult = { orderId: string; displayId: number; redirectUrl?: string }
+
+/**
+ * تأكيد الطلب:
+ * - الدفع عند الاستلام / واتساب: جلسة دفع ثم completeCart مباشرة
+ * - ثواني: جلسة دفع تعيد رابط صفحة ثواني؛ الإتمام بعد العودة في /checkout/thawani
+ */
+export async function placeOrderWith(providerId: string, countryCode: string): Promise<ActionResult<PlaceResult>> {
+  const pay = checkout.payments.find((p) => p.id === providerId)
+  if (!pay) return { ok: false, error: "اختاري طريقة الدفع" }
+
+  try {
+    const id = await cartIdOrFail()
+    const headers = await getAuthHeaders()
+    const { cart } = await sdk.store.cart.retrieve(
+      id,
+      { fields: "*items,*shipping_methods,*shipping_methods.shipping_option.type,+metadata,*region,+total" },
+      headers
+    )
+    if (!cart.items?.length) return { ok: false, error: "سلتك فارغة" }
+    if (!cart.shipping_methods?.length) return { ok: false, error: "اختاري طريقة التوصيل" }
+
+    const shippingCode = (cart.shipping_methods[0] as any)?.shipping_option?.type?.code
+    await sdk.store.cart.update(
+      id,
+      { metadata: { ...(cart.metadata ?? {}), payment_channel: pay.key, shipping_code: shippingCode ?? null } },
+      {},
+      headers
+    )
+
+    const base = `${getBaseURL()}/${countryCode}`
+    const { payment_collection } = await sdk.store.payment.initiatePaymentSession(
+      cart as HttpTypes.StoreCart,
+      {
+        provider_id: providerId,
+        data:
+          pay.key === "thawani"
+            ? {
+                cart_id: id,
+                title: `${storeConfig.name} — ${cart.items.length} منتجات`,
+                success_url: `${base}/checkout/thawani?cart_id=${id}`,
+                cancel_url: `${base}/checkout?step=payment&error=thawani_cancelled`,
+              }
+            : {},
+      },
+      {},
+      headers
+    )
+
+    if (pay.key === "thawani") {
+      const session = payment_collection.payment_sessions?.find((s) => s.provider_id === providerId)
+      const url = session?.data?.checkout_url as string | undefined
+      await refresh()
+      if (!url) return { ok: false, error: "تعذّر فتح صفحة ثواني، اختاري طريقة دفع أخرى" }
+      return { ok: true, data: { orderId: "", displayId: 0, redirectUrl: url } }
+    }
+
+    const res = await sdk.store.cart.complete(id, {}, headers)
+    if (res.type !== "order") {
+      return { ok: false, error: (res as any).error?.message ? "تعذّر تأكيد الطلب، راجعي البيانات وحاولي مجدداً" : "تعذّر تأكيد الطلب" }
+    }
+    await removeCartId()
+    await refresh()
+    revalidateTag(await getCacheTag("orders"))
+    return { ok: true, data: { orderId: res.order.id, displayId: res.order.display_id } }
+  } catch (e) {
+    const msg = String((e as any)?.message ?? "")
+    if (/inventory|stock/i.test(msg)) return { ok: false, error: "بعض المنتجات لم تعد متوفرة بالكمية المطلوبة" }
+    return fail(e, "تعذّر تأكيد الطلب، حاولي مرة أخرى")
+  }
+}

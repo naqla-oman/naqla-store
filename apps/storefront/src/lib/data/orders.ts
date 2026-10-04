@@ -110,3 +110,26 @@ export const declineTransferRequest = async (id: string, token: string) => {
     .then(({ order }) => ({ success: true, error: null, order }))
     .catch((err) => ({ success: false, error: err.message, order: null }))
 }
+
+/** طلب صفحة النجاح: التفاصيل + الحقول العامة من metadata (هدية، قناة الدفع، نوع التوصيل) */
+export const retrieveConfirmedOrder = async (id: string) => {
+  const headers = { ...(await getAuthHeaders()) }
+  const [order, extras] = await Promise.all([
+    sdk.client
+      .fetch<HttpTypes.StoreOrderResponse>(`/store/orders/${id}`, {
+        method: "GET",
+        query: {
+          fields:
+            "*items,*items.metadata,*shipping_address,*shipping_methods,*payment_collections.payment_sessions,+item_total,+total,+discount_total,+shipping_total,+created_at,+display_id",
+        },
+        headers,
+        cache: "no-store",
+      })
+      .then(({ order }) => order),
+    sdk.client
+      .fetch<{ extras: Record<string, any> }>(`/store/order-extras/${id}`, { headers, cache: "no-store" })
+      .then((r) => r.extras)
+      .catch(() => ({} as Record<string, any>)),
+  ])
+  return { order, extras }
+}

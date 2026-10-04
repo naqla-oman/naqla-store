@@ -44,6 +44,39 @@ export const storeConfig = {
   ],
   builtBy: { name: "نقلة للحلول الرقمية", url: "https://naqla.om" },
 
+  /* ===== السلة والدفع ===== */
+  checkout: {
+    orderPrefix: "LN-",
+    // رمز المحافظة يُحفظ في shipping_address.province ويطابق مناطق الخدمة في Medusa (om-ma = مسقط)
+    governorates: [
+      { code: "om-ma", name: "مسقط" },
+      { code: "om-zu", name: "ظفار" },
+      { code: "om-bs", name: "شمال الباطنة" },
+      { code: "om-bj", name: "جنوب الباطنة" },
+      { code: "om-da", name: "الداخلية" },
+      { code: "om-ss", name: "شمال الشرقية" },
+      { code: "om-sj", name: "جنوب الشرقية" },
+      { code: "om-za", name: "الظاهرة" },
+      { code: "om-bu", name: "البريمي" },
+      { code: "om-mu", name: "مسندم" },
+      { code: "om-wu", name: "الوسطى" },
+    ],
+    phone: { prefix: "+968", pattern: "^[79][0-9]{7}$", placeholder: "9XXXXXXX" },
+    // عرض طرق التوصيل حسب type.code في Medusa
+    shipping: {
+      standard: { icon: "truck", eta: "standard" },
+      express: { icon: "fire", eta: "يصلك اليوم قبل 9 مساءً داخل مسقط" },
+      pickup: { icon: "pin", eta: "جاهز للاستلام من المشغل خلال ساعتين" },
+    } as Record<string, { icon: string; eta: string }>,
+    // ترتيب وعرض طرق الدفع حسب معرّف المزوّد في Medusa (يظهر فقط ما فعّلته المنطقة)
+    payments: [
+      { id: "pp_thawani_thawani", key: "thawani", icon: "card", title: "الدفع الإلكتروني عبر ثواني", desc: "بطاقة بنكية، Apple Pay أو محفظة ثواني", cta: "ادفعي الآن", logos: ["visa.svg", "mastercard.svg", "applepay.svg", "thawani.png"] },
+      { id: "pp_cod_offline", key: "cod", icon: "cash", title: "الدفع عند الاستلام", desc: "نقداً أو ببطاقة عند وصول المندوب", cta: "تأكيد الطلب" },
+      { id: "pp_whatsapp_offline", key: "whatsapp", icon: "whatsapp", title: "إرسال الطلب عبر واتساب", desc: "نؤكد معك الطلب والدفع على واتساب", cta: "إرسال عبر واتساب" },
+    ],
+    giftNote: "تغليف فاخر مجاني + بطاقة برسالتك، وبلا فاتورة داخل الطرد",
+  },
+
   /* ===== صفحة المنتج ===== */
   product: {
     // عناوين خيارات Medusa كما في data/<client>.json (options.size / options.color)
