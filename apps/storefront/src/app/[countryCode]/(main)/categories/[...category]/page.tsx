@@ -1,5 +1,8 @@
 import { Metadata } from "next"
-import { notFound } from "next/navigation"
+import { notFound, permanentRedirect } from "next/navigation"
+import { findRedirect } from "@lib/data/seo"
+import { breadcrumbs, jsonLdScript } from "@lib/seo/jsonld"
+import { storeConfig } from "../../../../../store.config"
 
 import { getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"
@@ -44,22 +47,20 @@ export async function generateStaticParams() {
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
   const params = await props.params
-  try {
-    const productCategory = await getCategoryByHandle(params.category)
-
-    const title = productCategory.name + " | Medusa Store"
-
-    const description = productCategory.description ?? `${title} category.`
-
-    return {
-      title: `${title} | Medusa Store`,
-      description,
-      alternates: {
-        canonical: `${params.category.join("/")}`,
-      },
-    }
-  } catch (error) {
+  const category = await getCategoryByHandle(params.category).catch(() => null)
+  if (!category) {
+    const to = await findRedirect(`/categories/${params.category.join("/")}`)
+    if (to) permanentRedirect(`/${params.countryCode}${to}`)
     notFound()
+  }
+  const meta = (category.metadata ?? {}) as Record<string, any>
+  const description = (meta.seo_description || category.description || `${category.name} — ${storeConfig.name}`).slice(0, 160)
+  return {
+    // اسم المتجر يُضاف من قالب العنوان في التخطيط الجذري
+    title: meta.seo_title || category.name,
+    description,
+    alternates: { canonical: `/${params.countryCode}/categories/${params.category.join("/")}` },
+    openGraph: { title: `${meta.seo_title || category.name} | ${storeConfig.name}`, description },
   }
 }
 
@@ -68,18 +69,31 @@ export default async function CategoryPage(props: Props) {
   const params = await props.params
   const { sortBy, page } = searchParams
 
-  const productCategory = await getCategoryByHandle(params.category)
+  const productCategory = await getCategoryByHandle(params.category).catch(() => null)
 
   if (!productCategory) {
+    const to = await findRedirect(`/categories/${params.category.join("/")}`)
+    if (to) permanentRedirect(`/${params.countryCode}${to}`)
     notFound()
   }
 
   return (
-    <CategoryTemplate
-      category={productCategory}
-      sortBy={sortBy}
-      page={page}
-      countryCode={params.countryCode}
-    />
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={jsonLdScript(
+          breadcrumbs([
+            { name: "الرئيسية", path: `/${params.countryCode}` },
+            { name: productCategory.name, path: `/${params.countryCode}/categories/${productCategory.handle}` },
+          ])
+        )}
+      />
+      <CategoryTemplate
+        category={productCategory}
+        sortBy={sortBy}
+        page={page}
+        countryCode={params.countryCode}
+      />
+    </>
   )
 }

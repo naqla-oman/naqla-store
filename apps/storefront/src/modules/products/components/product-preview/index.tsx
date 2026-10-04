@@ -1,4 +1,5 @@
 import Image from "next/image"
+import { productAlt } from "@lib/seo/alt"
 import { getProductPrice } from "@lib/util/get-product-price"
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
@@ -30,7 +31,7 @@ export default async function ProductPreview({
     <LocalizedClientLink href={`/products/${product.handle}`} className="pcard" data-testid="product-wrapper">
       <div className="ph">
         {product.thumbnail && (
-          <Image src={product.thumbnail} alt={product.title} fill sizes="(max-width: 700px) 50vw, (max-width: 1024px) 33vw, 25vw" />
+          <Image src={product.thumbnail} alt={productAlt(product)} fill sizes="(max-width: 700px) 50vw, (max-width: 1024px) 33vw, 25vw" />
         )}
         {pct > 0 ? <span className="tag red"><bdi dir="ltr">-{pct}%</bdi></span> : tag ? <span className="tag">{tag}</span> : null}
         <WishButton productId={product.id} />

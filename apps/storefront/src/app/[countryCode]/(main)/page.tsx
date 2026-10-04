@@ -1,4 +1,5 @@
 import { Metadata } from "next"
+import { jsonLdScript, localBusiness, siteGraph } from "@lib/seo/jsonld"
 import FeaturedProducts from "@modules/home/components/featured-products"
 import Hero from "@modules/home/components/hero"
 import Decor from "@modules/common/components/decor"
@@ -24,6 +25,8 @@ export default async function Home(props: { params: Promise<{ countryCode: strin
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(siteGraph(countryCode))} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(localBusiness(countryCode))} />
       <Hero />
       <Decor className="wrap" />
       <div className="pb-8">
