@@ -56,7 +56,7 @@ export type ClientStore = {
 export function clientSlug(): string {
   const slug = process.env.STORE?.trim()
   if (!slug) {
-    throw new MedusaError(MedusaError.Types.INVALID_DATA, "STORE غير محدد — حدّد العميل في .env (مثال: STORE=layan). المجلد المطلوب: clients/<STORE>/")
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, "STORE غير محدد — حدّد العميل في .env (مثال: STORE=<slug>). المجلد المطلوب: clients/<STORE>/")
   }
   if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) throw new MedusaError(MedusaError.Types.INVALID_DATA, `STORE غير صالح: «${slug}» (حروف لاتينية صغيرة وأرقام وشرطات فقط)`)
   return slug
