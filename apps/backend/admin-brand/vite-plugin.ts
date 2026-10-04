@@ -74,14 +74,14 @@ const HEAD_SCRIPT = `
 export function naqlaAdminBrand(): Plugin {
   return {
     name: "naqla-admin-brand",
-    transformIndexHtml(html) {
+    transformIndexHtml(html: string): { html: string; tags: HtmlTag[] } {
       return {
         html: html.replace(/<title>[\s\S]*?<\/title>/, "<title>لوحة نقلة</title>").replace(/<link[^>]+rel="icon"[^>]*>/g, ""),
         tags: [
           { tag: "link", attrs: { rel: "icon", type: "image/png", sizes: "32x32", href: "/naqla-brand/favicon-32.png" }, injectTo: "head" },
           { tag: "link", attrs: { rel: "icon", type: "image/png", sizes: "16x16", href: "/naqla-brand/favicon-16.png" }, injectTo: "head" },
           { tag: "link", attrs: { rel: "apple-touch-icon", href: "/naqla-brand/apple-touch-icon.png" }, injectTo: "head" },
-          { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }, injectTo: "head" },
+          { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "anonymous" }, injectTo: "head" },
           { tag: "link", attrs: { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" }, injectTo: "head" },
           { tag: "meta", attrs: { name: "theme-color", content: TEAL }, injectTo: "head" },
           { tag: "style", attrs: { id: "naqla-brand" }, children: BRAND_CSS, injectTo: "head" },
