@@ -9,19 +9,20 @@ const file = storeEnvFile(slug)
 if (!existsSync(file)) fail(`المتجر غير مُعدّ — شغّلي أولاً: pnpm store:setup ${slug}`)
 const env = { ...process.env, ...readEnv(file) }
 
-// Next يضيف مسار مجلد البناء إلى tsconfig.json عند كل تشغيل؛ نعيده كما كان بعد الإقلاع حتى لا يتغيّر المستودع
-const TSCONFIG = join(STOREFRONT, "tsconfig.json")
-const tsconfigBefore = readFileSync(TSCONFIG, "utf8")
-const restoreTsconfig = () => {
-  if (readFileSync(TSCONFIG, "utf8") !== tsconfigBefore) writeFileSync(TSCONFIG, tsconfigBefore)
-}
+// Next يضيف مسار مجلد البناء إلى ملف tsconfig الذي يستخدمه؛ نعطي كل منفذ ملفاً خاصاً خارج Git
+// يرث الأصلي، فلا يتغيّر tsconfig.json المتتبَّع أبداً (حتى لو توقّف التشغيل فجأة)
+const TSCONFIG = `tsconfig.${env.STOREFRONT_PORT}.json`
+const base = JSON.parse(readFileSync(join(STOREFRONT, "tsconfig.json"), "utf8"))
+writeFileSync(
+  join(STOREFRONT, TSCONFIG),
+  JSON.stringify({ extends: "./tsconfig.json", include: [...base.include, `.next-${env.STOREFRONT_PORT}/types/**/*.ts`] }, null, 2) + "\n"
+)
 
 const start = (name, cmd, args, cwd, extra = {}) => {
   const p = spawn(cmd, args, { cwd, env: { ...env, ...extra }, stdio: ["ignore", "pipe", "pipe"] })
   const tag = name === "backend" ? c.y(`[${slug}:backend]`) : c.g(`[${slug}:store]`)
   const out = (d) => d.toString().split("\n").filter(Boolean).forEach((l) => {
     console.log(`${tag} ${l}`)
-    if (name === "store" && /Ready in|✓ Ready/.test(l)) restoreTsconfig()
   })
   p.stdout.on("data", out)
   p.stderr.on("data", out)
@@ -33,6 +34,6 @@ console.log(c.b(`▶ «${slug}»: المتجر ${env.STOREFRONT_URL} — الل�
 const procs = [
   start("backend", "npx", ["medusa", "develop", "-p", env.BACKEND_PORT], BACKEND),
   // مجلد بناء لكل منفذ حتى لا يتصادم متجران يعملان من المجلد نفسه
-  start("store", "npx", ["next", "dev", "--turbopack", "-p", env.STOREFRONT_PORT], STOREFRONT, { NEXT_DIST_DIR: `.next-${env.STOREFRONT_PORT}` }),
+  start("store", "npx", ["next", "dev", "--turbopack", "-p", env.STOREFRONT_PORT], STOREFRONT, { NEXT_DIST_DIR: `.next-${env.STOREFRONT_PORT}`, NEXT_TSCONFIG: TSCONFIG }),
 ]
-for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => { procs.forEach((p) => p.kill(sig)); restoreTsconfig(); process.exit(0) })
+for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => { procs.forEach((p) => p.kill(sig)); process.exit(0) })

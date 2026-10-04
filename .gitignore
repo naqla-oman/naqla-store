@@ -63,3 +63,4 @@ apps/storefront/.env.local
 .stores/
 # مجلدات بناء Next لكل متجر عند التشغيل جنباً إلى جنب
 apps/storefront/.next-*/
+apps/storefront/tsconfig.*.json
