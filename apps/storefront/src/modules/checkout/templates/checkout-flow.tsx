@@ -84,8 +84,9 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   // خصم التوصيل (امتياز المستوى) منفصل عن خصم المنتجات حتى لا يظهر مرتين
   const shipDiscount = (cart as any).shipping_discount_total ?? 0
   const discount = Math.max(0, (cart.discount_total ?? 0) - shipDiscount)
-  const perkPromo = (cart.promotions ?? []).find((p: any) => p.is_automatic && p.application_method?.target_type === "shipping_methods")
-  const perkLabel = (perkPromo as any)?.application_method?.description as string | undefined
+  // Store API يعيد is_automatic لكنه يخفي target_type ووصف العرض، فنستدل على امتياز التوصيل
+  // بوجود عرض تلقائي مع خصم على التوصيل (عروض الأكواد اليدوية عندنا على المنتجات فقط)
+  const perkPromo = shipDiscount > 0 ? (cart.promotions ?? []).find((p: any) => p.is_automatic) : undefined
   const method = cart.shipping_methods?.[0]
   const currentOptionId = method?.shipping_option_id
   const methodValid = !!currentOptionId && shippingOptions.some((o) => o.id === currentOptionId)
@@ -230,7 +231,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {CUR}</span>
             </div>
           ))}
-          <div className="trow"><span>التوصيل</span><span data-testid="sum-shipping">{shipping === null ? "في الخطوة التالية" : shipping === 0 && shipDiscount > 0 ? <>مجاني <span className="perktag">{perkLabel?.replace("توصيل مجاني — ", "") ?? "امتياز العضوية"}</span></> : shipping === 0 ? "مجاني" : fmt(shipping)}</span></div>
+          <div className="trow"><span>التوصيل</span><span data-testid="sum-shipping">{shipping === null ? "في الخطوة التالية" : shipping === 0 && shipDiscount > 0 ? <>مجاني <span className="perktag">امتياز عضويتك</span></> : shipping === 0 ? "مجاني" : fmt(shipping)}</span></div>
           <div className="trow final"><span>الإجمالي</span><span>{fmt(total)}</span></div>
         </div>
 
