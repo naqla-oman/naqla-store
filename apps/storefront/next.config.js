@@ -57,6 +57,8 @@ const nextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
+    // ملف tsconfig لكل متجر يعمل جنباً إلى جنب (store:dev يُنشئه ويرث tsconfig.json)
+    ...(process.env.NEXT_TSCONFIG ? { tsconfigPath: process.env.NEXT_TSCONFIG } : {}),
   },
   images: {
     remotePatterns: [
