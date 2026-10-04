@@ -16,7 +16,8 @@ const thawaniEnabled =
 module.exports = defineConfig({
   // لوحة نقلة: الهوية في رأس الصفحة فقط (admin-brand/vite-plugin.ts) — لا نسخ لكود Medusa
   admin: {
-    vite: (config) => ({ ...config, plugins: [...(config.plugins ?? []), naqlaAdminBrand()] }),
+    // Medusa يدمج الناتج مع إعداده (mergeConfig): نعيد الإضافة وحدها — إعادة config كاملاً تكرر إضافة React
+    vite: () => ({ plugins: [naqlaAdminBrand()] }),
   },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
