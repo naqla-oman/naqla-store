@@ -19,6 +19,7 @@ export default function ProductInfo({ product }: { product: HttpTypes.StoreProdu
         <WishButton productId={product.id} className="iconbtn share wishbtn" size={18} />
         <ShareButton title={product.title} />
       </div>
+      {meta.title_en && <div className="latinline">{meta.title_en}</div>}
       {/* التقييمات خلف features.reviews: بيانات الديمو مزروعة، وتُطفأ لأي عميل حقيقي حتى نظام تقييمات فعلي */}
       {storeConfig.features.reviews && rating > 0 && (
         <div className="raterow">

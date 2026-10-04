@@ -13,8 +13,9 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: storeConfig.colors.background,
     theme_color: storeConfig.colors.theme,
     icons: [
-      { src: clientAsset("icons/icon-192.png"), sizes: "192x192", type: "image/png" },
-      { src: clientAsset("icons/icon-512.png"), sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: clientAsset(storeConfig.icons.icon192), sizes: "192x192", type: "image/png" },
+      { src: clientAsset(storeConfig.icons.icon512), sizes: "512x512", type: "image/png" },
+      { src: clientAsset(storeConfig.icons.maskable), sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   }
 }

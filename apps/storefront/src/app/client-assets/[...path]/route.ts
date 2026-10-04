@@ -8,8 +8,8 @@ const TYPES: Record<string, string> = {
   ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp",
   ".avif": "image/avif", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".gif": "image/gif",
 }
-// المسموح من مجلد العميل: الصور والأيقونات والشعار وصورة المشاركة فقط (لا store.json ولا غيره)
-const ALLOWED = /^(images|icons)\/[^/]+$|^(logo\.svg|og\.jpg)$/
+// المسموح من مجلد العميل: الصور والأيقونات ونسخ الشعار والرمز وصورة المشاركة فقط (لا store.json ولا غيره)
+const ALLOWED = /^(images|icons)\/[^/]+$|^(logo[\w-]*\.svg|symbol\.svg|og\.jpg)$/
 
 /** يقدّم ملفات العميل من clients/<STORE>/ — /client-assets/images/hero.jpg */
 export async function GET(_: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {

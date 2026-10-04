@@ -2,6 +2,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Brand from "@modules/common/components/brand"
 import Icon from "@modules/common/components/icon"
 import BottomTabs from "@modules/layout/components/bottom-tabs"
+import Decor from "@modules/common/components/decor"
 import { storeConfig as c } from "../../../../store.config"
 import { g } from "@lib/voice"
 
@@ -73,6 +74,7 @@ export default function Footer() {
             <span>صُنع بشغف بواسطة <a href={c.builtBy.url} target="_blank" rel="noreferrer"><b>{c.builtBy.name}</b></a></span>
           </div>
         </div>
+        <Decor className="wrap" />
       </footer>
       <BottomTabs />
     </>

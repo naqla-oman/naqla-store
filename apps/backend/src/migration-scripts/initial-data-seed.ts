@@ -227,6 +227,8 @@ export default async function initial_data_seed({ container }: { container: Medu
             reviews: p.reviews ?? null,
             sold_week: p.sold_week ?? null,
             complements: p.complements ?? [],
+            // السطر اللاتيني تحت اسم المنتج (اختياري)
+            title_en: p.title_en ?? null,
             // ترتيب عرض قيم الخيارات كما في store.json (Medusa لا يحفظ ترتيب المتغيّرات للواجهة)
             option_order: Object.fromEntries(optionDefs.filter((d) => p.options?.[d.key]?.length).map((d) => [d.title, p.options[d.key]])),
           },
