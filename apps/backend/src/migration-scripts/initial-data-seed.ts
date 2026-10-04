@@ -1,12 +1,12 @@
 /**
  * Naqla Store Platform — البذرة الأولى للمتجر (سلطنة عُمان)
  *
- * تُقرأ كل بيانات المتجر من data/<STORE_DATA>.json (افتراضياً layan.json)
- * بحيث يكون إنشاء متجر لعميل جديد = ملف JSON جديد فقط.
+ * تُقرأ كل بيانات المتجر من clients/<STORE>/store.json (STORE إلزامي)
+ * بحيث يكون إنشاء متجر لعميل جديد = مجلد عميل جديد فقط، بلا تعديل كود.
  *
  * يُنشئ: المتجر (OMR)، قناة البيع، مفتاح النشر، منطقة عُمان، ضريبة القيمة المضافة 5٪،
  * موقع المخزون (المشغل)، خيارات التوصيل (عادي/سريع/استلام)، الأقسام، المجموعات،
- * وسوم المناسبات، خيارات المقاس واللون، المنتجات بمتغيراتها وأسعارها ومخزونها.
+ * الوسوم، خيارات المنتج المعرّفة لنشاط العميل (store.options)، المنتجات بمتغيراتها وأسعارها ومخزونها.
  */
 import { MedusaContainer } from "@medusajs/framework";
 import {
@@ -34,31 +34,7 @@ import {
   updateStoresWorkflow,
   updatePricePreferencesWorkflow,
 } from "@medusajs/medusa/core-flows";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-
-type StoreData = {
-  store: {
-    name: string;
-    name_en: string;
-    currency: string;
-    vat_rate: number;
-    country: string;
-    location: { name: string; city: string; address: string };
-    shipping: { code: string; name: string; desc: string; amount: number; free_over?: number }[];
-  };
-  categories: { handle: string; name: string }[];
-  collections: { handle: string; title: string }[];
-  tags: { value: string; label: string }[];
-  options: { size: string; color: string };
-  colors: string[];
-  products: {
-    handle: string; title: string; category: string; collection?: string | null;
-    description: string; price: number; compare_at?: number | null; images: string[];
-    sizes: string[]; colors: string[]; stock: Record<string, number>; tags: string[];
-    rating: number; reviews: number; sold_week: number; complements: string[];
-  }[];
-};
+import { client, feature } from "../lib/client";
 
 export default async function initial_data_seed({ container }: { container: MedusaContainer }) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
@@ -67,15 +43,16 @@ export default async function initial_data_seed({ container }: { container: Medu
   const fulfillmentModuleService = container.resolve(ModuleRegistrationName.FULFILLMENT);
   const storeModuleService = container.resolve(Modules.STORE);
 
-  const dataFile = process.env.STORE_DATA || "layan";
-  const data: StoreData = JSON.parse(
-    readFileSync(join(process.cwd(), "data", `${dataFile}.json`), "utf-8")
+  const data = client();
+  // التوصيل السريع والاستلام يتبعان مفاتيح التشغيل في store.json
+  const shipping = data.shipping.filter(
+    (sh) => !(sh.code === "express" && !feature("expressDelivery")) && !(sh.code === "pickup" && !feature("pickup"))
   );
-  const { store: S } = data;
+  const S = { name: data.name, name_en: data.nameEn, currency: data.currency, vat_rate: data.vatRate, country: data.country, location: data.location, shipping };
   const cur = S.currency;
   const country = S.country;
 
-  logger.info(`Seeding store "${S.name}" from data/${dataFile}.json ...`);
+  logger.info(`Seeding store "${S.name}" from clients/${data.slug}/store.json ...`);
 
   // ---------- قناة البيع + مفتاح النشر ----------
   const { result: [salesChannel] } = await createSalesChannelsWorkflow(container).run({
@@ -201,56 +178,72 @@ export default async function initial_data_seed({ container }: { container: Medu
     input: { product_tags: data.tags.map((t) => ({ value: t.value, metadata: { label: t.label } })) },
   });
 
-  // ---------- الخيارات ----------
-  const allSizes = [...new Set(data.products.flatMap((p) => p.sizes))];
+  // ---------- الخيارات (من store.options: مقاس/لون للأزياء، حجم للعطور، وزن/نكهة للحلويات…) ----------
+  const optionDefs = data.options.filter((o) => data.products.some((p) => p.options?.[o.key]?.length));
   const { result: options } = await createProductOptionsWorkflow(container).run({
     input: {
-      product_options: [
-        { title: data.options.size, values: allSizes },
-        { title: data.options.color, values: data.colors },
-      ],
+      product_options: optionDefs.map((o) => ({
+        title: o.title,
+        values: [...new Set(data.products.flatMap((p) => p.options?.[o.key] ?? []))],
+      })),
     },
   });
-  const sizeOpt = options.find((o) => o.title === data.options.size)!;
-  const colorOpt = options.find((o) => o.title === data.options.color)!;
+  const optionId = (key: string) => options.find((o) => o.title === optionDefs.find((d) => d.key === key)!.title)!.id;
 
   // ---------- المنتجات ----------
   const stockBySku = new Map<string, number>();
-  const skuOf = (handle: string, size: string, ci: number) =>
-    `${handle.replace(/-/g, "").toUpperCase().slice(0, 10)}-${size.replace(/\s/g, "")}-${ci}`;
+  // كل تركيبات قيم خيارات المنتج (بترتيب store.options)
+  const combos = (p: (typeof data.products)[number]) => {
+    const keys = optionDefs.map((o) => o.key).filter((k) => p.options?.[k]?.length);
+    return keys.reduce<Record<string, string>[]>(
+      (acc, k) => acc.flatMap((c) => p.options[k].map((v) => ({ ...c, [k]: v }))),
+      [{}]
+    ).map((c) => ({ keys, values: c }));
+  };
+  // رمز المخزون: بادئة المنتج + قيمة الخيار الأول + رقم المتغيّر (فريد داخل المنتج)
+  const skuOf = (handle: string, head: string, vi: number) =>
+    `${handle.replace(/-/g, "").toUpperCase().slice(0, 10)}-${head.replace(/\s/g, "")}-${vi}`;
   const { result: products } = await createProductsWorkflow(container).run({
     input: {
-      products: data.products.map((p) => ({
-        title: p.title,
-        handle: p.handle,
-        description: p.description,
-        status: ProductStatus.PUBLISHED,
-        shipping_profile_id: shippingProfile.id,
-        category_ids: [categories.find((c) => c.handle === p.category)!.id],
-        collection_id: p.collection ? collections.find((c) => c.handle === p.collection)?.id : undefined,
-        tag_ids: p.tags.map((t) => tags.find((x) => x.value === t)!.id),
-        images: p.images.map((url) => ({ url })),
-        thumbnail: p.images[0],
-        options: [{ id: sizeOpt.id }, { id: colorOpt.id }],
-        sales_channels: [{ id: salesChannel.id }],
-        metadata: {
-          compare_at_price: p.compare_at ?? null,
-          rating: p.rating,
-          reviews: p.reviews,
-          sold_week: p.sold_week,
-          complements: p.complements,
-        },
-        variants: p.sizes.flatMap((size) =>
-          p.colors.map((color, ci) => ({
-            title: `${size} / ${color}`,
-            sku: (() => { const sku = skuOf(p.handle, size, ci); stockBySku.set(sku, p.stock?.[size] ?? 10); return sku; })(),
-            options: { [data.options.size]: size, [data.options.color]: color },
-            manage_inventory: true,
-            prices: [{ amount: p.price, currency_code: cur }],
-            metadata: { compare_at_price: p.compare_at ?? null },
-          }))
-        ),
-      })),
+      products: data.products.map((p) => {
+        const list = combos(p);
+        const first = list[0]?.keys[0];
+        return {
+          title: p.title,
+          handle: p.handle,
+          description: p.description,
+          status: ProductStatus.PUBLISHED,
+          shipping_profile_id: shippingProfile.id,
+          category_ids: [categories.find((c) => c.handle === p.category)!.id],
+          collection_id: p.collection ? collections.find((c) => c.handle === p.collection)?.id : undefined,
+          tag_ids: (p.tags ?? []).map((t) => tags.find((x) => x.value === t)!.id),
+          images: p.images.map((url) => ({ url })),
+          thumbnail: p.images[0],
+          options: list[0]?.keys.map((k) => ({ id: optionId(k) })) ?? [],
+          sales_channels: [{ id: salesChannel.id }],
+          metadata: {
+            compare_at_price: p.compare_at ?? null,
+            rating: p.rating ?? null,
+            reviews: p.reviews ?? null,
+            sold_week: p.sold_week ?? null,
+            complements: p.complements ?? [],
+          },
+          variants: list.map(({ keys, values }, vi) => {
+            const head = first ? values[first] : "default";
+            const titleOf = (k: string) => optionDefs.find((d) => d.key === k)!.title;
+            const sku = skuOf(p.handle, head, vi);
+            stockBySku.set(sku, p.stock?.[head] ?? p.stock?.default ?? 10);
+            return {
+              title: keys.map((k) => values[k]).join(" / ") || p.title,
+              sku,
+              options: Object.fromEntries(keys.map((k) => [titleOf(k), values[k]])),
+              manage_inventory: true,
+              prices: [{ amount: p.prices?.[head] ?? p.price, currency_code: cur }],
+              metadata: { compare_at_price: p.compare_at ?? null },
+            };
+          }),
+        };
+      }),
     },
   });
 

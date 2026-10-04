@@ -1,6 +1,6 @@
 /**
  * صور المنتجات إلى وحدة الملفات في Medusa.
- * البذرة تحفظ مسارات نسبية (/img/...) موجودة في public الخاصة بالواجهة فقط، فلا تظهر في لوحة التحكم.
+ * البذرة تحفظ مسارات نسبية لصور العميل (images/... داخل clients/<STORE>/)، فلا تظهر في لوحة التحكم.
  * هذا السكربت يرفع كل صورة مرة واحدة ويستبدل المسار بالرابط الكامل من الخادم (<backend>/static/...)،
  * فتظهر في اللوحة وتُدار مثل أي صورة تُرفع منها لاحقاً. آمن للتكرار: يتخطى الروابط الكاملة.
  */
@@ -8,7 +8,8 @@ import { MedusaContainer } from "@medusajs/framework"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { updateProductsWorkflow } from "@medusajs/medusa/core-flows"
 import { existsSync, readFileSync } from "node:fs"
-import { basename, extname, join, resolve } from "node:path"
+import { basename, extname, join } from "node:path"
+import { clientDir } from "../lib/client"
 
 const MIME: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp", ".avif": "image/avif" }
 
@@ -16,13 +17,14 @@ export default async function product_images({ container }: { container: MedusaC
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   const files = container.resolve(Modules.FILE)
-  const dir = resolve(process.cwd(), process.env.SEED_IMAGES_DIR || "../storefront/public")
+  const dir = clientDir()
 
   const { data: products } = await query.graph({
     entity: "product",
     fields: ["id", "handle", "thumbnail", "images.url", "images.rank"],
   })
-  const isLocal = (u?: string | null) => !!u && u.startsWith("/")
+  // كل ما ليس رابطاً كاملاً هو ملف في مجلد العميل
+  const isLocal = (u?: string | null) => !!u && !/^https?:\/\//.test(u)
   const wanted = new Set<string>()
   for (const p of products as any[]) {
     if (isLocal(p.thumbnail)) wanted.add(p.thumbnail)

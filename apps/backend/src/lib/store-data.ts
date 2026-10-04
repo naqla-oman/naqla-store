@@ -1,21 +1,16 @@
-import { readFileSync } from "node:fs"
-import { join } from "node:path"
+import { client } from "./client"
 
-/** بيانات العميل من data/<STORE_DATA>.json (تُقرأ مرة واحدة) */
-let cache: any
-export function storeData(): {
-  name: string
-  name_en?: string
-  country: string
-  currency: string
-  order_prefix?: string
-  location?: { name?: string; address?: string; city?: string }
-} {
-  if (!cache) {
-    const file = process.env.STORE_DATA || "layan"
-    cache = JSON.parse(readFileSync(join(process.cwd(), "data", `${file}.json`), "utf-8")).store
+/** واجهة مختصرة لبيانات المتجر المستخدمة في الإشعارات والتتبّع */
+export function storeData() {
+  const c = client()
+  return {
+    name: c.name,
+    name_en: c.nameEn,
+    country: c.country,
+    currency: c.currency,
+    order_prefix: c.orderPrefix,
+    location: c.location,
   }
-  return cache
 }
 
 export const orderNumber = (displayId?: number | null) =>

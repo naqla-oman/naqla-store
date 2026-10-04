@@ -1,6 +1,10 @@
 import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
+import { client } from './src/lib/client'
 
 loadEnv(process.env.NODE_ENV || 'development', process.cwd())
+
+// العميل من STORE (إلزامي) — كل ما يخص المتجر في clients/<STORE>/store.json
+const store = client()
 
 /** ثواني لا يُحمَّل إلا عند THAWANI_ENABLED=true ووجود المفتاحين */
 const thawaniEnabled =
@@ -34,15 +38,24 @@ module.exports = defineConfig({
             resolve: '@medusajs/medusa/file-local',
             id: 'local',
             options: {
-              upload_dir: 'static',
-              backend_url: `${process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000'}/static`,
+              // مجلد لكل متجر حتى لا تختلط الملفات عند تشغيل أكثر من متجر على الخادم نفسه
+              upload_dir: `static/${store.slug}`,
+              backend_url: `${process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000'}/static/${store.slug}`,
             },
           },
         ],
       },
     },
-    // نقاط الولاء: 10 لكل ر.ع، معلّقة حتى التوصيل، 500 نقطة = كود 5 ر.ع
-    { resolve: './src/modules/loyalty', options: { pointsPerUnit: 10, redeemPoints: 500, redeemValue: 5 } },
+    // نقاط الولاء من store.json → loyalty (معلّقة حتى التوصيل)
+    {
+      resolve: './src/modules/loyalty',
+      options: {
+        pointsPerUnit: store.loyalty.pointsPerUnit,
+        redeemPoints: store.loyalty.redeemPoints,
+        redeemValue: store.loyalty.redeemValue,
+        tiers: store.loyalty.tiers.map((t) => ({ key: t.key, name: t.name, min: t.min })),
+      },
+    },
     {
       resolve: '@medusajs/medusa/auth',
       dependencies: [Modules.CACHE, ContainerRegistrationKeys.LOGGER, Modules.EVENT_BUS],
