@@ -1,0 +1,1000 @@
+{
+  "slug": "layan",
+  "name": "بوتيك ليان",
+  "nameEn": "Layan Boutique",
+  "shortName": "ليان",
+  "tagline": "عبايات وفساتين تُخاط بعناية في مسقط",
+  "description": "بوتيك عُماني للعبايات والفساتين بتصاميم حصرية تُخاط بعناية في مسقط، ونوصلها إلى بابك في كل محافظات السلطنة.",
+  "locale": "ar-OM",
+  "dir": "rtl",
+  "country": "om",
+  "currency": "omr",
+  "currencyLabel": "ر.ع",
+  "vatRate": 5,
+  "freeShippingOver": 20,
+  "cutoffHour": 15,
+  "orderPrefix": "LN-",
+  "fonts": {
+    "display": "alexandria",
+    "body": "ibm-plex-sans-arabic"
+  },
+  "colors": {
+    "theme": "#0f4a3c",
+    "background": "#f6f1ea"
+  },
+  "contact": {
+    "whatsapp": "96890000000",
+    "phone": "+968 9XXX XXXX",
+    "email": "hello@layan.om",
+    "address": "مسقط، الخوير — مجمع ليان",
+    "hours": "السبت – الخميس ١٠ص – ١٠م · الجمعة ٤م – ١٠م"
+  },
+  "social": {
+    "instagram": "https://instagram.com/",
+    "snapchat": "https://snapchat.com/",
+    "tiktok": "https://tiktok.com/"
+  },
+  "nav": [
+    {
+      "label": "كل المنتجات",
+      "href": "/store"
+    },
+    {
+      "label": "عباءات",
+      "href": "/categories/abayas"
+    },
+    {
+      "label": "فساتين",
+      "href": "/categories/dresses"
+    },
+    {
+      "label": "أوشحة",
+      "href": "/categories/scarves"
+    },
+    {
+      "label": "حقائب",
+      "href": "/categories/bags"
+    },
+    {
+      "label": "العروض",
+      "href": "/collections/sale",
+      "accent": true
+    }
+  ],
+  "welcomeCode": {
+    "code": "LAYAN10",
+    "text": "خصم ١٠٪ على طلبك الأول"
+  },
+  "ticker": [
+    "توصيل مجاني للطلبات فوق ٢٠ ر.ع",
+    "استبدال مجاني خلال ١٤ يوماً",
+    "خصم ١٠٪ على طلبك الأول بكود LAYAN10",
+    "تطريز حصري لليان",
+    "دفع آمن عبر ثواني"
+  ],
+  "home": {
+    "hero": {
+      "kicker": "تشكيلة الشتاء ٢٠٢٦ وصلت",
+      "title": [
+        "عبايات تُخاط لكِ",
+        "بروح مسقط"
+      ],
+      "text": "عبايات وفساتين تُخاط بعناية في مسقط — قصّات حصرية، أقمشة مختارة، وتعديل مجاني للطول عند الشراء.",
+      "image": "images/hero-1.jpg",
+      "primary": {
+        "label": "تسوّقي التشكيلة",
+        "href": "/store"
+      },
+      "secondary": {
+        "label": "العبايات الجديدة",
+        "href": "/categories/abayas"
+      }
+    },
+    "tiles": [
+      {
+        "image": "images/lk-2.jpg",
+        "title": "العروض",
+        "text": "خصومات حتى ٢٣٪ على قطع مختارة",
+        "href": "/collections/sale"
+      },
+      {
+        "image": "images/n-bag3.jpg",
+        "title": "حقائب جلد",
+        "text": "صُنعت لتدوم — تكمل إطلالتك",
+        "href": "/categories/bags"
+      }
+    ],
+    "trust": [
+      {
+        "icon": "truck",
+        "title": "توصيل ٢٤–٤٨ ساعة",
+        "text": "لكل محافظات السلطنة"
+      },
+      {
+        "icon": "refresh",
+        "title": "استبدال ١٤ يوماً",
+        "text": "بلا أسئلة"
+      },
+      {
+        "icon": "scissors",
+        "title": "خياطة في مشغلنا",
+        "text": "تعديل الطول مجاناً"
+      },
+      {
+        "icon": "lock",
+        "title": "دفع آمن",
+        "text": "ثواني · Apple Pay · عند الاستلام"
+      }
+    ],
+    "collectionsOrder": [
+      "new",
+      "bestsellers",
+      "sale"
+    ]
+  },
+  "features": {
+    "tailoring": true,
+    "sizeGuide": true,
+    "lengthField": true,
+    "gift": true,
+    "expressDelivery": true,
+    "pickup": true,
+    "loyalty": true,
+    "loyaltyTiers": true,
+    "cod": true,
+    "thawani": true,
+    "whatsappOrder": true,
+    "bnpl": false
+  },
+  "options": [
+    {
+      "key": "size",
+      "title": "المقاس",
+      "type": "buttons"
+    },
+    {
+      "key": "color",
+      "title": "اللون",
+      "type": "color",
+      "swatches": {
+        "أسود": [
+          "#1c1f1e",
+          "#3b3f3d"
+        ],
+        "رملي": [
+          "#e2cfb4",
+          "#bf9f78"
+        ],
+        "زمردي": [
+          "#0f4a3c",
+          "#2a7a63"
+        ]
+      }
+    }
+  ],
+  "loyalty": {
+    "pointsPerUnit": 10,
+    "redeemPoints": 500,
+    "redeemValue": 5,
+    "tiers": [
+      {
+        "key": "silver",
+        "name": "فضية",
+        "min": 0,
+        "perk": "10 نقاط لكل ر.ع"
+      },
+      {
+        "key": "gold",
+        "name": "ذهبية",
+        "min": 1000,
+        "perk": "توصيل مجاني دائماً",
+        "group": "عضوات ذهبيات",
+        "freeShipping": true,
+        "promoCode": "LAYAN-GOLD-SHIPPING"
+      },
+      {
+        "key": "diamond",
+        "name": "ماسية",
+        "min": 2500,
+        "perk": "",
+        "group": "عضوات ماسيات"
+      }
+    ]
+  },
+  "checkout": {
+    "governorates": [
+      {
+        "code": "om-ma",
+        "name": "مسقط"
+      },
+      {
+        "code": "om-zu",
+        "name": "ظفار"
+      },
+      {
+        "code": "om-bs",
+        "name": "شمال الباطنة"
+      },
+      {
+        "code": "om-bj",
+        "name": "جنوب الباطنة"
+      },
+      {
+        "code": "om-da",
+        "name": "الداخلية"
+      },
+      {
+        "code": "om-ss",
+        "name": "شمال الشرقية"
+      },
+      {
+        "code": "om-sj",
+        "name": "جنوب الشرقية"
+      },
+      {
+        "code": "om-za",
+        "name": "الظاهرة"
+      },
+      {
+        "code": "om-bu",
+        "name": "البريمي"
+      },
+      {
+        "code": "om-mu",
+        "name": "مسندم"
+      },
+      {
+        "code": "om-wu",
+        "name": "الوسطى"
+      }
+    ],
+    "phone": {
+      "prefix": "+968",
+      "pattern": "^[79][0-9]{7}$",
+      "placeholder": "9XXXXXXX"
+    },
+    "shipping": {
+      "standard": {
+        "icon": "truck",
+        "eta": "standard"
+      },
+      "express": {
+        "icon": "fire",
+        "eta": "يصلك اليوم قبل 9 مساءً داخل مسقط"
+      },
+      "pickup": {
+        "icon": "pin",
+        "eta": "جاهز للاستلام من المشغل خلال ساعتين"
+      }
+    },
+    "giftNote": "تغليف فاخر مجاني + بطاقة برسالتك، وبلا فاتورة داخل الطرد"
+  },
+  "product": {
+    "lowStockAt": 3,
+    "lengthField": {
+      "categories": [
+        "abayas"
+      ],
+      "note": "تعديل الطول مجاناً"
+    },
+    "atelier": {
+      "categories": [
+        "abayas"
+      ]
+    },
+    "bnpl": {
+      "installments": 4,
+      "providers": [
+        "tamara",
+        "tabby"
+      ]
+    },
+    "delivery": {
+      "timezone": "Asia/Muscat",
+      "cityLabel": "داخل مسقط",
+      "othersLabel": "بقية المحافظات خلال 48 ساعة"
+    },
+    "perks": [
+      {
+        "icon": "truck",
+        "text": "توصيل خلال ٢٤–٤٨ ساعة"
+      },
+      {
+        "icon": "refresh",
+        "text": "استبدال خلال ١٤ يوماً"
+      },
+      {
+        "icon": "shield",
+        "text": "دفع آمن عبر ثواني"
+      },
+      {
+        "icon": "gift",
+        "text": "تغليف هدايا مجاني"
+      }
+    ],
+    "craftNote": "تُخاط كل قطعة في مشغل ليان بمسقط.",
+    "shippingReturns": "التوصيل داخل مسقط خلال ٢٤ ساعة ولبقية المحافظات خلال ٤٨ ساعة. الاستبدال مجاني خلال ١٤ يوماً بشرط عدم الاستخدام وبقاء البطاقة.",
+    "sizeGuides": {
+      "abayas": {
+        "head": [
+          "المقاس",
+          "الطول (سم)",
+          "الصدر (سم)",
+          "الكم (سم)"
+        ],
+        "rows": [
+          [
+            "50",
+            "140",
+            "100",
+            "60"
+          ],
+          [
+            "52",
+            "145",
+            "104",
+            "61"
+          ],
+          [
+            "54",
+            "150",
+            "108",
+            "62"
+          ],
+          [
+            "56",
+            "155",
+            "112",
+            "63"
+          ],
+          [
+            "58",
+            "160",
+            "116",
+            "64"
+          ]
+        ]
+      },
+      "dresses": {
+        "head": [
+          "المقاس",
+          "الصدر (سم)",
+          "الخصر (سم)",
+          "الطول (سم)"
+        ],
+        "rows": [
+          [
+            "S",
+            "88",
+            "70",
+            "138"
+          ],
+          [
+            "M",
+            "94",
+            "76",
+            "140"
+          ],
+          [
+            "L",
+            "100",
+            "82",
+            "142"
+          ],
+          [
+            "XL",
+            "106",
+            "88",
+            "144"
+          ]
+        ]
+      }
+    }
+  },
+  "location": {
+    "name": "مشغل ليان — الخوير",
+    "city": "مسقط",
+    "address": "الخوير، مجمع ليان"
+  },
+  "shipping": [
+    {
+      "code": "standard",
+      "name": "توصيل عادي",
+      "desc": "خلال 24–48 ساعة بمندوب ليان",
+      "amount": 1.5,
+      "free_over": 20
+    },
+    {
+      "code": "express",
+      "name": "توصيل سريع اليوم",
+      "desc": "داخل مسقط — للطلبات قبل 3 عصراً",
+      "amount": 2.0,
+      "provinces": [
+        "om-ma"
+      ]
+    },
+    {
+      "code": "pickup",
+      "name": "استلام من المشغل",
+      "desc": "الخوير — مجمع ليان · جاهز خلال ساعتين",
+      "amount": 0
+    }
+  ],
+  "promotions": [
+    {
+      "code": "LAYAN10",
+      "type": "percentage",
+      "value": 10,
+      "description": "خصم ١٠٪ على الطلب"
+    }
+  ],
+  "categories": [
+    {
+      "handle": "abayas",
+      "name": "عباءات"
+    },
+    {
+      "handle": "dresses",
+      "name": "فساتين"
+    },
+    {
+      "handle": "scarves",
+      "name": "أوشحة"
+    },
+    {
+      "handle": "bags",
+      "name": "حقائب"
+    }
+  ],
+  "collections": [
+    {
+      "handle": "new",
+      "title": "وصل حديثاً"
+    },
+    {
+      "handle": "bestsellers",
+      "title": "الأكثر مبيعاً"
+    },
+    {
+      "handle": "sale",
+      "title": "العروض"
+    }
+  ],
+  "tags": [
+    {
+      "value": "eid",
+      "label": "العيد"
+    },
+    {
+      "value": "weddings",
+      "label": "الأعراس"
+    },
+    {
+      "value": "work",
+      "label": "الدوام"
+    },
+    {
+      "value": "umrah",
+      "label": "العمرة"
+    },
+    {
+      "value": "graduation",
+      "label": "التخرج"
+    }
+  ],
+  "products": [
+    {
+      "handle": "classic-straight-abaya",
+      "title": "عباءة كلاسيكية بقصة مستقيمة",
+      "category": "abayas",
+      "collection": "bestsellers",
+      "description": "عباءة يومية بقماش كريب فاخر خفيف ومنسدل، قصة مستقيمة بأكمام واسعة وخياطة مخفية. تصميم عملي يناسب الدوام والمناسبات اليومية.",
+      "price": 28.5,
+      "compare_at": 34,
+      "images": [
+        "images/n-mod1.jpg",
+        "images/ab-1.jpg",
+        "images/ab-2.jpg",
+        "images/n-mod5.jpg"
+      ],
+      "options": {
+        "size": [
+          "50",
+          "52",
+          "54",
+          "56",
+          "58"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "50": 6,
+        "52": 2,
+        "54": 8,
+        "56": 4,
+        "58": 0
+      },
+      "tags": [
+        "work"
+      ],
+      "rating": 4.8,
+      "reviews": 126,
+      "sold_week": 14,
+      "complements": [
+        "beaded-embroidered-shayla",
+        "medium-leather-handbag"
+      ]
+    },
+    {
+      "handle": "gold-embroidered-evening-dress",
+      "title": "فستان سهرة مطرز بخيوط ذهبية",
+      "category": "dresses",
+      "collection": "new",
+      "description": "فستان سهرة طويل بتطريز يدوي بخيوط ذهبية على الصدر والأكمام، بطانة ساتان كاملة وسحّاب خلفي مخفي.",
+      "price": 45,
+      "compare_at": null,
+      "images": [
+        "images/n-mod2.jpg",
+        "images/lk-2.jpg",
+        "images/dr-4.jpg",
+        "images/lk-1.jpg"
+      ],
+      "options": {
+        "size": [
+          "S",
+          "M",
+          "L",
+          "XL"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "S": 3,
+        "M": 5,
+        "L": 2,
+        "XL": 4
+      },
+      "tags": [
+        "eid",
+        "weddings"
+      ],
+      "rating": 4.9,
+      "reviews": 87,
+      "sold_week": 9,
+      "complements": [
+        "mini-chain-evening-bag",
+        "printed-silk-scarf"
+      ]
+    },
+    {
+      "handle": "gold-trim-embroidered-abaya",
+      "title": "عباءة مطرزة بحواف ذهبية",
+      "category": "abayas",
+      "collection": "new",
+      "description": "عباءة مناسبات بقماش ندى الإماراتي مع تطريز شريطي ذهبي على الأكمام والحواف الأمامية.",
+      "price": 36.9,
+      "compare_at": null,
+      "images": [
+        "images/ab-3.jpg",
+        "images/hero-1.jpg",
+        "images/ab-2.jpg",
+        "images/ab-1.jpg"
+      ],
+      "options": {
+        "size": [
+          "50",
+          "52",
+          "54",
+          "56"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "50": 4,
+        "52": 3,
+        "54": 1,
+        "56": 5
+      },
+      "tags": [
+        "eid",
+        "weddings"
+      ],
+      "rating": 4.7,
+      "reviews": 64,
+      "sold_week": 11,
+      "complements": [
+        "printed-silk-scarf",
+        "mini-chain-evening-bag"
+      ]
+    },
+    {
+      "handle": "printed-silk-scarf",
+      "title": "وشاح حرير طبيعي منقوش",
+      "category": "scarves",
+      "collection": "sale",
+      "description": "وشاح من الحرير الطبيعي 100% بنقشة حصرية لليان، حواف مخيطة يدوياً. يأتي في علبة هدايا أنيقة.",
+      "price": 8.5,
+      "compare_at": 11,
+      "images": [
+        "images/n-mod6.jpg",
+        "images/n-silk2.jpg",
+        "images/n-silk1.jpg",
+        "images/n-silk3.jpg"
+      ],
+      "options": {
+        "size": [
+          "مقاس واحد"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "مقاس واحد": 20
+      },
+      "tags": [
+        "eid",
+        "umrah"
+      ],
+      "rating": 4.6,
+      "reviews": 203,
+      "sold_week": 31,
+      "complements": [
+        "classic-straight-abaya",
+        "medium-leather-handbag"
+      ]
+    },
+    {
+      "handle": "medium-leather-handbag",
+      "title": "حقيبة يد جلدية متوسطة",
+      "category": "bags",
+      "collection": "bestsellers",
+      "description": "حقيبة من الجلد الطبيعي بتصميم هندسي، حزام كتف قابل للتعديل وبطانة قطنية بجيبين داخليين.",
+      "price": 22,
+      "compare_at": null,
+      "images": [
+        "images/n-bag3.jpg",
+        "images/n-bag2.jpg",
+        "images/n-bag1.jpg",
+        "images/bg-5.jpg"
+      ],
+      "options": {
+        "size": [
+          "مقاس واحد"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "مقاس واحد": 5
+      },
+      "tags": [
+        "work",
+        "graduation"
+      ],
+      "rating": 4.8,
+      "reviews": 91,
+      "sold_week": 17,
+      "complements": [
+        "classic-straight-abaya",
+        "printed-silk-scarf"
+      ]
+    },
+    {
+      "handle": "puff-sleeve-day-dress",
+      "title": "فستان يومي بأكمام منفوخة",
+      "category": "dresses",
+      "collection": "sale",
+      "description": "فستان ميدي يومي بقماش قطني مريح وأكمام منفوخة، جيوب جانبية عملية وحزام خصر قابل للفك.",
+      "price": 18.5,
+      "compare_at": 23,
+      "images": [
+        "images/n-mod4.jpg",
+        "images/lk-2.jpg",
+        "images/n-mod2.jpg",
+        "images/n-mod7.jpg"
+      ],
+      "options": {
+        "size": [
+          "S",
+          "M",
+          "L",
+          "XL"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "S": 7,
+        "M": 2,
+        "L": 6,
+        "XL": 3
+      },
+      "tags": [
+        "work",
+        "graduation"
+      ],
+      "rating": 4.5,
+      "reviews": 142,
+      "sold_week": 22,
+      "complements": [
+        "beaded-embroidered-shayla",
+        "small-leather-backpack"
+      ]
+    },
+    {
+      "handle": "beaded-embroidered-shayla",
+      "title": "شيلة مطرزة بخرز ناعم",
+      "category": "scarves",
+      "collection": "bestsellers",
+      "description": "شيلة شيفون كوري بتطريز خرز ناعم على الأطراف، خفيفة وثابتة ولا تحتاج كيّاً.",
+      "price": 6.9,
+      "compare_at": null,
+      "images": [
+        "images/n-silk1.jpg",
+        "images/n-silk4.jpg",
+        "images/n-silk2.jpg",
+        "images/sc-1.jpg"
+      ],
+      "options": {
+        "size": [
+          "مقاس واحد"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "مقاس واحد": 30
+      },
+      "tags": [
+        "umrah",
+        "eid"
+      ],
+      "rating": 4.7,
+      "reviews": 178,
+      "sold_week": 40,
+      "complements": [
+        "classic-straight-abaya",
+        "medium-leather-handbag"
+      ]
+    },
+    {
+      "handle": "mini-chain-evening-bag",
+      "title": "حقيبة سهرة صغيرة بسلسلة",
+      "category": "bags",
+      "collection": "new",
+      "description": "حقيبة كلتش بقفل معدني ذهبي وسلسلة كتف قابلة للإخفاء، تتسع للجوال والأساسيات.",
+      "price": 15.5,
+      "compare_at": null,
+      "images": [
+        "images/n-bag4.jpg",
+        "images/bg-5.jpg",
+        "images/n-bag1.jpg",
+        "images/n-bag5.jpg"
+      ],
+      "options": {
+        "size": [
+          "مقاس واحد"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "مقاس واحد": 3
+      },
+      "tags": [
+        "weddings",
+        "eid"
+      ],
+      "rating": 4.4,
+      "reviews": 53,
+      "sold_week": 8,
+      "complements": [
+        "gold-embroidered-evening-dress",
+        "printed-silk-scarf"
+      ]
+    },
+    {
+      "handle": "practical-side-pocket-abaya",
+      "title": "عباءة عملية بجيوب جانبية",
+      "category": "abayas",
+      "collection": "sale",
+      "description": "عباءة يومية خفيفة بجيوب جانبية مخفية وأزرار أمامية، قماش مقاوم للتجعد يناسب السفر والعمل.",
+      "price": 24,
+      "compare_at": 28,
+      "images": [
+        "images/n-mod3.jpg",
+        "images/ab-4.jpg",
+        "images/ab-5.jpg",
+        "images/hero-1.jpg"
+      ],
+      "options": {
+        "size": [
+          "50",
+          "52",
+          "54",
+          "56",
+          "58"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "50": 5,
+        "52": 9,
+        "54": 2,
+        "56": 6,
+        "58": 4
+      },
+      "tags": [
+        "work",
+        "umrah"
+      ],
+      "rating": 4.6,
+      "reviews": 110,
+      "sold_week": 19,
+      "complements": [
+        "beaded-embroidered-shayla",
+        "small-leather-backpack"
+      ]
+    },
+    {
+      "handle": "floral-casual-dress",
+      "title": "فستان كاجوال بطبعة زهور",
+      "category": "dresses",
+      "collection": "new",
+      "description": "فستان كاجوال واسع بطبعة زهور هادئة، قماش فسكوز بارد يناسب أجواء الصيف.",
+      "price": 16.9,
+      "compare_at": null,
+      "images": [
+        "images/n-mod7.jpg",
+        "images/lk-1.jpg",
+        "images/n-mod4.jpg",
+        "images/n-mod2.jpg"
+      ],
+      "options": {
+        "size": [
+          "S",
+          "M",
+          "L"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "S": 4,
+        "M": 4,
+        "L": 1
+      },
+      "tags": [
+        "graduation"
+      ],
+      "rating": 4.5,
+      "reviews": 96,
+      "sold_week": 12,
+      "complements": [
+        "printed-silk-scarf",
+        "small-leather-backpack"
+      ]
+    },
+    {
+      "handle": "open-sleeve-black-abaya",
+      "title": "عباءة سوداء بأكمام مفتوحة",
+      "category": "abayas",
+      "collection": "bestsellers",
+      "description": "عباءة كلاسيكية سوداء بأكمام مفتوحة واسعة وقصة انسيابية، من قماش السلك الكوري الفاخر.",
+      "price": 31,
+      "compare_at": null,
+      "images": [
+        "images/ab-1.jpg",
+        "images/ab-2.jpg",
+        "images/n-mod5.jpg",
+        "images/n-mod1.jpg"
+      ],
+      "options": {
+        "size": [
+          "50",
+          "52",
+          "54",
+          "56",
+          "58"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "50": 3,
+        "52": 7,
+        "54": 5,
+        "56": 2,
+        "58": 6
+      },
+      "tags": [
+        "umrah",
+        "work",
+        "eid"
+      ],
+      "rating": 4.9,
+      "reviews": 212,
+      "sold_week": 27,
+      "complements": [
+        "printed-silk-scarf",
+        "medium-leather-handbag"
+      ]
+    },
+    {
+      "handle": "small-leather-backpack",
+      "title": "حقيبة ظهر جلدية صغيرة",
+      "category": "bags",
+      "collection": "sale",
+      "description": "حقيبة ظهر أنيقة بحجم عملي، جلد ناعم وسحّابات معدنية ذهبية وحزامان قابلان للتعديل.",
+      "price": 19.5,
+      "compare_at": 24,
+      "images": [
+        "images/n-bag2.jpg",
+        "images/bg-3.jpg",
+        "images/n-bag5.jpg",
+        "images/bg-4.jpg"
+      ],
+      "options": {
+        "size": [
+          "مقاس واحد"
+        ],
+        "color": [
+          "أسود",
+          "رملي",
+          "زمردي"
+        ]
+      },
+      "stock": {
+        "مقاس واحد": 4
+      },
+      "tags": [
+        "work",
+        "graduation"
+      ],
+      "rating": 4.3,
+      "reviews": 38,
+      "sold_week": 6,
+      "complements": [
+        "puff-sleeve-day-dress",
+        "beaded-embroidered-shayla"
+      ]
+    }
+  ]
+}
