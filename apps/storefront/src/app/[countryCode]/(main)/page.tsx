@@ -10,14 +10,16 @@ export const metadata: Metadata = {
   description: storeConfig.description,
 }
 
-const ORDER = ["new", "bestsellers", "sale"]
 
 export default async function Home(props: { params: Promise<{ countryCode: string }> }) {
   const { countryCode } = await props.params
   const region = await getRegion(countryCode)
   const { collections } = await listCollections({ fields: "id, handle, title" })
   if (!collections || !region) return null
-  const ordered = [...collections].sort((a, b) => ORDER.indexOf(a.handle!) - ORDER.indexOf(b.handle!))
+  // ترتيب المجموعات من store.json → home.collectionsOrder (غير المذكورة في الآخر)
+  const order = storeConfig.home.collectionsOrder ?? []
+  const rank = (h?: string | null) => (order.indexOf(h ?? "") < 0 ? 99 : order.indexOf(h ?? ""))
+  const ordered = [...collections].sort((a, b) => rank(a.handle) - rank(b.handle))
 
   return (
     <>

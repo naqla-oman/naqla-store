@@ -124,7 +124,6 @@ export default async function ProductPage(props: Props) {
 
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
   const { price, currency } = variantPricing(pricedProduct)
-  const meta = (pricedProduct.metadata || {}) as Record<string, any>
   const inStock = (pricedProduct.variants ?? []).some((v) => availableQty(v) > 0)
   const url = `${getBaseURL()}/${params.countryCode}/products/${pricedProduct.handle}`
   const jsonLd = {
@@ -143,9 +142,7 @@ export default async function ProductPage(props: Props) {
       price: price.toFixed(3),
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
     },
-    ...(meta.rating && meta.reviews
-      ? { aggregateRating: { "@type": "AggregateRating", ratingValue: meta.rating, reviewCount: meta.reviews } }
-      : {}),
+    // لا aggregateRating: التقييمات حالياً بيانات مزروعة لا تقييمات حقيقية (إرشادات Google)
   }
 
   return (

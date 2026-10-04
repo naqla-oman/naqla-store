@@ -265,12 +265,12 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
       <Steps current={step === "address" ? 1 : 2} />
       {customer ? (
         <div className="guest" data-testid="signed-in-note">
-          <Icon name="user" size={15} /> أنتِ داخلة بحسابك{customer.first_name ? ` يا ${customer.first_name}` : ""} — ستُضاف نقاط هذا الطلب لرصيدك
+          <Icon name="user" size={15} /> أنتِ داخلة بحسابك{customer.first_name ? ` يا ${customer.first_name}` : ""}{storeConfig.features.loyalty ? " — ستُضاف نقاط هذا الطلب لرصيدك" : ""}
         </div>
       ) : (
         <div className="guest" data-testid="guest-note">
           <Icon name="user" size={15} /> لا حاجة لإنشاء حساب — أكملي كضيفة، أو{" "}
-          <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>ادخلي برقمك</LocalizedClientLink> لتكسبي نقاط الولاء
+          <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>ادخلي برقمك</LocalizedClientLink>{storeConfig.features.loyalty ? " لتكسبي نقاط الولاء" : " لحفظ طلباتك"}
         </div>
       )}
       <button type="button" className="sumtoggle" aria-expanded={step === "payment" || sumOpen} aria-controls="sumBox" onClick={() => setSumOpen((v) => !v)}>

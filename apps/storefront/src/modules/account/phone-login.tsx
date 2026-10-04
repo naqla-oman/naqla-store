@@ -112,7 +112,7 @@ export default function PhoneLogin() {
                 <Icon name="whatsapp" size={18} /> {busy ? "جارٍ الإرسال…" : "أرسلي الرمز على واتساب"}
               </button>
               <div className="perkline">
-                <div><Icon name="sparkle" size={15} /> {storeConfig.loyalty.pointsPerUnit} نقاط ولاء لكل ريال</div>
+                {storeConfig.features.loyalty && <div><Icon name="sparkle" size={15} /> {storeConfig.loyalty.pointsPerUnit} نقاط ولاء لكل ريال</div>}
                 <div><Icon name="box" size={15} /> طلباتك السابقة برقمك تظهر في حسابك تلقائياً</div>
                 <div><Icon name="heart" size={15} /> مفضلتك محفوظة على كل أجهزتك</div>
               </div>
