@@ -1,6 +1,21 @@
+const path = require("path")
 const checkEnvVariables = require("./check-env-variables")
+const { clientDir, clientStore } = require("./client")
 
 checkEnvVariables()
+
+// العميل من STORE: كل ما يخصه يُقرأ من clients/<STORE>/ عبر أسماء مستعارة — لا نسخ ملفات
+const CLIENT_DIR = clientDir()
+const CLIENT = clientStore()
+const ALIASES = {
+  "@client": CLIENT_DIR,
+  "@client-font-display": path.join(__dirname, "src/fonts/display", `${CLIENT.fonts.display}.ts`),
+  "@client-font-body": path.join(__dirname, "src/fonts/body", `${CLIENT.fonts.body}.ts`),
+}
+// Turbopack يقبل مسارات نسبية من جذر التطبيق
+const TURBO_ALIASES = Object.fromEntries(
+  Object.entries(ALIASES).map(([k, v]) => [k, "./" + path.relative(__dirname, v).split(path.sep).join("/")])
+)
 
 /**
  * Medusa Cloud-related environment variables
@@ -21,6 +36,13 @@ const BACKEND_HOST = (() => {
 
 const nextConfig = {
   reactStrictMode: true,
+  // ملفات العميل خارج مجلد التطبيق (clients/)
+  experimental: { externalDir: true },
+  turbopack: { resolveAlias: TURBO_ALIASES },
+  webpack: (config) => {
+    Object.assign(config.resolve.alias, ALIASES)
+    return config
+  },
   logging: {
     fetches: {
       fullUrl: true,
