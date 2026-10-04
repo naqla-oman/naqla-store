@@ -29,6 +29,8 @@ module.exports = defineConfig({
     }
   },
   modules: [
+    // أدوات التتبع (المعرّفات والرموز في الخادم) + تحويلات 301 للسيو
+    { resolve: './src/modules/tracking' },
     // الملفات (صور المنتجات): محلياً في static/ ويُقدَّم من الخادم. للإنتاج: MEDUSA_BACKEND_URL بالنطاق العام
     {
       resolve: '@medusajs/medusa/file',
