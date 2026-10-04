@@ -6,7 +6,7 @@
 - `logo.svg` = `logo-on-light.svg`: الشعار الأساسي (الكلمة + الموجة + ABAQ) للأرضيات الفاتحة. `logo-on-dark.svg` للوضع الليلي، `logo-white.svg` فوق الصور. بدّل حسب الوضع (SVG لا يرث لون النص).
 - `symbol.svg`: القطرة والموج — للأيقونات فقط، لا تضعها بجانب الكلمة.
 - `icons/`: icon-512، icon-192، apple-touch-icon، icon-maskable-512، favicon.svg، favicon.ico.
-- `og.jpg` (1200×630). `theme.css`: نفس أسماء رموز ليان بقيم عبق.
+- `og.jpg` (1200×630). `theme.css`: نفس أسماء رموز القالب بقيم عبق.
 
 ## الإعدادات
 - الوضع الافتراضي: **نهاري (light)**.
