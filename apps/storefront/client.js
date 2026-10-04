@@ -17,7 +17,8 @@ function clientSlug() {
 }
 
 function clientDir() {
-  const base = process.env.CLIENTS_DIR ? path.resolve(process.env.CLIENTS_DIR) : path.resolve(__dirname, "../../clients")
+  // من مجلد التشغيل (apps/storefront) لا __dirname: عند حزم المسارات يصبح __dirname مساراً افتراضياً
+  const base = process.env.CLIENTS_DIR ? path.resolve(process.env.CLIENTS_DIR) : path.resolve(process.cwd(), "../../clients")
   const dir = path.join(base, clientSlug())
   if (!fs.existsSync(path.join(dir, "store.json"))) {
     throw new Error(`لا يوجد ${path.join(dir, "store.json")} — أنشئي العميل بـ pnpm store:new ${clientSlug()}`)

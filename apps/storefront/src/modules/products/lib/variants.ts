@@ -39,6 +39,14 @@ export const availableQty = (v?: Variant) => {
 
 export function buildMatrix(product: HttpTypes.StoreProduct): VariantMatrix {
   const variants = product.variants ?? []
+  // ترتيب القيم: كما حُفظ من store.json (metadata.option_order)، وإلا ترتيب طبيعي للأرقام (3 مل قبل 12 مل)
+  const saved = ((product.metadata as any)?.option_order ?? {}) as Record<string, string[]>
+  const num = (x: string) => { const m = x.match(/[\d.]+/); return m ? parseFloat(m[0]) : NaN }
+  const ordered = (title: string, vals: string[]) => {
+    const order = saved[title]
+    if (order?.length) return [...vals].sort((a, b) => (order.indexOf(a) < 0 ? 99 : order.indexOf(a)) - (order.indexOf(b) < 0 ? 99 : order.indexOf(b)))
+    return vals.every((v) => !isNaN(num(v))) ? [...vals].sort((a, b) => num(a) - num(b)) : vals
+  }
   const used = (product.options ?? []).filter((o) => variants.some((v) => valueOf(v, o.id)))
 
   // ترتيب store.options أولاً، ثم أي خيار أُضيف من اللوحة باسم آخر (يُعرض كأزرار)
@@ -52,7 +60,7 @@ export function buildMatrix(product: HttpTypes.StoreProduct): VariantMatrix {
         type: c?.type ?? ("buttons" as const),
         swatches: c?.swatches,
         optionId: o.id,
-        values: Array.from(new Set(variants.map((v) => valueOf(v, o.id)).filter(Boolean) as string[])),
+        values: ordered(o.title, Array.from(new Set(variants.map((v) => valueOf(v, o.id)).filter(Boolean) as string[]))),
       }
     })
     .sort((a, b) => {
