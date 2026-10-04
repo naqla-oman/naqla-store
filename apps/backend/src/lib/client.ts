@@ -28,6 +28,8 @@ export type ClientProduct = {
   reviews?: number
   sold_week?: number
   complements?: string[]
+  /** اسم لاتيني اختياري يُعرض تحت اسم المنتج (fonts.latin) */
+  title_en?: string
 }
 export type ClientTier = { key: string; name: string; min: number; perk?: string; group?: string; freeShipping?: boolean; promoCode?: string }
 export type ClientShipping = { code: string; name: string; desc: string; amount: number; free_over?: number; provinces?: string[] }

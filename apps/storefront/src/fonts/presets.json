@@ -14,5 +14,9 @@
     "noto-sans-arabic",
     "readex-pro",
     "tajawal"
+  ],
+  "latin": [
+    "none",
+    "tenor-sans"
   ]
 }

@@ -153,3 +153,13 @@ footer.site a { color: inherit; text-decoration: none; }
   .fcol details[open] summary::after { transform: rotate(-135deg); }
   .fcol ul { padding: 8px 0 12px; }
 }
+
+/* الشعار الكلمة: نسخة نهارية وليلية */
+.brand-word { display: inline-flex; align-items: center; }
+.brand-word .logo-dark { display: none; }
+:root[data-theme="dark"] .brand-word .logo-light { display: none; }
+:root[data-theme="dark"] .brand-word .logo-dark { display: block; }
+/* الزخرفة الفاصلة */
+.decor-wave { line-height: 0; margin: 18px auto; opacity: .9; }
+/* السطر اللاتيني تحت اسم المنتج (fonts.latin) */
+.latinline { font-family: var(--font-latin, inherit); text-transform: uppercase; letter-spacing: .32em; font-size: 11.5px; color: var(--muted); direction: ltr; text-align: start; margin: -2px 0 6px; }

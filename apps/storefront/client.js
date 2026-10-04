@@ -28,7 +28,8 @@ function clientDir() {
 
 function clientStore() {
   const store = JSON.parse(fs.readFileSync(path.join(clientDir(), "store.json"), "utf8"))
-  for (const kind of ["display", "body"]) {
+  store.fonts = { latin: "none", ...(store.fonts || {}) }
+  for (const kind of ["display", "body", "latin"]) {
     const id = store.fonts && store.fonts[kind]
     if (!presets[kind].includes(id)) {
       throw new Error(`store.json → fonts.${kind} = «${id}» غير موجود. المتاح: ${presets[kind].join("، ")}`)

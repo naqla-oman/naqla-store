@@ -12,3 +12,7 @@ declare module "@client-font-body" {
   const font: { className: string; variable: string; style: { fontFamily: string } }
   export default font
 }
+declare module "@client-font-latin" {
+  const font: { className: string; variable: string; style: { fontFamily: string } }
+  export default font
+}

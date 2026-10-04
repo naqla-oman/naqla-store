@@ -11,6 +11,7 @@ const ALIASES = {
   "@client": CLIENT_DIR,
   "@client-font-display": path.join(__dirname, "src/fonts/display", `${CLIENT.fonts.display}.ts`),
   "@client-font-body": path.join(__dirname, "src/fonts/body", `${CLIENT.fonts.body}.ts`),
+  "@client-font-latin": path.join(__dirname, "src/fonts/latin", `${CLIENT.fonts.latin}.ts`),
 }
 // Turbopack: مسارات نسبية من جذر التطبيق، ولا يطابق البادئات إلا بصيغة النجمة (@client/*)
 const rel = (v) => "./" + path.relative(__dirname, v).split(path.sep).join("/")

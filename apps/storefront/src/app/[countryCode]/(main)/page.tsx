@@ -1,6 +1,7 @@
 import { Metadata } from "next"
 import FeaturedProducts from "@modules/home/components/featured-products"
 import Hero from "@modules/home/components/hero"
+import Decor from "@modules/common/components/decor"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
 import { storeConfig } from "../../../store.config"
@@ -24,6 +25,7 @@ export default async function Home(props: { params: Promise<{ countryCode: strin
   return (
     <>
       <Hero />
+      <Decor className="wrap" />
       <div className="pb-8">
         <ul className="flex flex-col">
           <FeaturedProducts collections={ordered} region={region} />

@@ -41,7 +41,13 @@ type ClientStore = {
   freeShippingOver: number
   cutoffHour: number
   orderPrefix: string
-  fonts: { display: string; body: string }
+  fonts: { display: string; body: string; latin?: string }
+  /** الشعار: wordmark = الكلمة كاملة في الملف (تُعرض وحدها)، وإلا علامة مربعة + الاسم نصاً */
+  brand?: { logo?: string; logoDark?: string; logoOnDark?: string; wordmark?: boolean }
+  defaultTheme?: "light" | "dark"
+  icons?: { icon192?: string; icon512?: string; maskable?: string; apple?: string; svg?: string }
+  /** زخرفة فاصلة اختيارية بين أقسام الرئيسية وأسفل الفوتر */
+  decor?: { type: "wave"; color: string } | null
   colors: { theme: string; background: string }
   contact: { whatsapp: string; phone: string; email: string; address: string; hours: string }
   social: Record<string, string>
@@ -107,6 +113,22 @@ export const storeConfig = {
   freeShippingOver: c.freeShippingOver,
   cutoffHour: c.cutoffHour,
   colors: c.colors,
+  defaultTheme: c.defaultTheme ?? "light",
+  brand: {
+    logo: c.brand?.logo ?? "logo.svg",
+    logoDark: c.brand?.logoDark ?? c.brand?.logo ?? "logo.svg",
+    // الفوتر داكن في الوضعين: نسخة للأرضية الداكنة إن وُجدت
+    logoOnDark: c.brand?.logoOnDark ?? c.brand?.logoDark ?? c.brand?.logo ?? "logo.svg",
+    wordmark: c.brand?.wordmark === true,
+  },
+  icons: {
+    icon192: c.icons?.icon192 ?? "icons/icon-192.png",
+    icon512: c.icons?.icon512 ?? "icons/icon-512.png",
+    maskable: c.icons?.maskable ?? c.icons?.icon512 ?? "icons/icon-512.png",
+    apple: c.icons?.apple ?? c.icons?.icon192 ?? "icons/icon-192.png",
+    svg: c.icons?.svg ?? null,
+  },
+  decor: c.decor ?? null,
   contact: c.contact,
   social: c.social,
   nav: c.nav,
