@@ -27,7 +27,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   const loyalty = req.scope.resolve<LoyaltyModuleService>(LOYALTY_MODULE)
   const [entry] = await loyalty.listLoyaltyEntries({ order_id: order.id, kind: "earn" })
   const points = {
-    points: entry?.points ?? loyalty.pointsFor((order as any).item_total ?? 0),
+    points: entry?.points ?? (await loyalty.pointsFor((order as any).item_total ?? 0)),
     status: entry?.status ?? null,
     has_account: !!(order as any).customer?.has_account,
   }

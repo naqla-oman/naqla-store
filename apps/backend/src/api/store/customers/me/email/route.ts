@@ -1,5 +1,6 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { MedusaError, Modules } from "@medusajs/framework/utils"
+import { updateCustomersWorkflow } from "@medusajs/medusa/core-flows"
 import { PLACEHOLDER_EMAIL_DOMAIN } from "../../../phone-account/route"
 
 /**
@@ -20,6 +21,6 @@ export const POST = async (req: AuthenticatedMedusaRequest<{ email?: string; onl
   if (taken && taken.id !== me.id) {
     throw new MedusaError(MedusaError.Types.DUPLICATE_ERROR, "هذا البريد مستخدم في حساب آخر")
   }
-  await customers.updateCustomers(me.id, { email })
+  await updateCustomersWorkflow(req.scope).run({ input: { selector: { id: me.id }, update: { email } } })
   res.json({ updated: true })
 }
