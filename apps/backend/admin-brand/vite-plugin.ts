@@ -1,0 +1,93 @@
+/** جزء إضافة Vite الذي نستخدمه (يُعرَّف هنا لتجنّب استيراد أنواع vite بصيغة ESM في إعدادات CommonJS) */
+type HtmlTag = { tag: string; attrs?: Record<string, string>; children?: string; injectTo?: "head" | "head-prepend" | "body" }
+type Plugin = { name: string; transformIndexHtml: (html: string) => { html: string; tags: HtmlTag[] } }
+
+/**
+ * هوية «لوحة نقلة» على لوحة Medusa دون نسخ كودها — كل التعديلات في رأس الصفحة فقط:
+ *  - العنوان والأيقونة، خط IBM Plex Sans Arabic، ألوان نقلة عبر متغيرات @medusajs/ui (لا المكوّنات)
+ *  - العربية افتراضياً (localStorage.lng) ما لم يختر المستخدم لغة
+ *  - إخفاء شعار Medusa في الدخول، وهوية نقلة + شعار العميل في رأس القائمة
+ *  - عنوان المتبويب: Medusa يضيف « - Medusa» نصاً ثابتاً، فيُستبدل بـ«لوحة نقلة»
+ * عند تحديث Medusa: راجعي المحدِّدات في BRAND_CSS فقط (مُعلَّمة بـ «محدِّد»).
+ */
+const NAVY = "#041B3F"
+const TEAL = "#03635E"
+const TEAL_HOVER = "#024E4A"
+const TEAL_LIGHT = "#0E9E9F"
+
+const BRAND_CSS = `
+/* ---- الخط ---- */
+html, body, body *:not(code):not(pre):not(.font-mono) { font-family: "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif !important; }
+
+/* ---- ألوان نقلة (متغيرات @medusajs/ui) ---- */
+:root, .light {
+  --bg-interactive: ${TEAL};
+  --fg-interactive: ${TEAL};
+  --fg-interactive-hover: ${TEAL_LIGHT};
+  --border-interactive: ${TEAL};
+  --borders-interactive-with-active: 0px 0px 0px 4px rgba(3, 99, 94, 0.2), 0px 0px 0px 1px ${TEAL};
+  --button-inverted: ${TEAL};
+  --button-inverted-hover: ${TEAL_HOVER};
+  --button-inverted-pressed: #023B38;
+  --bg-highlight: #E7F4F3;
+  --bg-highlight-hover: #D2ECEA;
+  --fg-base: ${NAVY};
+}
+.dark {
+  --bg-interactive: ${TEAL_LIGHT};
+  --fg-interactive: #3CC2C2;
+  --fg-interactive-hover: #6FD6D5;
+  --border-interactive: ${TEAL_LIGHT};
+  --button-inverted: ${TEAL};
+  --button-inverted-hover: ${TEAL_LIGHT};
+  --bg-highlight: #0B3533;
+}
+
+/* ---- الدخول: إخفاء شعار Medusa (محدِّد: أول صندوق في نموذج الدخول يحوي svg) ---- */
+.max-w-\\[280px\\] > div:first-child:has(> svg), .max-w-\\[280px\\] > div:first-child:has(svg):not(:has(img)) { display: none !important; }
+
+/* ---- رأس القائمة: هوية نقلة فوق اسم المتجر (محدِّد: aside .sticky.top-0) ---- */
+aside .sticky.top-0::before {
+  content: ""; display: block; height: 34px; margin: 14px 14px 2px;
+  background: url(/naqla-brand/logo-horizontal.png) no-repeat right center / contain;
+}
+.dark aside .sticky.top-0::before { background-image: url(/naqla-brand/logo-horizontal-white.png); }
+/* شعار العميل الصغير بدل الحرف الأول (محدِّد: زر قائمة المتجر في الرأس) */
+aside .sticky.top-0 button[aria-haspopup="menu"] > span:first-child > span {
+  font-size: 0 !important; background: url(/naqla-brand/client-logo.png) center / cover no-repeat !important;
+}
+`
+
+const HEAD_SCRIPT = `
+(function () {
+  try {
+    if (!localStorage.getItem("lng") && document.cookie.indexOf("i18next=") < 0) localStorage.setItem("lng", "ar");
+  } catch (e) {}
+  var fix = function () {
+    if (document.title.indexOf("Medusa") >= 0) document.title = document.title.replace(/Medusa/g, "لوحة نقلة");
+  };
+  new MutationObserver(fix).observe(document.head, { childList: true, subtree: true, characterData: true });
+  fix();
+})();
+`
+
+export function naqlaAdminBrand(): Plugin {
+  return {
+    name: "naqla-admin-brand",
+    transformIndexHtml(html) {
+      return {
+        html: html.replace(/<title>[\s\S]*?<\/title>/, "<title>لوحة نقلة</title>").replace(/<link[^>]+rel="icon"[^>]*>/g, ""),
+        tags: [
+          { tag: "link", attrs: { rel: "icon", type: "image/png", sizes: "32x32", href: "/naqla-brand/favicon-32.png" }, injectTo: "head" },
+          { tag: "link", attrs: { rel: "icon", type: "image/png", sizes: "16x16", href: "/naqla-brand/favicon-16.png" }, injectTo: "head" },
+          { tag: "link", attrs: { rel: "apple-touch-icon", href: "/naqla-brand/apple-touch-icon.png" }, injectTo: "head" },
+          { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.gstatic.com", crossorigin: "" }, injectTo: "head" },
+          { tag: "link", attrs: { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" }, injectTo: "head" },
+          { tag: "meta", attrs: { name: "theme-color", content: TEAL }, injectTo: "head" },
+          { tag: "style", attrs: { id: "naqla-brand" }, children: BRAND_CSS, injectTo: "head" },
+          { tag: "script", children: HEAD_SCRIPT, injectTo: "head-prepend" },
+        ],
+      }
+    },
+  }
+}
