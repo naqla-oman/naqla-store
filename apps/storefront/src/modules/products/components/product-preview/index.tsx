@@ -4,6 +4,7 @@ import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Icon from "@modules/common/components/icon"
+import WishButton from "@modules/common/components/wish-button"
 
 const TAG: Record<string, string> = { new: "جديد", bestsellers: "الأكثر مبيعاً", sale: "خصم" }
 
@@ -31,7 +32,7 @@ export default async function ProductPreview({
           <Image src={product.thumbnail} alt={product.title} fill sizes="(max-width: 700px) 50vw, (max-width: 1024px) 33vw, 25vw" />
         )}
         {pct > 0 ? <span className="tag red"><bdi dir="ltr">-{pct}%</bdi></span> : tag ? <span className="tag">{tag}</span> : null}
-        <button type="button" className="wish" aria-label="أضيفي للمفضلة"><Icon name="heart" size={17} /></button>
+        <WishButton productId={product.id} />
       </div>
       <div className="pb">
         {cat && <div className="cat">{cat}</div>}
