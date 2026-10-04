@@ -19,8 +19,8 @@ const BRAND_CSS = `
 /* ---- الخط ---- */
 html, body, body *:not(code):not(pre):not(.font-mono) { font-family: "IBM Plex Sans Arabic", "Inter", system-ui, sans-serif !important; }
 
-/* ---- ألوان نقلة (متغيرات @medusajs/ui) ---- */
-:root, .light {
+/* ---- ألوان نقلة (متغيرات @medusajs/ui) — تحديد أعلى لأن app.css يُحمَّل بعد هذا الوسم ---- */
+html:root, html.light:root {
   --bg-interactive: ${TEAL};
   --fg-interactive: ${TEAL};
   --fg-interactive-hover: ${TEAL_LIGHT};
@@ -33,7 +33,7 @@ html, body, body *:not(code):not(pre):not(.font-mono) { font-family: "IBM Plex S
   --bg-highlight-hover: #D2ECEA;
   --fg-base: ${NAVY};
 }
-.dark {
+html.dark:root, html:root .dark {
   --bg-interactive: ${TEAL_LIGHT};
   --fg-interactive: #3CC2C2;
   --fg-interactive-hover: #6FD6D5;
@@ -64,7 +64,11 @@ const HEAD_SCRIPT = `
     if (!localStorage.getItem("lng") && document.cookie.indexOf("i18next=") < 0) localStorage.setItem("lng", "ar");
   } catch (e) {}
   var fix = function () {
-    if (document.title.indexOf("Medusa") >= 0) document.title = document.title.replace(/Medusa/g, "لوحة نقلة");
+    var t = document.title;
+    if (t.indexOf("Medusa") < 0) return;
+    var base = t.replace(/\s*-\s*Medusa\s*$/, "");
+    // «مرحباً بك في لوحة نقلة» لا تحتاج لاحقة، وغيرها: «الطلبات — لوحة نقلة»
+    document.title = base.indexOf("لوحة نقلة") >= 0 ? base : (base && base !== "Medusa" ? base + " — لوحة نقلة" : "لوحة نقلة");
   };
   new MutationObserver(fix).observe(document.head, { childList: true, subtree: true, characterData: true });
   fix();
