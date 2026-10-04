@@ -24,3 +24,6 @@ build
 !.yarn/versions
 
 .medusa
+# ملفات وحدة الملفات المحلية (صور مرفوعة) — بيانات تشغيل لا تُرفع للمستودع
+static/
+migrate*.log
