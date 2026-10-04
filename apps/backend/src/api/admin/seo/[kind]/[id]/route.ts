@@ -19,11 +19,10 @@ export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaRes
     entity: kind === "product" ? "product" : "product_category", fields: ["id", "metadata"], filters: { id },
   })
   if (!data[0]) throw new MedusaError(MedusaError.Types.NOT_FOUND, "غير موجود")
-  const metadata = {
-    ...((data[0] as any).metadata ?? {}),
-    seo_title: (req.body.seo_title ?? "").trim().slice(0, 70) || null,
-    seo_description: (req.body.seo_description ?? "").trim().slice(0, 170) || null,
-  }
+  // تحديث جزئي: الحقل غير المرسل يبقى كما هو (النص الفارغ يحذفه)
+  const metadata: Record<string, unknown> = { ...((data[0] as any).metadata ?? {}) }
+  if ("seo_title" in req.body) metadata.seo_title = (req.body.seo_title ?? "").trim().slice(0, 70) || null
+  if ("seo_description" in req.body) metadata.seo_description = (req.body.seo_description ?? "").trim().slice(0, 170) || null
   const update = { metadata, ...(handle ? { handle } : {}) }
   if (kind === "product") await updateProductsWorkflow(req.scope).run({ input: { selector: { id }, update } })
   else await updateProductCategoriesWorkflow(req.scope).run({ input: { selector: { id }, update } })
