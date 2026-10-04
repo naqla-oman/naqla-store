@@ -10,10 +10,13 @@ type Props = {
   images: HttpTypes.StoreProductImage[]
   title: string
   badge?: React.ReactNode
+  /** النص البديل (الاسم + القسم + الألوان) — الافتراضي العنوان */
+  alt?: string
 }
 
 /** معرض المنتج: صورة رئيسية (سحب على الجوال) + مصغّرات + عارض بملء الشاشة مع تكبير */
-export default function ImageGallery({ images, title, badge }: Props) {
+export default function ImageGallery({ images, title, badge, alt }: Props) {
+  const base = alt || title
   const list = images.length ? images : []
   const [shot, setShot] = useState(0)
   const [open, setOpen] = useState(false)
@@ -66,7 +69,7 @@ export default function ImageGallery({ images, title, badge }: Props) {
               <Image
                 key={img.id}
                 src={img.url}
-                alt={i === 0 ? title : `${title} — صورة ${i + 1}`}
+                alt={i === 0 ? base : `${base} — صورة ${i + 1}`}
                 fill
                 priority={i === 0}
                 sizes="(max-width: 900px) 100vw, 50vw"

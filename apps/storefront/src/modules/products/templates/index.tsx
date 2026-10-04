@@ -1,4 +1,5 @@
 import React, { Suspense } from "react"
+import { productAlt } from "@lib/seo/alt"
 import { notFound } from "next/navigation"
 import { HttpTypes } from "@medusajs/types"
 import Icon from "@modules/common/components/icon"
@@ -46,7 +47,7 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, imag
       </nav>
 
       <div className="pview">
-        <ImageGallery images={images} title={product.title} badge={badge} />
+        <ImageGallery images={images} title={product.title} alt={productAlt(product)} badge={badge} />
         <div className="pinfo">
           <ProductInfo product={product} />
           <Suspense fallback={<ProductActions disabled product={product} region={region} />}>
