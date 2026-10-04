@@ -34,6 +34,10 @@ function describeVisit(v: Visit) {
   }
 }
 
+/** نفس الزيارة إن تطابقت حقول المصدر (الوقت قد يختلف بأجزاء ثانية عند أول تحويل) */
+const SOURCE_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "gclid", "fbclid", "ScCid", "ttclid", "landing"]
+const sameVisit = (a: Visit, b: Visit) => !!a && !!b && SOURCE_KEYS.every((k) => (a[k] ?? null) === (b[k] ?? null))
+
 const VisitRow = ({ label, v }: { label: string; v: ReturnType<typeof describeVisit> }) =>
   v ? (
     <Row label={label}>
@@ -129,7 +133,7 @@ const OrderDeliveryDetailsWidget = ({ data: order }: DetailWidgetProps<AdminOrde
             <Text size="small" weight="plus">مصدر الطلب</Text>
           </div>
           <VisitRow label="آخر زيارة" v={describeVisit(meta.attribution.last)} />
-          {JSON.stringify(meta.attribution.first) !== JSON.stringify(meta.attribution.last) && (
+          {sameVisit(meta.attribution.first, meta.attribution.last) ? null : (
             <VisitRow label="أول زيارة" v={describeVisit(meta.attribution.first)} />
           )}
           {!meta.attribution.first && !meta.attribution.last && (
