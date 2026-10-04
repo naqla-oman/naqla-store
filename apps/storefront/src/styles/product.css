@@ -163,3 +163,9 @@
 .lightbox .strip button { padding: 0; border: 2px solid transparent; border-radius: 8px; overflow: hidden; background: none; cursor: pointer; opacity: .5; }
 .lightbox .strip button.on { border-color: #fff; opacity: 1; }
 .lightbox .strip img { width: 48px; height: 56px; object-fit: cover; display: block; }
+
+/* المفضلة */
+.pcard .wish.on, .iconbtn.wishbtn.on { color: #c0392b; }
+.iconbtn.wishbtn.on { border-color: #e8b4ad; background: #fdf0ee; }
+:root[data-theme="dark"] .iconbtn.wishbtn.on { background: #2d1714; border-color: #5a2a22; }
+.pcard .wish:focus-visible, .iconbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

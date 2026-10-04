@@ -1,6 +1,7 @@
 import { HttpTypes } from "@medusajs/types"
 import Icon from "@modules/common/components/icon"
 import ShareButton from "@modules/products/components/share-button"
+import WishButton from "@modules/common/components/wish-button"
 
 /** رأس المنتج: القسم، العنوان مع المشاركة، والتقييم */
 export default function ProductInfo({ product }: { product: HttpTypes.StoreProduct }) {
@@ -14,6 +15,7 @@ export default function ProductInfo({ product }: { product: HttpTypes.StoreProdu
       {category && <div className="pcat">{category.name}</div>}
       <div className="titlerow">
         <h1 data-testid="product-title">{product.title}</h1>
+        <WishButton productId={product.id} className="iconbtn share wishbtn" size={18} />
         <ShareButton title={product.title} />
       </div>
       {rating > 0 && (
