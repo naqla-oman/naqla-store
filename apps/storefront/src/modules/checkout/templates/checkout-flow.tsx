@@ -30,7 +30,8 @@ const URL_ERRORS: Record<string, string> = {
   thawani_session: "انتهت جلسة الدفع، أعيدي المحاولة",
 }
 
-type Errors = Partial<Record<"name" | "phone" | "province" | "city", string>>
+type Errors = Partial<Record<"name" | "phone" | "province" | "city" | "email", string>>
+const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 function validate(f: DeliveryInput): Errors {
   const e: Errors = {}
@@ -38,6 +39,7 @@ function validate(f: DeliveryInput): Errors {
   if (!phoneRe.test(f.phone)) e.phone = "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7"
   if (!f.province) e.province = "اختاري المحافظة"
   if (!f.city.trim()) e.city = "أدخلي الولاية"
+  if (f.email.trim() && !emailRe.test(f.email.trim())) e.email = "تحققي من البريد، مثال: name@example.com"
   return e
 }
 
@@ -51,6 +53,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   const [form, setForm] = useState<DeliveryInput>({
     name: [addr?.first_name, addr?.last_name].filter(Boolean).join(" "),
     phone: (addr?.phone ?? "").replace(checkout.phone.prefix, ""),
+    email: cart.email ?? "",
     province: addr?.province ?? "",
     city: addr?.city ?? "",
     address: addr?.address_1 && addr.address_1 !== addr.city ? addr.address_1 : "",
@@ -291,6 +294,11 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                   <input id="fCity" value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="مثال: السيب" autoComplete="address-level2" aria-invalid={!!showErr("city")} aria-describedby="eCity" />
                   <span className="ferr" id="eCity">{showErr("city")}</span>
                 </div>
+              </div>
+              <div className={`field ${showErr("email") ? "err" : ""}`}>
+                <label htmlFor="fEmail">البريد الإلكتروني <span style={{ fontWeight: 400 }}>(اختياري)</span></label>
+                <input id="fEmail" type="email" inputMode="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="name@example.com" autoComplete="email" dir="ltr" style={{ textAlign: "start" }} aria-invalid={!!showErr("email")} aria-describedby="eEmail" />
+                <span className="ferr" id="eEmail">{showErr("email")}</span>
               </div>
               <div className="field">
                 <label htmlFor="fAddr">العنوان التفصيلي</label>

@@ -16,6 +16,7 @@ export type ActionResult<T = undefined> = { ok: true; data?: T } | { ok: false; 
 export type DeliveryInput = {
   name: string
   phone: string // 8 أرقام بدون البادئة
+  email: string // اختياري
   province: string // رمز المحافظة مثل om-ma
   city: string
   address: string
@@ -26,6 +27,7 @@ export type DeliveryInput = {
 
 const { checkout } = storeConfig
 const phoneRe = new RegExp(checkout.phone.pattern)
+const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 const refresh = async () => {
   revalidateTag(await getCacheTag("carts"))
@@ -52,6 +54,8 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
   if (!phoneRe.test(input.phone)) return { ok: false, error: "رقم الهاتف غير صحيح" }
   if (!checkout.governorates.some((g) => g.code === input.province)) return { ok: false, error: "اختاري المحافظة" }
   if (!input.city.trim()) return { ok: false, error: "أدخلي الولاية" }
+  const email = input.email.trim().toLowerCase()
+  if (email && !emailRe.test(email)) return { ok: false, error: "البريد الإلكتروني غير صحيح" }
 
   try {
     const id = await cartIdOrFail()
@@ -71,6 +75,7 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
       {
         shipping_address: address,
         billing_address: address,
+        ...(email ? { email } : {}),
         metadata: {
           ...(cart.metadata ?? {}),
           gift: input.gift,
