@@ -54,6 +54,12 @@ module.exports = defineConfig({
               accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
               phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
               otpTemplate: process.env.WHATSAPP_OTP_TEMPLATE,
+              orderTemplates: {
+                order_placed: process.env.WHATSAPP_TPL_ORDER_PLACED,
+                order_shipped: process.env.WHATSAPP_TPL_ORDER_SHIPPED,
+                order_ready_pickup: process.env.WHATSAPP_TPL_ORDER_READY_PICKUP,
+                order_delivered: process.env.WHATSAPP_TPL_ORDER_DELIVERED,
+              },
               language: process.env.WHATSAPP_TEMPLATE_LANG || 'ar',
             },
           },

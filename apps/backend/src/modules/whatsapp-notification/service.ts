@@ -12,6 +12,8 @@ type Options = {
   phoneNumberId?: string
   /** اسم قالب المصادقة المعتمد في Meta (فئة Authentication) */
   otpTemplate?: string
+  /** أسماء قوالب الطلبات المعتمدة (Utility) — مفتاح النوع ← اسم القالب في Meta */
+  orderTemplates?: Partial<Record<"order_placed" | "order_shipped" | "order_ready_pickup" | "order_delivered", string>>
   language?: string
   apiVersion?: string
 }
@@ -50,13 +52,15 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
       if (process.env.NODE_ENV === "production") {
         throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "WhatsApp غير مفعّل — لا يمكن إرسال الرمز")
       }
-      this.logger_.info(`[whatsapp:dev] ${n.template} → +${to}${data.otp ? ` رمز الدخول: ${data.otp}` : ""}`)
+      const preview = (n.data as any)?.preview
+      this.logger_.info(
+        `[whatsapp:dev] ${n.template} → +${to}${data.otp ? ` رمز الدخول: ${data.otp}` : ""}${preview ? ` | ${preview}` : ""}`
+      )
       return { id: `dev-${Date.now()}` }
     }
 
-    if (n.template !== "otp" || !data.otp) {
-      throw new MedusaError(MedusaError.Types.INVALID_DATA, `WhatsApp: قالب غير مدعوم ${n.template}`)
-    }
+    if (n.template !== "otp") return this.sendOrderTemplate(to, n)
+    if (!data.otp) throw new MedusaError(MedusaError.Types.INVALID_DATA, "WhatsApp: الرمز مفقود")
 
     const res = await fetch(
       `https://graph.facebook.com/${this.options_.apiVersion}/${this.options_.phoneNumberId}/messages`,
@@ -82,6 +86,30 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
     if (!res.ok) {
       throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, `WhatsApp: ${json.error?.message ?? res.status}`)
     }
+    return { id: json.messages?.[0]?.id }
+  }
+
+  /** قالب Utility بمتغيرات نصية في المتن (ترتيبها = ترتيب params) */
+  protected async sendOrderTemplate(to: string, n: ProviderSendNotificationDTO): Promise<ProviderSendNotificationResultsDTO> {
+    const name = this.options_.orderTemplates?.[n.template as keyof NonNullable<Options["orderTemplates"]>]
+    if (!name) {
+      // القالب غير معتمد بعد: لا نُفشل سير الطلب، نكتفي بالتسجيل
+      this.logger_.warn(`WhatsApp: لا يوجد قالب معتمد لـ ${n.template} — لم يُرسل`)
+      return {}
+    }
+    const params = (((n.data as any)?.params ?? []) as unknown[]).map((p) => ({ type: "text", text: String(p) }))
+    const res = await fetch(`https://graph.facebook.com/${this.options_.apiVersion}/${this.options_.phoneNumberId}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${this.options_.accessToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "template",
+        template: { name, language: { code: this.options_.language }, components: [{ type: "body", parameters: params }] },
+      }),
+    })
+    const json = (await res.json().catch(() => ({}))) as { messages?: { id: string }[]; error?: { message?: string } }
+    if (!res.ok) throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, `WhatsApp: ${json.error?.message ?? res.status}`)
     return { id: json.messages?.[0]?.id }
   }
 }

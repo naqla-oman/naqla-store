@@ -41,7 +41,8 @@
         "value": 10,
         "description": "خصم ١٠٪ على الطلب"
       }
-    ]
+    ],
+    "order_prefix": "LN-"
   },
   "categories": [
     {
