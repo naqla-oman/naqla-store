@@ -10,6 +10,7 @@ import { PRODUCT_FIELDS } from "@modules/products/lib/fields"
 import { variantPricing, availableQty } from "@modules/products/lib/variants"
 import { getBaseURL } from "@lib/util/env"
 import { storeConfig } from "../../../../../store.config"
+import { getFreeShippingOver } from "@lib/data/shipping-threshold"
 
 type Props = {
   params: Promise<{ countryCode: string; handle: string }>
@@ -151,7 +152,7 @@ export default async function ProductPage(props: Props) {
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@id": `${getBaseURL()}/#org` },
-      ...offerExtras(price),
+      ...offerExtras(price, await getFreeShippingOver()),
     },
     // لا aggregateRating: التقييمات حالياً بيانات مزروعة لا تقييمات حقيقية (إرشادات Google)
   }

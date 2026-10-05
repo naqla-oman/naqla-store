@@ -7,18 +7,21 @@ import Icon from "@modules/common/components/icon"
 import ThemeToggle from "@modules/layout/components/theme-toggle"
 import HeaderSearch from "@modules/layout/components/header-search"
 import { storeConfig } from "../../../../store.config"
+import { getFreeShippingOver } from "@lib/data/shipping-threshold"
 
 export default async function Nav() {
+  // M19: الحد من قاعدة Medusa الفعلية (null = لا توصيل مجاني ← لا يظهر الشريط)
+  const freeOver = await getFreeShippingOver()
   return (
     <div className="sticky top-0 inset-x-0 z-50">
       <div className="announce hidden small:flex">
-        <span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {storeConfig.freeShippingOver} ر.ع</span>
+        {freeOver != null && <span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {freeOver} ر.ع</span>}
         <span><Icon name="refresh" size={14} /> استبدال مجاني خلال ١٤ يوماً</span>
         {storeConfig.welcomeCode && (
           <span><Icon name="gift" size={14} /> {storeConfig.welcomeCode.text} بكود {storeConfig.welcomeCode.code}</span>
         )}
       </div>
-      <div className="announce small:hidden"><span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {storeConfig.freeShippingOver} ر.ع</span></div>
+      {freeOver != null && <div className="announce small:hidden"><span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {freeOver} ر.ع</span></div>}
       <header className="hdr">
         <nav className="wrap flex items-center gap-3 h-[66px]" aria-label="الرئيسي">
           <div className="small:hidden"><SideMenu /></div>

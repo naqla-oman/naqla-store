@@ -10,7 +10,7 @@ import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 
 /** صفحة السلة — الخطوة الأولى (مطابقة لسلة الديمو) */
-export default function CartTemplate({ cart }: { cart: HttpTypes.StoreCart | null }) {
+export default function CartTemplate({ cart, freeOver: threshold }: { cart: HttpTypes.StoreCart | null; freeOver?: number | null }) {
   const items = cart?.items ?? []
   const count = items.reduce((s, i) => s + i.quantity, 0)
 
@@ -29,7 +29,8 @@ export default function CartTemplate({ cart }: { cart: HttpTypes.StoreCart | nul
 
   const subtotal = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
   const discount = Math.max(0, (cart.discount_total ?? 0) - ((cart as any).shipping_discount_total ?? 0))
-  const freeOver = storeConfig.freeShippingOver
+  // M19: من قاعدة Medusa عبر الصفحة (store.json احتياطي)
+  const freeOver = threshold === undefined ? storeConfig.freeShippingOver : threshold ?? 0
   const left = Math.max(0, freeOver - (subtotal - discount))
 
   return (

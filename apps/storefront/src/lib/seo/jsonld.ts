@@ -66,14 +66,15 @@ export function breadcrumbs(items: { name: string; path: string }[]) {
 }
 
 /** تفاصيل التوصيل لكل طريقة من store.json (مجاني فوق الحد إن وُجد) + سياسة الإرجاع */
-export function offerExtras(price: number) {
+/** M19: freeOver من قاعدة Medusa الفعلية (للتوصيل العادي) */
+export function offerExtras(price: number, freeOver?: number | null) {
   const currency = c.currency.toUpperCase()
   const shippingDetails = c.seo.shipping
     .filter((sh) => sh.code !== "pickup")
     .map((sh) => ({
       "@type": "OfferShippingDetails",
       shippingLabel: sh.name,
-      shippingRate: { "@type": "MonetaryAmount", value: (sh.free_over && price >= sh.free_over ? 0 : sh.amount).toFixed(3), currency },
+      shippingRate: { "@type": "MonetaryAmount", value: ((sh.code === "standard" && freeOver != null ? price >= freeOver : !!sh.free_over && price >= sh.free_over) ? 0 : sh.amount).toFixed(3), currency },
       shippingDestination: {
         "@type": "DefinedRegion",
         addressCountry: COUNTRY,
