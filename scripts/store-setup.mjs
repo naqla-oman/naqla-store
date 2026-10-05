@@ -34,6 +34,8 @@ const env = {
   STORE: slug,
   JWT_SECRET: strong(prev.JWT_SECRET) ? prev.JWT_SECRET : randomBytes(48).toString("base64url"),
   COOKIE_SECRET: strong(prev.COOKIE_SECRET) ? prev.COOKIE_SECRET : randomBytes(48).toString("base64url"),
+  // H1: سر مشترك بين الخلفية والواجهة لإبطال ذاكرة الواجهة
+  REVALIDATE_SECRET: strong(prev.REVALIDATE_SECRET) ? prev.REVALIDATE_SECRET : randomBytes(32).toString("base64url"),
   DATABASE_URL: dbUrl,
   MEDUSA_BACKEND_URL: backendUrl,
   STOREFRONT_URL: storefrontUrl,
