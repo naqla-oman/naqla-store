@@ -14,6 +14,21 @@ export function useNaqla<T>(path: string) {
   return { data, error }
 }
 
+/**
+ * العدد مع المعدود بقواعد العربية (Intl.PluralRules): «طلب واحد / طلبان / 3 طلبات / 11 طلباً / 100 طلب».
+ * الصيغ: zero, one, two, few (3–10), many (11–99), other (100، 101…)؛ {n} يُستبدل بالعدد.
+ */
+type Forms = { zero: string; one: string; two: string; few: string; many: string; other: string }
+const AR_RULES = new Intl.PluralRules("ar")
+export const count = (n: number, f: Forms) => f[AR_RULES.select(n) as keyof Forms].replace("{n}", String(n))
+export const N = {
+  orders: { zero: "لا طلبات", one: "طلب واحد", two: "طلبان", few: "{n} طلبات", many: "{n} طلباً", other: "{n} طلب" },
+  pieces: { zero: "لا قطع", one: "قطعة واحدة", two: "قطعتان", few: "{n} قطع", many: "{n} قطعة", other: "{n} قطعة" },
+  customers: { zero: "لا أحد", one: "زبون واحد", two: "زبونين", few: "{n} زبائن", many: "{n} زبوناً", other: "{n} زبون" },
+  codes: { zero: "لم يُستبدل أي كود", one: "كود واحد استُبدل", two: "كودان استُبدلا", few: "{n} أكواد استُبدلت", many: "{n} كوداً استُبدل", other: "{n} كود استُبدل" },
+  members: { zero: "لا أعضاء", one: "عضو واحد", two: "عضوان", few: "{n} أعضاء", many: "{n} عضواً", other: "{n} عضو" },
+} satisfies Record<string, Forms>
+
 export const money = (n: number, label = "") =>
   `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(n || 0)}${label ? ` ${label}` : ""}`
 
