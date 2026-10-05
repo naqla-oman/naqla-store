@@ -92,6 +92,13 @@ class ThawaniPaymentProvider extends AbstractPaymentProvider<ThawaniOptions> {
     return `${this.base}/pay/${sessionId}?key=${this.options_.publishableKey}`
   }
 
+  /** H3: ثواني يدعم الريال العُماني فقط — أي عملة أخرى تُرفض (لا تحويل صامت: 100 ر.س ≠ 100 ر.ع) */
+  protected assertOmr(currency?: string) {
+    if (String(currency ?? "").toLowerCase() !== "omr") {
+      throw new MedusaError(MedusaError.Types.INVALID_DATA, `Thawani: العملة ${String(currency ?? "").toUpperCase() || "؟"} غير مدعومة — الريال العُماني فقط`)
+    }
+  }
+
   protected async createSession(amount: unknown, data: Record<string, unknown>, sessionId?: string) {
     const baisa = Math.round(Number(amount) * BAISA)
     if (!Number.isFinite(baisa) || baisa < 100) {
@@ -115,6 +122,7 @@ class ThawaniPaymentProvider extends AbstractPaymentProvider<ThawaniOptions> {
       session_id: session.session_id,
       invoice: session.invoice,
       amount_baisa: baisa,
+      client_reference_id: ref,
       checkout_url: this.checkoutUrl(session.session_id),
     }
   }
@@ -125,12 +133,14 @@ class ThawaniPaymentProvider extends AbstractPaymentProvider<ThawaniOptions> {
     return PaymentSessionStatus.PENDING
   }
 
-  async initiatePayment({ amount, data, context }: InitiatePaymentInput): Promise<InitiatePaymentOutput> {
+  async initiatePayment({ amount, currency_code, data, context }: InitiatePaymentInput): Promise<InitiatePaymentOutput> {
+    this.assertOmr(currency_code)
     const out = await this.createSession(amount, data ?? {}, context?.idempotency_key)
     return { id: out.session_id, data: out }
   }
 
-  async updatePayment({ amount, data, context }: UpdatePaymentInput): Promise<UpdatePaymentOutput> {
+  async updatePayment({ amount, currency_code, data, context }: UpdatePaymentInput): Promise<UpdatePaymentOutput> {
+    this.assertOmr(currency_code)
     // تغيّر المبلغ (كوبون/توصيل) → جلسة جديدة بالمبلغ الصحيح
     const prev = data ?? {}
     const baisa = Math.round(Number(amount) * BAISA)
@@ -142,6 +152,13 @@ class ThawaniPaymentProvider extends AbstractPaymentProvider<ThawaniOptions> {
     const id = data?.session_id as string | undefined
     if (!id) return { data: data ?? {}, status: PaymentSessionStatus.ERROR }
     const s = await this.request<ThawaniSession>(`/checkout/session/${id}`)
+    // H2: لا نقبل الدفع إلا إن طابق المبلغ المدفوع مبلغ الجلسة، ومرجعها مرجعنا (لا جلسة سلة أخرى ولا مبلغ معدّل)
+    const expected = Number(data?.amount_baisa)
+    const ref = data?.client_reference_id ? String(data.client_reference_id) : null
+    if (s.payment_status === "paid" && (s.total_amount !== expected || (ref && s.client_reference_id !== ref))) {
+      this.logger_.error(`Thawani ${id}: عدم تطابق — المدفوع ${s.total_amount} بيسة مقابل ${expected}، المرجع ${s.client_reference_id} مقابل ${ref}`)
+      return { data: { ...data, payment_status: s.payment_status, invoice: s.invoice, mismatch: true }, status: PaymentSessionStatus.ERROR }
+    }
     // ثواني يحصّل المبلغ فوراً عند نجاح الدفع، لذا الحالة «مُحصّل» مباشرة
     return { data: { ...data, payment_status: s.payment_status, invoice: s.invoice }, status: this.mapStatus(s.payment_status) }
   }
@@ -177,12 +194,26 @@ class ThawaniPaymentProvider extends AbstractPaymentProvider<ThawaniOptions> {
     return this.cancelPayment(input)
   }
 
-  async refundPayment(_: RefundPaymentInput): Promise<RefundPaymentOutput> {
-    // يتطلب payment_id من حساب التاجر الفعلي؛ يُفعَّل بعد الحصول على حساب ثواني
-    throw new MedusaError(
-      MedusaError.Types.NOT_ALLOWED,
-      "الاسترداد عبر ثواني غير مفعّل بعد — نفّذيه من لوحة تاجر ثواني ثم سجّليه يدوياً"
-    )
+  /**
+   * H2: الاسترداد عبر API ثواني: payment_id من الفاتورة ثم POST /refunds.
+   * ثواني يسترد المبلغ كاملاً فقط — الاسترداد الجزئي يُرفض بوضوح بدل استرداد الكل.
+   */
+  async refundPayment({ amount, data }: RefundPaymentInput): Promise<RefundPaymentOutput> {
+    const invoice = data?.invoice as string | undefined
+    if (!invoice) throw new MedusaError(MedusaError.Types.INVALID_DATA, "Thawani: لا فاتورة لهذه الدفعة — لا يمكن الاسترداد")
+    const paid = Number(data?.amount_baisa)
+    const want = Math.round(Number(amount) * BAISA)
+    if (paid && want !== paid) {
+      throw new MedusaError(MedusaError.Types.NOT_ALLOWED, `Thawani يدعم الاسترداد الكامل فقط (${paid / BAISA} ر.ع) — للجزئي استخدمي قسيمة أو رصيد متجر`)
+    }
+    const payments = await this.request<{ payment_id: string; status?: string }[]>(`/payments?checkout_invoice=${encodeURIComponent(invoice)}&limit=10&skip=0`)
+    const payment = (payments ?? []).find((p) => !p.status || p.status === "successful") ?? payments?.[0]
+    if (!payment?.payment_id) throw new MedusaError(MedusaError.Types.NOT_FOUND, `Thawani: لم يُعثر على دفعة للفاتورة ${invoice}`)
+    const refund = await this.request<{ refund_id?: string; status?: string }>("/refunds", {
+      method: "POST",
+      body: { payment_id: payment.payment_id, reason: "طلب استرداد من لوحة المتجر", metadata: { session_id: data?.session_id ?? null } },
+    })
+    return { data: { ...data, refund_id: refund?.refund_id ?? null, refund_status: refund?.status ?? "requested" } }
   }
 
   async getWebhookActionAndData(payload: ProviderWebhookPayload["payload"]): Promise<WebhookActionResult> {
