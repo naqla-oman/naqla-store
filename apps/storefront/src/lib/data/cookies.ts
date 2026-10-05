@@ -40,13 +40,10 @@ export const getCacheOptions = async (
     return {}
   }
 
+  // H1: وسم عام (global:<tag>) مع كل طلب — يُبطَل من الخادم عند تعديل المنتج/السعر/المخزون.
+  // (سابقاً بلا كوكي cache_id لم يكن للطلب أي وسم فيبقى force-cache قديماً إلى الأبد)
   const cacheTag = await getCacheTag(tag)
-
-  if (!cacheTag) {
-    return {}
-  }
-
-  return { tags: [`${cacheTag}`] }
+  return { tags: cacheTag ? [cacheTag, `global:${tag}`] : [`global:${tag}`] }
 }
 
 export const setAuthToken = async (token: string) => {
