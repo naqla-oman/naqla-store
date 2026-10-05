@@ -1,6 +1,6 @@
 # منصة نقلة على خادم واحد: Caddy + Postgres + Redis + (خلفية + واجهة) لكل متجر.
-# الأسرار في ../.stores/<slug>.prod.env (صلاحيات 600، خارج Git)، والمعرّفات في deploy/.env.
-# متجر جديد = نسخ كتلتي backend-storeN/storefront-storeN ومتغيراتها STOREN_*.
+# الأساس المشترك فقط. خدمات كل متجر في deploy/stores/<slug>.compose.yml (يولّدها pnpm store:deploy، خارج Git).
+# التشغيل: deploy/up.sh <slug>
 name: naqla
 
 x-restart: &restart
@@ -13,11 +13,10 @@ services:
     ports: ["80:80", "443:443"]
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # مواقع المتاجر المولَّدة بـ store:deploy (خارج Git)
+      - ./sites:/etc/caddy/sites:ro
       - caddy_data:/data
       - caddy_config:/config
-    depends_on:
-      storefront-store1: { condition: service_healthy }
-      backend-store1: { condition: service_healthy }
 
   postgres:
     image: postgres:16
@@ -43,55 +42,8 @@ services:
       timeout: 3s
       retries: 20
 
-  # ===== متجر 1 (القيم من deploy/.env: STORE1_SLUG, STORE1_DOMAIN, STORE1_PUBLISHABLE_KEY) =====
-  backend-store1:
-    build: { context: .., dockerfile: deploy/backend.Dockerfile, args: { STORE: "${STORE1_SLUG:?}" } }
-    <<: *restart
-    env_file: ../.stores/${STORE1_SLUG:?}.prod.env
-    environment:
-      REDIS_URL: redis://redis:6379
-      PRIVATE_FILES_DIR: /data/private
-    volumes: [uploads_store1:/data/uploads, private_store1:/data/private]
-    mem_limit: 900m
-    # ملاحظة التحقق المستقل: لا يقلع قبل جاهزية Redis (وإلا يموت عامل الأحداث بصمت)،
-    # والخلفية نفسها تتوقف بخطأ واضح إن لم يتوفر Redis، وصحتها من /ready (قاعدة البيانات + Redis)
-    depends_on:
-      postgres: { condition: service_healthy }
-      redis: { condition: service_healthy }
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:9000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 90s
-
-  storefront-store1:
-    build:
-      context: ..
-      dockerfile: deploy/storefront.Dockerfile
-      args:
-        STORE: "${STORE1_SLUG:?}"
-        NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${STORE1_PUBLISHABLE_KEY:?}
-        NEXT_PUBLIC_BASE_URL: https://${STORE1_DOMAIN:?}
-        MEDUSA_BACKEND_URL: http://backend-store1:9000
-    <<: *restart
-    env_file: ../.stores/${STORE1_SLUG:?}.prod.env
-    environment:
-      MEDUSA_BACKEND_URL: http://backend-store1:9000
-    mem_limit: 400m
-    depends_on:
-      backend-store1: { condition: service_healthy }
-    healthcheck:
-      test: ["CMD", "node", "-e", "fetch('http://localhost:8000/robots.txt').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-
 volumes:
   pg_data: {}
   redis_data: {}
   caddy_data: {}
   caddy_config: {}
-  uploads_store1: {}
-  private_store1: {}
