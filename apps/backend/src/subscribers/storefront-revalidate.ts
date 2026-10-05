@@ -13,6 +13,9 @@ const TAGS: Record<string, string[]> = {
   price: ["products", "shipping-threshold"],
   "price-set": ["products", "shipping-threshold"],
   "price-rule": ["shipping-threshold"],
+  // M26: قوائم الأسعار (تخفيضات اللوحة) تغيّر سعر المنتج المعروض
+  "price-list": ["products"],
+  "price-list-rule": ["products"],
   "shipping-option": ["shipping-threshold"],
   "inventory-level": ["products"],
   "inventory-item": ["products"],
