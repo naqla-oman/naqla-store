@@ -28,8 +28,12 @@ const storefrontPort = prev.STOREFRONT_PORT || String(8000 + Number(backendPort)
 const backendUrl = `http://localhost:${backendPort}`
 const storefrontUrl = `http://localhost:${storefrontPort}`
 
+// C3: أسرار مستقلة لكل متجر (تبقى عند إعادة الإعداد حتى لا تبطل الجلسات القائمة)
+const strong = (v) => typeof v === "string" && v.length >= 32
 const env = {
   STORE: slug,
+  JWT_SECRET: strong(prev.JWT_SECRET) ? prev.JWT_SECRET : randomBytes(48).toString("base64url"),
+  COOKIE_SECRET: strong(prev.COOKIE_SECRET) ? prev.COOKIE_SECRET : randomBytes(48).toString("base64url"),
   DATABASE_URL: dbUrl,
   MEDUSA_BACKEND_URL: backendUrl,
   STOREFRONT_URL: storefrontUrl,
