@@ -13,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/*/cart", "/*/checkout", "/*/account", "/*/order/", "/*/track"],
       },
     ],
+    // بلا Host: توجيه غير قياسي (Yandex فقط) ويقبل اسم النطاق دون بروتوكول
     sitemap: `${getBaseURL()}/sitemap.xml`,
-    host: getBaseURL(),
   }
 }

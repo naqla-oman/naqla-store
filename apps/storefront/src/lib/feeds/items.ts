@@ -66,7 +66,9 @@ export async function feedItems(): Promise<FeedItem[]> {
         const old = Math.max(cp?.original_amount ?? 0, Number((v.metadata as any)?.compare_at_price ?? (p.metadata as any)?.compare_at_price) || 0)
         const qty = availableQty(v)
         return {
-          id: v.sku || v.id,
+          // معرّف المتغيّر (لاتيني، variant_…): هو نفسه content_ids في البكسلات وأحداث الخادم،
+          // فتطابق Meta/TikTok/Snap الإعلانات الديناميكية بالكتالوج (الـSKU قد يحوي نصاً عربياً)
+          id: v.id,
           item_group_id: p.handle!,
           title: clean(multi ? `${p.title} — ${v.title}` : p.title).slice(0, 150),
           description: clean(p.description || p.title).slice(0, 5000),
