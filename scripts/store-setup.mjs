@@ -37,6 +37,8 @@ const env = {
   DATABASE_URL: dbUrl,
   MEDUSA_BACKEND_URL: backendUrl,
   STOREFRONT_URL: storefrontUrl,
+  // H6: Redis مشترك بين المتاجر (البادئة لكل متجر في medusa-config)؛ بدونه تعمل الوحدات في الذاكرة
+  ...((process.env.REDIS_URL || readEnv(join(BACKEND, ".env")).REDIS_URL) ? { REDIS_URL: process.env.REDIS_URL || readEnv(join(BACKEND, ".env")).REDIS_URL } : {}),
   STORE_CORS: storefrontUrl,
   ADMIN_CORS: `${backendUrl}`,
   AUTH_CORS: `${storefrontUrl},${backendUrl}`,
