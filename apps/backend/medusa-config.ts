@@ -1,6 +1,7 @@
 import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/utils'
 import { client } from './src/lib/client'
 import { BACKEND_DIR, PRIVATE_FILES_DIR, UPLOADS_DIR } from './src/lib/paths'
+import { thawaniConfigured } from './src/lib/thawani-env'
 import { join } from 'node:path'
 import { naqlaAdminBrand } from './admin-brand/vite-plugin'
 
@@ -98,9 +99,7 @@ if (revalidateSecret.length < 32) {
 
 /** ثواني لا يُحمَّل إلا عند THAWANI_ENABLED=true ووجود المفتاحين */
 const thawaniEnabled =
-  process.env.THAWANI_ENABLED === 'true' &&
-  !!process.env.THAWANI_SECRET_KEY &&
-  !!process.env.THAWANI_PUBLISHABLE_KEY
+  thawaniConfigured()
 
 module.exports = defineConfig({
   // لوحة نقلة: الهوية في رأس الصفحة فقط (admin-brand/vite-plugin.ts) — لا نسخ لكود Medusa

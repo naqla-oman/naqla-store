@@ -3,6 +3,13 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { updateRegionsWorkflow } from "@medusajs/medusa/core-flows"
 import { featureOn } from "./features"
 
+import { thawaniConfigured } from "./thawani-env"
+
+// M12: Medusa لا يحدّث is_enabled للمزوّد غير المحمَّل — نستخدم شرط تحميله نفسه
+
+/** مزوّدون مشروطون بالبيئة (غيرهم يُحمَّل دائماً) */
+const LOADED: Record<string, () => boolean> = { pp_thawani_thawani: thawaniConfigured }
+
 /** مزوّد الدفع ← مفتاح تشغيله في store.json → features */
 export const PROVIDER_FEATURE: Record<string, string> = {
   pp_cod_offline: "cod",
@@ -17,7 +24,7 @@ export const PROVIDER_FEATURE: Record<string, string> = {
  */
 export async function syncPaymentProviders(container: MedusaContainer) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
-  const registered = (await container.resolve(Modules.PAYMENT).listPaymentProviders({})).map((p) => p.id)
+  const registered = (await container.resolve(Modules.PAYMENT).listPaymentProviders({})).map((p) => p.id).filter((id) => (LOADED[id] ?? (() => true))())
   const { data: regions } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({ entity: "region", fields: ["id", "name", "payment_providers.id"] })
   const ours = Object.keys(PROVIDER_FEATURE)
   for (const r of regions as any[]) {
