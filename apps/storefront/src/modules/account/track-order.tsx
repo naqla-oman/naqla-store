@@ -14,7 +14,7 @@ const t = (iso?: string | null) =>
   iso ? new Intl.DateTimeFormat("ar-OM", { timeZone: storeConfig.product.delivery.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso)) : ""
 
 /** تتبّع الطلب بلا تسجيل دخول: رقم الطلب + الهاتف */
-export default function TrackOrder({ initialNo, initialPhone }: { initialNo: string; initialPhone: string }) {
+export default function TrackOrder({ initialNo, initialPhone, signedIn = false }: { initialNo: string; initialPhone: string; signedIn?: boolean }) {
   const [no, setNo] = useState(initialNo)
   const [phone, setPhone] = useState(initialPhone)
   const [busy, setBusy] = useState(false)
@@ -32,7 +32,7 @@ export default function TrackOrder({ initialNo, initialPhone }: { initialNo: str
   }
 
   useEffect(() => {
-    if (!auto.current && initialNo && initialPhone) { auto.current = true; search() }
+    if (!auto.current && initialNo && (initialPhone || signedIn)) { auto.current = true; search() }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const pickup = order?.shipping_code === "pickup"
@@ -57,6 +57,7 @@ export default function TrackOrder({ initialNo, initialPhone }: { initialNo: str
               <label htmlFor="tNo">رقم الطلب</label>
               <input id="tNo" value={no} onChange={(e) => setNo(e.target.value)} placeholder={`${checkout.orderPrefix}0001`} dir="ltr" style={{ textAlign: "start" }} autoComplete="off" />
             </div>
+            {!signedIn && (
             <div className="field">
               <label htmlFor="tPh">رقم الهاتف</label>
               <div className="phone">
@@ -64,6 +65,7 @@ export default function TrackOrder({ initialNo, initialPhone }: { initialNo: str
                 <span className="pre">{checkout.phone.prefix}</span>
               </div>
             </div>
+            )}
           </div>
           {error && <div className="alert" role="alert"><Icon name="x" size={15} /> {error}</div>}
           <button type="submit" className="btn block" style={{ marginTop: 16 }} disabled={busy} data-testid="track-btn">
