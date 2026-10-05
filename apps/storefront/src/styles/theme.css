@@ -205,3 +205,6 @@ footer.site a { color: inherit; text-decoration: none; }
 .empty-search .es-hint { color: var(--muted); margin: 0 0 14px; }
 .empty-search .catchips { justify-content: center; flex-wrap: wrap; }
 @media (max-width: 520px) { .sortsel span { display: none; } }
+
+/* شريط الموافقة لا يغطي زر إتمام الطلب: في صفحات الدفع يظهر أعلى الشاشة */
+body:has(.costicky) .consent { top: calc(12px + env(safe-area-inset-top, 0px)); bottom: auto; }
