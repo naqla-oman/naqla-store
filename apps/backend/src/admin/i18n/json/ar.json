@@ -1,4 +1,20 @@
 {
-  "login": { "title": "مرحباً بك في لوحة نقلة", "hint": "سجّل الدخول لإدارة متجرك" },
-  "app": { "nav": { "common": { "extensions": "نقلة" } } }
+  "login": {
+    "title": "مرحباً بك في لوحة نقلة",
+    "hint": "سجّل الدخول لإدارة متجرك"
+  },
+  "app": {
+    "nav": {
+      "common": {
+        "extensions": "نقلة"
+      }
+    }
+  },
+  "orders": {
+    "fulfillment": {
+      "status": {
+        "notFulfilled": "لم يُجهَّز بعد"
+      }
+    }
+  }
 }
