@@ -6,7 +6,7 @@ import { NextRequest, NextResponse } from "next/server"
  * H1: إبطال الذاكرة المؤقتة من الخادم (مشترك Medusa عند تعديل المنتج/السعر/المخزون/القسم).
  * POST /api/revalidate  { tags: ["products", ...] }  مع الترويسة x-revalidate-secret
  */
-const ALLOWED = new Set(["products", "categories", "collections", "regions", "tracking-config", "seo-redirects"])
+const ALLOWED = new Set(["products", "categories", "collections", "regions", "tracking-config", "seo-redirects", "shipping-threshold"])
 // وسوم تُستخدم بأسمائها مباشرة (لا global:)
 const PLAIN = new Set(["tracking-config", "seo-redirects"])
 

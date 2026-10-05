@@ -9,8 +9,11 @@ const TAGS: Record<string, string[]> = {
   product: ["products"],
   "product-variant": ["products"],
   "product-option": ["products"],
-  price: ["products"],
-  "price-set": ["products"],
+  // M19: أسعار خيارات التوصيل (ومنها قاعدة المجاني) أسعار في وحدة التسعير
+  price: ["products", "shipping-threshold"],
+  "price-set": ["products", "shipping-threshold"],
+  "price-rule": ["shipping-threshold"],
+  "shipping-option": ["shipping-threshold"],
   "inventory-level": ["products"],
   "inventory-item": ["products"],
   "reservation-item": ["products"],
