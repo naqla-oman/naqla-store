@@ -472,6 +472,7 @@ export async function listCartOptions() {
     query: { cart_id: cartId },
     next,
     headers,
-    cache: "force-cache",
+    // H13: هذه مصدر خيارات التوصيل في صفحة الدفع — أسعارها تتبع السلة لحظياً (حد المجاني، المستوى)
+    cache: "no-store",
   })
 }
