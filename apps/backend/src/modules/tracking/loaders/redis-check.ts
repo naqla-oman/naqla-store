@@ -34,5 +34,5 @@ export default async function redisCheck({ container }: LoaderOptions) {
     logger.error(`[naqla] Redis غير متاح على ${where} بعد 5 محاولات — الإيقاف (الأحداث ورموز الدخول تعتمد عليه)`)
     process.exit(1)
   }
-  logger.warn(`[naqla] تحذير: Redis غير متاح على ${where} — الأحداث ورموز الدخول والإشعارات لن تعمل حتى يعود ثم يُعاد تشغيل الخادم (في الإنتاج يتوقف الخادم هنا)`)
+  logger.warn(`[naqla] تحذير: Redis غير متاح على ${where} — وحدات Medusa (الأحداث والأقفال) ستنتظره ولن يكتمل الإقلاع. للتطوير بلا Redis احذف REDIS_URL (تعمل الوحدات في الذاكرة). في الإنتاج يتوقف الخادم هنا.`)
 }
