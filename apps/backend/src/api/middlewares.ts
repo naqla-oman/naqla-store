@@ -1,7 +1,7 @@
 import { authenticate, configureStoreSearch, defineMiddlewares } from '@medusajs/framework/http'
 import { requireExistingAdmin } from './admin-user-guard'
 import { securityHeaders } from './security-headers'
-import { rateLimit } from '../lib/rate-limit'
+import { clientIp, rateLimit } from '../lib/rate-limit'
 
 // The product index declares filterable `status` and `sales_channel_ids`, so
 // the route narrows it to published products in the key's sales channels.
@@ -15,14 +15,28 @@ export default defineMiddlewares({
       method: ['POST'],
       matcher: '/auth/user/emailpass',
       middlewares: [
+        // تُعدّ المحاولات الفاشلة فقط، بمفاتيح متدرجة حتى لا يُقفل حساب المسؤول عمداً من عناوين أخرى:
+        // (بريد + IP) 10 / 15 دقيقة، وIP وحده 20 / 15 دقيقة، والبريد وحده 50 / ساعة
         rateLimit([
-          { name: 'admin-login-ip', max: 20, windowMs: 15 * 60_000, message: 'محاولات دخول كثيرة — حاول بعد 15 دقيقة' },
           {
-            name: 'admin-login-email',
+            name: 'admin-login-email-ip',
             max: 10,
             windowMs: 15 * 60_000,
+            failuresOnly: true,
+            key: (req) => {
+              const email = String((req.body as any)?.email ?? '').trim().toLowerCase()
+              return email ? `${email}|${clientIp(req)}` : null
+            },
+            message: 'محاولات دخول كثيرة — حاول بعد 15 دقيقة',
+          },
+          { name: 'admin-login-ip', max: 20, windowMs: 15 * 60_000, failuresOnly: true, message: 'محاولات دخول كثيرة من هذا الجهاز — حاول بعد 15 دقيقة' },
+          {
+            name: 'admin-login-email',
+            max: 50,
+            windowMs: 60 * 60_000,
+            failuresOnly: true,
             key: (req) => String((req.body as any)?.email ?? '').trim().toLowerCase() || null,
-            message: 'محاولات دخول كثيرة لهذا الحساب — حاول بعد 15 دقيقة',
+            message: 'محاولات دخول كثيرة لهذا الحساب — حاول لاحقاً',
           },
         ]),
       ],
