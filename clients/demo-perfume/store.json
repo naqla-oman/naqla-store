@@ -321,7 +321,10 @@
       "code": "ABAQ10",
       "type": "percentage",
       "value": 10,
-      "description": "خصم ١٠٪ على أول طلب"
+      "description": "خصم ١٠٪ على أول طلب",
+      "firstOrderOnly": true,
+      "exclusive": true,
+      "limit": 1000
     }
   ],
   "categories": [

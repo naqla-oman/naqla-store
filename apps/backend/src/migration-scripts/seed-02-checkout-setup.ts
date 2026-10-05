@@ -16,7 +16,7 @@ import {
 import { client, feature } from "../lib/client"
 
 type Shipping = { code: string; name: string; desc: string; amount: number; free_over?: number; provinces?: string[] }
-type Promo = { code: string; type: "percentage" | "fixed"; value: number; description?: string }
+type Promo = { code: string; type: "percentage" | "fixed"; value: number; description?: string; limit?: number }
 
 // مزوّد الدفع ← مفتاح تشغيله في store.json → features
 const PROVIDER_FEATURE: Record<string, string> = {
@@ -108,6 +108,8 @@ export default async function checkout_setup({ container }: { container: MedusaC
             type: "standard",
             status: "active",
             is_automatic: false,
+            // H4: حد الاستخدام الكلي من store.json
+            ...(p.limit ? { limit: p.limit } : {}),
             application_method: {
               type: p.type,
               target_type: "items",
