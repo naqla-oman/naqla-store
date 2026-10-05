@@ -1,9 +1,13 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
+import { MedusaError } from "@medusajs/framework/utils"
+import { featureOn } from "../../../../../lib/features"
 import { LOYALTY_MODULE } from "../../../../../modules/loyalty"
 import type LoyaltyModuleService from "../../../../../modules/loyalty/service"
 
 /** GET /store/customers/me/loyalty — الرصيدان (متاح/معلّق) والمستوى والسجل وأكواد الاستبدال */
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
+  // M10: الولاء مُطفأ لهذا المتجر ← لا رصيد ولا استبدال
+  if (!featureOn("loyalty")) throw new MedusaError(MedusaError.Types.NOT_FOUND, "برنامج الولاء غير مفعّل")
   const loyalty = req.scope.resolve<LoyaltyModuleService>(LOYALTY_MODULE)
   const s = await loyalty.summary(req.auth_context.actor_id)
   res.json({

@@ -1,10 +1,12 @@
 import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
+import { featureOn } from "../lib/features"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { setOrderPointsStatusWorkflow } from "../workflows/loyalty"
 import { syncLoyaltyTierWorkflow } from "../workflows/sync-loyalty-tier"
 
 /** عند تسجيل التوصيل في اللوحة: تتحول نقاط الطلب إلى «متاحة» */
 export default async function onDelivered({ event: { data }, container }: SubscriberArgs<{ id: string }>) {
+  if (!featureOn("loyalty")) return // M10
   const query = container.resolve(ContainerRegistrationKeys.QUERY)
   // الحدث يحمل معرّف التنفيذ (fulfillment)، فنصل منه إلى الطلب عبر جدول الربط
   const { data: links } = await query.graph({
