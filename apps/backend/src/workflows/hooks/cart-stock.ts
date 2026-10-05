@@ -1,6 +1,6 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
-import { addShippingMethodToCartWorkflow, addToCartWorkflow, completeCartWorkflow, updateCartPromotionsWorkflow, updateLineItemInCartWorkflow } from "@medusajs/medusa/core-flows"
+import { addShippingMethodToCartWorkflow, addToCartWorkflow, completeCartWorkflow, listShippingOptionsForCartWithPricingWorkflow, updateCartPromotionsWorkflow, updateLineItemInCartWorkflow } from "@medusajs/medusa/core-flows"
 import { client } from "../../lib/client"
 
 /**
@@ -149,6 +149,23 @@ updateCartPromotionsWorkflow.hooks.validate(async ({ input }, { container }) => 
 completeCartWorkflow.hooks.validate(async ({ input }, { container }) => {
   const id = (input as any).id
   await assertCartStock(container, id)
+  // M7: سعر التوصيل في السلة يجب أن يطابق سعره الحالي (حد المجاني بعد الخصم) — لا التفاف عبر الـAPI
+  {
+    const { data } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({
+      entity: "cart", fields: ["shipping_methods.shipping_option_id", "shipping_methods.amount"], filters: { id },
+    })
+    for (const m of (((data[0] as any)?.shipping_methods ?? []) as any[])) {
+      if (!m.shipping_option_id) continue
+      const { result } = await listShippingOptionsForCartWithPricingWorkflow(container).run({
+        input: { cart_id: id, options: [{ id: m.shipping_option_id }] } as any,
+      })
+      const o: any = (result as any[])?.[0]
+      const expected = Number(o?.calculated_price?.calculated_amount ?? o?.amount ?? m.amount)
+      if (Number(m.amount) + 0.0005 < expected) {
+        throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "تغيّر سعر التوصيل بعد تعديل السلة — أعد اختيار طريقة التوصيل")
+      }
+    }
+  }
   // M13: من اختارت السريع قبل الثالثة وأكملت بعدها
   if (!expressOpen()) {
     const { data } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({ entity: "cart", fields: ["shipping_methods.shipping_option_id"], filters: { id } })
