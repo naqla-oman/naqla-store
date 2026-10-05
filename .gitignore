@@ -64,3 +64,6 @@ apps/storefront/.env.local
 # مجلدات بناء Next لكل متجر عند التشغيل جنباً إلى جنب
 apps/storefront/.next-*/
 apps/storefront/tsconfig.*.json
+
+# Redis dump (لا يُتتبَّع)
+dump.rdb
