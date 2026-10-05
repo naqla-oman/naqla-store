@@ -212,6 +212,8 @@ export type TrackedOrder = {
   city: string | null
   total: number
   times: { placed: string; packed: string | null; shipped: string | null; delivered: string | null }
+  /** M20: بوليصة شركة الشحن إن وُجدت */
+  shipment?: { tracking_number: string; tracking_url: string | null } | null
   items: { id: string; title: string; variant: string | null; quantity: number; unit_price: number; thumbnail: string | null }[]
 }
 

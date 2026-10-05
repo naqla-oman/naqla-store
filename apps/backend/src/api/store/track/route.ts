@@ -37,6 +37,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
       "shipping_methods.name",
       "items.id", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
       "fulfillments.packed_at", "fulfillments.shipped_at", "fulfillments.delivered_at", "fulfillments.canceled_at", "fulfillments.created_at",
+      "fulfillments.labels.tracking_number", "fulfillments.labels.tracking_url",
     ],
     filters: { display_id: displayId } as any, // display_id رقمي في القاعدة
   })
@@ -55,6 +56,11 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
       display_id: o.display_id,
       status: o.status,
       stage: stageOf(o.status, f),
+      // M20: بوليصة شركة الشحن (آخر تنفيذ نشط فيه رقم)
+      shipment: (() => {
+        const l = active.flatMap((x: any) => x.labels ?? []).filter((x: any) => x?.tracking_number).pop()
+        return l ? { tracking_number: l.tracking_number, tracking_url: /^https?:\/\//.test(l.tracking_url ?? "") ? l.tracking_url : null } : null
+      })(),
       shipping_code: meta.shipping_code ?? null,
       shipping_name: o.shipping_methods?.[0]?.name ?? null,
       province: o.shipping_address?.province ?? null,

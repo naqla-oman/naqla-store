@@ -107,6 +107,17 @@ export default function TrackOrder({ initialNo, initialPhone, signedIn = false }
             ))}
             <div className="kv" style={{ marginTop: 6 }}><span>العنوان</span><span>{pickup ? "استلام من المشغل" : `${governorateName(order.province)} — ${order.city ?? ""}`}</span></div>
             <div className="kv"><span>الإجمالي</span><span className="num">{formatAmount(order.total)} {CUR}</span></div>
+              {order.shipment && (
+                <div className="kv" data-testid="track-awb">
+                  <span>رقم البوليصة</span>
+                  <span>
+                    <bdi className="num">{order.shipment.tracking_number}</bdi>
+                    {order.shipment.tracking_url && (
+                      <> · <a href={order.shipment.tracking_url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--accent)", textDecoration: "underline" }}>تتبّع لدى شركة الشحن</a></>
+                    )}
+                  </span>
+                </div>
+              )}
             <div className="helprow">
               <a href={`https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(help + " — أرغب بتغيير وقت التوصيل")}`} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> تغيير وقت التوصيل</a>
               <a href={`https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(help)}`} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" size={14} /> مساعدة في الطلب</a>

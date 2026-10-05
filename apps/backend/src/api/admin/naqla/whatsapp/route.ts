@@ -11,13 +11,14 @@ const ORDER: { kind: OrderNotice; env: string; title: string }[] = [
   { kind: "order_shipped", env: "WHATSAPP_TPL_ORDER_SHIPPED", title: "خرج للتوصيل" },
   { kind: "order_ready_pickup", env: "WHATSAPP_TPL_ORDER_READY_PICKUP", title: "جاهز للاستلام" },
   { kind: "order_delivered", env: "WHATSAPP_TPL_ORDER_DELIVERED", title: "تم التسليم" },
+  { kind: "order_shipped_courier", env: "WHATSAPP_TPL_ORDER_SHIPPED_COURIER", title: "شُحن مع شركة (رقم البوليصة)" },
   { kind: "order_canceled", env: "WHATSAPP_TPL_ORDER_CANCELED", title: "إلغاء الطلب (للزبونة)" },
   { kind: "merchant_new_order", env: "WHATSAPP_TPL_MERCHANT_NEW_ORDER", title: "طلب جديد (للتاجر — merchantPhones)" },
 ]
 
 export const GET = async (_req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const c = client()
-  const sample = { name: "هند", number: `${c.orderPrefix}0009`, total: `10.000 ${(c as any).currencyLabel ?? ""}`.trim(), shipping: "توصيل عادي", track: `https://<الدومين>/${c.country}/track?no=${c.orderPrefix}0009`, payment: "عند الاستلام" }
+  const sample = { name: "هند", number: `${c.orderPrefix}0009`, total: `10.000 ${(c as any).currencyLabel ?? ""}`.trim(), shipping: "توصيل عادي", track: `https://<الدومين>/${c.country}/track?no=${c.orderPrefix}0009`, payment: "عند الاستلام", awb: "ARX123456", awbUrl: "https://<شركة الشحن>/track/ARX123456" }
   res.json({
     enabled: process.env.WHATSAPP_ENABLED === "true",
     credentials: { token: !!process.env.WHATSAPP_ACCESS_TOKEN, phoneNumberId: !!process.env.WHATSAPP_PHONE_NUMBER_ID },
