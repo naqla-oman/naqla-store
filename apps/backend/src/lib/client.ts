@@ -52,6 +52,8 @@ export type ClientStore = {
   /** M13: آخر ساعة للتوصيل السريع «اليوم» (بتوقيت المتجر) وأيام بلا توصيل سريع (0=الأحد … 5=الجمعة) */
   cutoffHour?: number
   deliveryOffDays?: number[]
+  /** M18: المحافظات وولاياتها (قائمة الدفع والتحقق على الخادم) */
+  checkout?: { governorates?: { code: string; name: string; wilayats?: string[] }[] } & Record<string, any>
   promotions?: { code: string; type: "percentage" | "fixed"; value: number; description?: string; firstOrderOnly?: boolean; exclusive?: boolean; limit?: number }[]
   categories: { handle: string; name: string }[]
   collections: { handle: string; title: string }[]

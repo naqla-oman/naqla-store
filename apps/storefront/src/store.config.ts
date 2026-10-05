@@ -71,7 +71,8 @@ type ClientStore = {
   options: Option[]
   loyalty: { pointsPerUnit: number; redeemPoints: number; redeemValue: number; tiers: Tier[] }
   checkout: {
-    governorates: { code: string; name: string }[]
+    /** M18: ولايات كل محافظة (قائمة بدل نص حر) */
+    governorates: { code: string; name: string; wilayats?: string[] }[]
     phone: { prefix: string; pattern: string; placeholder: string }
     shipping: Record<string, { icon: string; eta: string }>
     giftNote: string
