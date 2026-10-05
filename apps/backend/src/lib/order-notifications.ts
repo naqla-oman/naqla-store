@@ -14,7 +14,7 @@ const money = (n: number, cur: string) =>
   `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(n)} ${cur === "omr" ? "ر.ع" : cur.toUpperCase()}`
 
 /** نص كل قالب ومتغيراته — يُستخدم للمعاينة في السجل ولتوثيق القوالب المطلوب اعتمادها */
-function build(kind: OrderNotice, o: { name: string; number: string; total: string; shipping: string; track: string }): Built {
+export function build(kind: OrderNotice, o: { name: string; number: string; total: string; shipping: string; track: string }): Built {
   // النصوص مطابقة حرفياً لقوالب Meta في docs/whatsapp-templates.md:
   // لا يبدأ المتن ولا ينتهي بمتغير (شرط Meta)، والمتغيرات بترتيب ظهورها {{1}}، {{2}}…
   const s = storeData()
