@@ -58,7 +58,8 @@ aside .sticky.top-0 button[aria-haspopup="menu"] > span:first-child > span {
 }
 `
 
-const HEAD_SCRIPT = `
+// String.raw: الشرطات العكسية في التعابير النمطية تبقى كما هي (`\s` في قالب عادي تصبح «s» فتفشل المطابقة)
+const HEAD_SCRIPT = String.raw`
 (function () {
   try {
     if (!localStorage.getItem("lng") && document.cookie.indexOf("i18next=") < 0) localStorage.setItem("lng", "ar");
@@ -68,7 +69,9 @@ const HEAD_SCRIPT = `
     if (t.indexOf("Medusa") < 0) return;
     var base = t.replace(/\s*-\s*Medusa\s*$/, "");
     // «مرحباً بك في لوحة نقلة» لا تحتاج لاحقة، وغيرها: «الطلبات — لوحة نقلة»
-    document.title = base.indexOf("لوحة نقلة") >= 0 ? base : (base && base !== "Medusa" ? base + " — لوحة نقلة" : "لوحة نقلة");
+    var next = base.indexOf("لوحة نقلة") >= 0 ? base : (base && base !== "Medusa" ? base + " — لوحة نقلة" : "لوحة نقلة");
+    // حارس: لا كتابة إلا عند تغيّر فعلي (وإلا يعيد المراقب استدعاء الدالة بلا نهاية)
+    if (next !== t) document.title = next;
   };
   new MutationObserver(fix).observe(document.head, { childList: true, subtree: true, characterData: true });
   fix();
