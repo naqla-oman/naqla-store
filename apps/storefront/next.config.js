@@ -37,8 +37,21 @@ const BACKEND_HOST = (() => {
   }
 })()
 
+// H8: ترويسات أمان (Caddy يضيف HSTS وCSP في الإنتاج — هذه طبقة ثانية لا تعتمد عليه)
+const SECURITY_HEADERS = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self'" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=(self)" },
+]
+
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: "/:path*", headers: SECURITY_HEADERS }]
+  },
   // مجلد بناء لكل متجر حتى لا يتصادم متجران يعملان من نفس المجلد (store:dev يضبطه)
   distDir: process.env.NEXT_DIST_DIR || ".next",
   // ملفات العميل خارج مجلد التطبيق (clients/)
