@@ -3,6 +3,7 @@ import { requireExistingAdmin } from './admin-user-guard'
 import { securityHeaders } from './security-headers'
 import { clientIp, rateLimit } from '../lib/rate-limit'
 import { blockLockedCart } from '../lib/cart-lock'
+import { revalidateAfter } from '../lib/revalidate'
 import { canonicalizeAddress } from '../workflows/hooks/cart-address'
 
 // The product index declares filterable `status` and `sales_channel_ids`, so
@@ -18,6 +19,8 @@ export default defineMiddlewares({
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/line-items/:line_id', middlewares: [blockLockedCart] },
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/promotions', middlewares: [blockLockedCart] },
     { method: ['POST'], matcher: '/store/carts/:id/shipping-methods', middlewares: [blockLockedCart] },
+    // M26: قوائم الأسعار (تخفيضات اللوحة) لا تُطلق أحداثاً تصل للمشترك ← إبطال المنتجات بعد كل تعديل ناجح
+    { method: ['POST', 'DELETE'], matcher: '/admin/price-lists*', middlewares: [revalidateAfter(['products'])] },
     // H5: حدود المعدل (Redis عند توفره)
     {
       // دخول الأدمن: 20 محاولة لكل IP و10 لكل بريد في 15 دقيقة
