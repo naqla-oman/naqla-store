@@ -1,4 +1,5 @@
 import crypto from "crypto"
+import Redis from "ioredis"
 import { AbstractAuthModuleProvider, MedusaError } from "@medusajs/framework/utils"
 import type {
   AuthenticationInput,
@@ -21,6 +22,9 @@ type Options = {
   ipSendsPerHour?: number
   /** محاولات تحقق لكل IP في الساعة */
   ipVerifiesPerHour?: number
+  /** H6: عند ضبطه تنتقل الأقفال والحدود إلى Redis (مشتركة بين كل عمليات المتجر) */
+  redisUrl?: string
+  redisPrefix?: string
 }
 
 type Deps = {
@@ -46,7 +50,50 @@ export const OTP_EVENT = "phone-auth.otp.generated"
  *   POST /auth/customer/phone-auth/callback  ?phone&otp      → يتحقق ويعيد JWT
  * الرمز: 6 أرقام من crypto.randomInt، يُخزَّن كـ HMAC، صالح 5 دقائق، 5 محاولات، إعادة إرسال كل 60 ثانية.
  */
-/* ===== C2: أقفال وحدود ===== */
+/* ===== C2: أقفال وحدود (ذاكرة العملية، أو Redis عند توفره — H6) ===== */
+
+type Guard = {
+  lock<T>(key: string, fn: () => Promise<T>): Promise<T>
+  overLimit(key: string, max: number, windowMs: number): Promise<boolean>
+}
+
+/** Redis: قفل SET NX PX مع انتظار قصير، وعدّاد INCR بنافذة ثابتة */
+function redisGuard(url: string, prefix: string): Guard {
+  const r = new Redis(url, { maxRetriesPerRequest: 2, lazyConnect: false })
+  const sleep = (ms: number) => new Promise((ok) => setTimeout(ok, ms))
+  return {
+    async lock(key, fn) {
+      const k = `${prefix}lock:${key}`
+      const token = crypto.randomBytes(12).toString("hex")
+      for (let i = 0; i < 200; i++) {
+        if ((await r.set(k, token, "PX", 15_000, "NX")) === "OK") {
+          try {
+            return await fn()
+          } finally {
+            // تحرير القفل فقط إن كان ما زال لنا
+            await r.eval('if redis.call("get", KEYS[1]) == ARGV[1] then return redis.call("del", KEYS[1]) else return 0 end', 1, k, token)
+          }
+        }
+        await sleep(25 + Math.random() * 25)
+      }
+      throw new MedusaError(MedusaError.Types.CONFLICT, "الخادم مشغول — حاول بعد لحظات")
+    },
+    async overLimit(key, max, windowMs) {
+      const k = `${prefix}rl:${key}:${Math.floor(Date.now() / windowMs)}`
+      const n = await r.incr(k)
+      if (n === 1) await r.pexpire(k, windowMs)
+      return n > max
+    },
+  }
+}
+
+/** الذاكرة (تطوير بلا Redis): نفس الواجهة */
+function memoryGuard(): Guard {
+  return {
+    lock: (key, fn) => withLock(key, fn),
+    overLimit: async (key, max, windowMs) => overLimit(key, max, windowMs),
+  }
+}
 
 /** قفل لكل مفتاح (رقم): العمليات على الرقم نفسه تُنفَّذ بالتتابع، فلا تُقرأ المحاولات قديمة */
 const locks = new Map<string, Promise<unknown>>()
@@ -92,6 +139,7 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
   protected options_: Required<Options>
   protected logger_: Logger
   protected eventBus_: Deps["event_bus"]
+  protected guard_: Guard
 
   static validateOptions(options: Record<string, unknown>) {
     if (!options.secret || String(options.secret).length < 16) {
@@ -112,8 +160,11 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
       maxSendsPerDay: 8,
       ipSendsPerHour: 20,
       ipVerifiesPerHour: 60,
+      redisUrl: "",
+      redisPrefix: "otp:",
       ...options,
-    }
+    } as Required<Options>
+    this.guard_ = this.options_.redisUrl ? redisGuard(this.options_.redisUrl, this.options_.redisPrefix) : memoryGuard()
   }
 
   /** يقبل 9XXXXXXX أو 968XXXXXXXX أو +968XXXXXXXX ويعيد +968XXXXXXXX */
@@ -140,10 +191,10 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
   async authenticate(data: AuthenticationInput, svc: AuthIdentityProviderService): Promise<AuthenticationResponse> {
     const phone = this.normalize((data.body as any)?.phone)
     if (!phone) return { success: false, error: "رقم الهاتف غير صحيح" }
-    if (overLimit(`send:${ipOf(data)}`, this.options_.ipSendsPerHour, 3600_000)) {
+    if (await this.guard_.overLimit(`send:${ipOf(data)}`, this.options_.ipSendsPerHour, 3600_000)) {
       return { success: false, error: "طلبات كثيرة من هذا الجهاز — حاول بعد ساعة" }
     }
-    return withLock(`otp:${phone}`, () => this.sendCode(phone, svc))
+    return this.guard_.lock(`otp:${phone}`, () => this.sendCode(phone, svc))
   }
 
   protected async sendCode(phone: string, svc: AuthIdentityProviderService): Promise<AuthenticationResponse> {
@@ -189,11 +240,11 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
     const phone = this.normalize(src.phone)
     const otp = String(src.otp ?? "").replace(/\D/g, "")
     if (!phone || otp.length !== 6) return { success: false, error: "أدخلي الرمز المكوّن من 6 أرقام" }
-    if (overLimit(`verify:${ipOf(data)}`, this.options_.ipVerifiesPerHour, 3600_000)) {
+    if (await this.guard_.overLimit(`verify:${ipOf(data)}`, this.options_.ipVerifiesPerHour, 3600_000)) {
       return { success: false, error: "محاولات كثيرة من هذا الجهاز — حاول بعد ساعة" }
     }
     // C2: القراءة والعدّ والكتابة داخل قفل الرقم — الطلبات المتوازية تُعدّ واحدة واحدة
-    return withLock(`otp:${phone}`, () => this.checkCode(phone, otp, svc))
+    return this.guard_.lock(`otp:${phone}`, () => this.checkCode(phone, otp, svc))
   }
 
   protected async checkCode(phone: string, otp: string, svc: AuthIdentityProviderService): Promise<AuthenticationResponse> {

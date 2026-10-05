@@ -11,6 +11,28 @@ loadEnv(process.env.NODE_ENV || 'development', BACKEND_DIR)
 const store = client()
 
 /**
+ * H6: Redis للأحداث وworkflows والأقفال والكاش والجلسات — عند وجود REDIS_URL فقط (التطوير بدونه يعمل في الذاكرة).
+ * بادئة لكل متجر حتى تتشارك المتاجر خادم Redis واحداً دون تداخل.
+ */
+const REDIS_URL = process.env.REDIS_URL
+const REDIS_PREFIX = `naqla:${store.slug}:`
+const redisModules = REDIS_URL
+  ? [
+      { resolve: '@medusajs/medusa/event-bus-redis', options: { redisUrl: REDIS_URL, queueName: `${REDIS_PREFIX}events` } },
+      { resolve: '@medusajs/medusa/workflow-engine-redis', options: { redis: { url: REDIS_URL, queueName: `${REDIS_PREFIX}workflows` } } },
+      { resolve: '@medusajs/medusa/cache-redis', options: { redisUrl: REDIS_URL, namespace: `${REDIS_PREFIX}cache` } },
+      {
+        resolve: '@medusajs/medusa/locking',
+        options: {
+          providers: [
+            { resolve: '@medusajs/medusa/locking-redis', id: 'locking-redis', is_default: true, options: { redisUrl: REDIS_URL, namespace: `${REDIS_PREFIX}lock` } },
+          ],
+        },
+      },
+    ]
+  : []
+
+/**
  * C3: أسرار JWT/الكوكي لكل متجر (يولّدها store:setup بطول 48 بايت).
  * في الإنتاج يُرفض الإقلاع بسر فارغ أو افتراضي أو قصير؛ في التطوير تحذير فقط.
  */
@@ -40,6 +62,8 @@ module.exports = defineConfig({
   },
   projectConfig: {
     databaseUrl: process.env.DATABASE_URL,
+    // H6: الجلسات في Redis (تبقى بعد إعادة التشغيل وتعمل مع أكثر من عملية)
+    ...(REDIS_URL ? { redisUrl: REDIS_URL, redisPrefix: `${REDIS_PREFIX}sess:` } : {}),
     http: {
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
@@ -54,6 +78,7 @@ module.exports = defineConfig({
     }
   },
   modules: [
+    ...redisModules,
     // أدوات التتبع (المعرّفات والرموز في الخادم) + تحويلات 301 للسيو
     { resolve: './src/modules/tracking' },
     // الملفات (صور المنتجات): محلياً في static/ ويُقدَّم من الخادم. للإنتاج: MEDUSA_BACKEND_URL بالنطاق العام
@@ -93,7 +118,8 @@ module.exports = defineConfig({
           {
             resolve: './src/modules/phone-auth',
             id: 'phone-auth',
-            options: { secret: process.env.PHONE_AUTH_SECRET },
+            // C2+H6: أقفال الرموز وحدود IP في Redis عند توفره (مشتركة بين العمليات)
+            options: { secret: process.env.PHONE_AUTH_SECRET, redisUrl: REDIS_URL, redisPrefix: `${REDIS_PREFIX}otp:` },
           },
         ],
       },
