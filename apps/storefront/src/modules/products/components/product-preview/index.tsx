@@ -7,6 +7,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Icon from "@modules/common/components/icon"
 import WishButton from "@modules/common/components/wish-button"
 import { storeConfig } from "../../../../store.config"
+import { g } from "@lib/voice"
 
 const TAG: Record<string, string> = { new: "جديد", bestsellers: "الأكثر مبيعاً", sale: "خصم" }
 
@@ -21,7 +22,9 @@ export default async function ProductPreview({
   const { cheapestPrice } = getProductPrice({ product })
   const meta = (product.metadata || {}) as Record<string, any>
   const price = cheapestPrice?.calculated_price_number ?? 0
-  const old: number | null = meta.compare_at_price ?? null
+  // M26: سعر قائمة أسعار «تخفيض» من Medusa أولاً (أداة التخفيضات في اللوحة)، ثم compare_at في البيانات
+  const sale = cheapestPrice?.price_type === "sale" ? Number(cheapestPrice.original_price_number) : null
+  const old: number | null = sale && sale > price ? sale : meta.compare_at_price ?? null
   const cur = region.currency_code
   const tag = product.collection?.handle ? TAG[product.collection.handle] : null
   const pct = old && old > price ? Math.round((1 - price / old) * 100) : 0
@@ -49,7 +52,7 @@ export default async function ProductPreview({
           {old && old > price && (
             <>
               <span className="old">{convertToLocale({ amount: old, currency_code: cur })}</span>
-              <span className="save">وفّري {convertToLocale({ amount: old - price, currency_code: cur })}</span>
+              <span className="save">{g("وفّري", "وفّر")} {convertToLocale({ amount: old - price, currency_code: cur })}</span>
             </>
           )}
         </div>
