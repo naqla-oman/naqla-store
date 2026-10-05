@@ -186,3 +186,22 @@ footer.site a { color: inherit; text-decoration: none; }
 .prose-store ul, .prose-store ol { margin: 0 0 12px; padding-inline-start: 22px; color: var(--ink-2); }
 .prose-store li { margin: 4px 0; }
 .prose-store a { color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+
+/* قوائم المتجر والأقسام (H9/H10/H11) */
+.listing { padding-block: 16px 40px; }
+.listing .sechead { margin-top: 12px; }
+.listing .sechead h1 { font-size: 26px; font-weight: 800; margin: 0; line-height: 1.25; }
+.listctl { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+.searchbox { flex: 1; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 0 12px; height: 46px; color: var(--muted); }
+.searchbox:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
+.searchbox input { flex: 1; border: 0; outline: 0; background: transparent; font: inherit; color: var(--ink); min-width: 0; }
+.sortsel { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
+.sortsel select { height: 46px; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--surface); color: var(--ink); font: inherit; padding-inline: 10px; }
+.catchips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 14px; scrollbar-width: none; }
+.catchip { flex: none; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; font-size: 13.5px; color: var(--ink-2); background: var(--surface); white-space: nowrap; }
+.catchip.on, .catchip:hover { border-color: var(--accent); color: var(--accent); }
+.empty-search { text-align: center; padding: 40px 12px; }
+.empty-search .es-title { font-size: 18px; font-weight: 700; margin: 0 0 6px; }
+.empty-search .es-hint { color: var(--muted); margin: 0 0 14px; }
+.empty-search .catchips { justify-content: center; flex-wrap: wrap; }
+@media (max-width: 520px) { .sortsel span { display: none; } }

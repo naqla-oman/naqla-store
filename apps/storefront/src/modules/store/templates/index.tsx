@@ -1,46 +1,10 @@
-import { Suspense } from "react"
-
-import SkeletonProductGrid from "@modules/skeletons/templates/skeleton-product-grid"
-import RefinementList from "@modules/store/components/refinement-list"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { storeConfig } from "../../../store.config"
+import ListingTemplate from "./listing"
 
-import PaginatedProducts from "./paginated-products"
-
-const StoreTemplate = ({
-  sortBy,
-  q,
-  page,
-  countryCode,
-}: {
-  sortBy?: SortOptions
-  q?: string
-  page?: string
-  countryCode: string
-}) => {
-  const pageNumber = page ? parseInt(page) : 1
-  const sort = sortBy || "created_at"
-
-  return (
-    <div
-      className="flex flex-col small:flex-row small:items-start py-6 content-container"
-      data-testid="category-container"
-    >
-      <RefinementList sortBy={sort} />
-      <div className="w-full">
-        <div className="mb-8 text-2xl-semi">
-          <h1 data-testid="store-page-title">All products</h1>
-        </div>
-        <Suspense fallback={<SkeletonProductGrid />}>
-          <PaginatedProducts
-            sortBy={sort}
-            q={q}
-            page={pageNumber}
-            countryCode={countryCode}
-          />
-        </Suspense>
-      </div>
-    </div>
-  )
-}
+/** صفحة المتجر: كل المنتجات أو نتائج البحث (H11) */
+const StoreTemplate = ({ sortBy, q, page, countryCode }: { sortBy?: SortOptions; q?: string; page?: string; countryCode: string }) => (
+  <ListingTemplate countryCode={countryCode} sortBy={sortBy} q={q} page={page} title="كل المنتجات" subtitle={storeConfig.description} />
+)
 
 export default StoreTemplate
