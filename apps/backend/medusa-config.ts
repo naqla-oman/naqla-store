@@ -16,10 +16,12 @@ const store = client()
  */
 const REDIS_URL = process.env.REDIS_URL
 const REDIS_PREFIX = `naqla:${store.slug}:`
+// أسماء طوابير BullMQ لا تقبل «:» — بادئة بالشرطات للأحداث والـworkflows
+const QUEUE_PREFIX = `naqla-${store.slug}-`
 const redisModules = REDIS_URL
   ? [
-      { resolve: '@medusajs/medusa/event-bus-redis', options: { redisUrl: REDIS_URL, queueName: `${REDIS_PREFIX}events` } },
-      { resolve: '@medusajs/medusa/workflow-engine-redis', options: { redis: { url: REDIS_URL, queueName: `${REDIS_PREFIX}workflows` } } },
+      { resolve: '@medusajs/medusa/event-bus-redis', options: { redisUrl: REDIS_URL, queueName: `${QUEUE_PREFIX}events` } },
+      { resolve: '@medusajs/medusa/workflow-engine-redis', options: { redis: { redisUrl: REDIS_URL, queueName: `${QUEUE_PREFIX}workflows` } } },
       { resolve: '@medusajs/medusa/cache-redis', options: { redisUrl: REDIS_URL, namespace: `${REDIS_PREFIX}cache` } },
       {
         resolve: '@medusajs/medusa/locking',
