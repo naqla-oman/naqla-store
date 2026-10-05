@@ -201,8 +201,11 @@ export default async function initial_data_seed({ container }: { container: Medu
     ).map((c) => ({ keys, values: c }));
   };
   // رمز المخزون: بادئة المنتج + قيمة الخيار الأول + رقم المتغيّر (فريد داخل المنتج)
-  const skuOf = (handle: string, head: string, vi: number) =>
-    `${handle.replace(/-/g, "").toUpperCase().slice(0, 10)}-${head.replace(/\s/g, "")}-${vi}`;
+  // لاتيني فقط (قيم الخيارات العربية لا تدخل الرمز): بادئة المنتج + قيمة لاتينية إن وُجدت + رقم المتغيّر
+  const skuOf = (handle: string, head: string, vi: number) => {
+    const latin = head.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 8);
+    return `${handle.replace(/-/g, "").toUpperCase().slice(0, 10)}-${latin || "V"}-${vi}`;
+  };
   const { result: products } = await createProductsWorkflow(container).run({
     input: {
       products: data.products.map((p) => {
