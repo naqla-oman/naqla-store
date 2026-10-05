@@ -21,7 +21,17 @@ const QUEUE_PREFIX = `naqla-${store.slug}-`
 const redisModules = REDIS_URL
   ? [
       { resolve: '@medusajs/medusa/event-bus-redis', options: { redisUrl: REDIS_URL, queueName: `${QUEUE_PREFIX}events` } },
-      { resolve: '@medusajs/medusa/workflow-engine-redis', options: { redis: { redisUrl: REDIS_URL, queueName: `${QUEUE_PREFIX}workflows` } } },
+      { resolve: '@medusajs/medusa/workflow-engine-redis', options: {
+          redis: {
+            redisUrl: REDIS_URL,
+            queueName: `${QUEUE_PREFIX}workflows`,
+            jobQueueName: `${QUEUE_PREFIX}workflows-jobs`,
+            // اسم طابور التنظيف ثابت في المحرّك: نفصل المتاجر ببادئة BullMQ (للطابور والعامل معاً)
+            cleanerQueueOptions: { prefix: `bull-${QUEUE_PREFIX}cleaner` },
+            cleanerWorkerOptions: { prefix: `bull-${QUEUE_PREFIX}cleaner` },
+          },
+        },
+      },
       { resolve: '@medusajs/medusa/cache-redis', options: { redisUrl: REDIS_URL, namespace: `${REDIS_PREFIX}cache` } },
       {
         resolve: '@medusajs/medusa/locking',
