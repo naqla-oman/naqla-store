@@ -87,7 +87,7 @@ const checkBalanceStep = createStep("check-balance", async ({ customer_id }: Red
 
 const createRedeemPromotionStep = createStep(
   "create-redeem-promotion",
-  async (input: { redeemValue: number; currency: string }, { container }) => {
+  async (input: { redeemValue: number; currency: string; customer_id: string }, { container }) => {
     const promotion = container.resolve(Modules.PROMOTION)
     const code = `LNP-${crypto.randomBytes(4).toString("hex").toUpperCase()}`
     const [promo] = await promotion.createPromotions([
@@ -98,6 +98,8 @@ const createRedeemPromotionStep = createStep(
         is_automatic: false,
         is_tax_inclusive: true,
         limit: 1, // يُستخدم مرة واحدة
+        // M8: الكود لصاحبته فقط — Medusa يرفضه في سلة أي زبونة أخرى
+        rules: [{ attribute: "customer.id", operator: "eq", values: [input.customer_id] }],
         application_method: {
           type: "fixed",
           target_type: "order",
@@ -146,8 +148,43 @@ export const redeemPointsWorkflow = createWorkflow("redeem-points", (input: Rede
   const lockKey = transform({ input }, ({ input }) => `loyalty:${input.customer_id}`)
   acquireLockStep({ key: lockKey, timeout: 15, ttl: 30 })
   const rules = checkBalanceStep({ customer_id: input.customer_id })
-  const promo = createRedeemPromotionStep({ redeemValue: rules.redeemValue, currency: input.currency })
+  const promo = createRedeemPromotionStep({ redeemValue: rules.redeemValue, currency: input.currency, customer_id: input.customer_id })
   const entry = recordRedeemStep({ customer_id: input.customer_id, points: rules.redeemPoints, code: promo.code })
   releaseLockStep({ key: lockKey })
   return new WorkflowResponse({ code: promo.code, entry })
+})
+
+
+/**
+ * M8: إلغاء طلب استُخدم فيه كود استبدال ← تُلغى قيدة الخصم فتعود النقاط للرصيد.
+ * الكود نفسه استُخدم مرة (limit: 1) فلا يُعاد تفعيله؛ تستبدل الزبونة من جديد.
+ */
+const restoreRedeemStep = createStep(
+  "restore-redeem",
+  async (input: { order_id: string }, { container }) => {
+    const { data } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({
+      entity: "order",
+      fields: ["id", "customer_id", "items.adjustments.code"],
+      filters: { id: input.order_id },
+    })
+    const o: any = data[0]
+    const codes = [...new Set(((o?.items ?? []) as any[]).flatMap((i) => (i.adjustments ?? []).map((a: any) => a.code)).filter(Boolean))]
+    if (!o?.customer_id || !codes.length) return new StepResponse([] as string[], [] as string[])
+    const loyalty = container.resolve<LoyaltyModuleService>(LOYALTY_MODULE)
+    const entries = await loyalty.listLoyaltyEntries({ customer_id: o.customer_id, kind: "redeem", code: codes, status: "available" } as any, { take: 20 })
+    for (const e of entries) {
+      await loyalty.updateLoyaltyEntries({ id: e.id, status: "canceled", note: `أُعيدت النقاط — أُلغي الطلب الذي استُخدم فيه الكود ${e.code}` } as any)
+    }
+    return new StepResponse(entries.map((e) => e.code as string), entries.map((e) => e.id))
+  },
+  async (ids, { container }) => {
+    if (ids?.length) {
+      const loyalty = container.resolve<LoyaltyModuleService>(LOYALTY_MODULE)
+      for (const id of ids) await loyalty.updateLoyaltyEntries({ id, status: "available" } as any)
+    }
+  }
+)
+
+export const restoreRedeemOnCancelWorkflow = createWorkflow("restore-redeem-on-cancel", (input: { order_id: string }) => {
+  return new WorkflowResponse(restoreRedeemStep(input))
 })
