@@ -49,6 +49,9 @@ export type ClientStore = {
   location: { name: string; city: string; address: string }
   shipping: ClientShipping[]
   /** firstOrderOnly: لأول طلب فقط (حساب/بريد/هاتف) — exclusive: لا يُجمع مع أكواد أخرى — limit: حد الاستخدام الكلي */
+  /** M13: آخر ساعة للتوصيل السريع «اليوم» (بتوقيت المتجر) وأيام بلا توصيل سريع (0=الأحد … 5=الجمعة) */
+  cutoffHour?: number
+  deliveryOffDays?: number[]
   promotions?: { code: string; type: "percentage" | "fixed"; value: number; description?: string; firstOrderOnly?: boolean; exclusive?: boolean; limit?: number }[]
   categories: { handle: string; name: string }[]
   collections: { handle: string; title: string }[]

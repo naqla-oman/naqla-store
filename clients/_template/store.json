@@ -296,5 +296,8 @@
       }
     }
   ],
-  "returnDays": 7
+  "returnDays": 7,
+  "deliveryOffDays": [
+    5
+  ]
 }

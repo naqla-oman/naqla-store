@@ -40,6 +40,8 @@ type ClientStore = {
   currencyLabel: string
   freeShippingOver: number
   cutoffHour: number
+  /** M13: أيام بلا توصيل سريع (0=الأحد … 5=الجمعة) */
+  deliveryOffDays?: number[]
   orderPrefix: string
   /** مدة الإرجاع بالأيام (تدخل في hasMerchantReturnPolicy للسيو) */
   returnDays?: number
@@ -122,6 +124,7 @@ export const storeConfig = {
   currencyLabel: c.currencyLabel,
   freeShippingOver: c.freeShippingOver,
   cutoffHour: c.cutoffHour,
+  deliveryOffDays: c.deliveryOffDays ?? [5],
   colors: c.colors,
   defaultTheme: c.defaultTheme ?? "light",
   brand: {

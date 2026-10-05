@@ -1,5 +1,6 @@
 "use client"
 
+import { expressOpen } from "@lib/util/eta"
 import { track } from "@lib/tracking/events"
 import Image from "next/image"
 import { applyCode, chooseShipping, DeliveryInput, placeOrderWith, removeCode, saveDelivery } from "@lib/data/checkout"
@@ -102,8 +103,10 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   const codes = (cart.promotions ?? []).filter((p: any) => !p.is_automatic).map((p) => p.code).filter(Boolean) as string[]
 
   const sortedOptions = useMemo(() => {
+    // M13: السريع «اليوم» يُخفى بعد ساعة القطع وفي أيام العطلة (والخادم يرفضه أيضاً)
+    const open = expressOpen()
     const order = Object.keys(checkout.shipping)
-    return [...shippingOptions].sort(
+    return [...shippingOptions].filter((o) => open || (o.type as any)?.code !== "express").sort(
       (a, b) => order.indexOf((a.type as any)?.code) - order.indexOf((b.type as any)?.code)
     )
   }, [shippingOptions])
