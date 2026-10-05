@@ -15,7 +15,7 @@ async function load(req: MedusaRequest) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const { data: products } = await query.graph({
     entity: "product",
-    fields: ["id", "title", "subtitle", "description", "status", "metadata", "categories.name", "tags.value", "collection.title"],
+    fields: ["id", "title", "subtitle", "description", "status", "metadata", "categories.name", "tags.value", "collection.title", "options.values.value"],
     filters: { status: "published" } as any,
     pagination: { take: 5000 },
   })
@@ -26,7 +26,8 @@ async function load(req: MedusaRequest) {
       id: p.id,
       title: tokens(`${p.title} ${p.subtitle ?? ""} ${p.metadata?.title_en ?? ""}`),
       cats: tokens((p.categories ?? []).map((c: any) => c.name).join(" ")),
-      other: tokens(`${(p.tags ?? []).map((t: any) => t.value).join(" ")} ${p.collection?.title ?? ""}`),
+      // الوسوم والمجموعة وقيم الخيارات (الألوان والمقاسات والأحجام): «أسود»، «54»، «100 مل»
+      other: tokens(`${(p.tags ?? []).map((t: any) => t.value).join(" ")} ${p.collection?.title ?? ""} ${(p.options ?? []).flatMap((o: any) => (o.values ?? []).map((v: any) => v.value)).join(" ")}`),
       desc: tokens(p.description ?? ""),
     }))
   const categories = (cats as any[]).filter((c) => c.is_active !== false).map((c) => ({ name: c.name, handle: c.handle, toks: tokens(c.name) }))
