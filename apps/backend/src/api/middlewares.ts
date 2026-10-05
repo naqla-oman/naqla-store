@@ -3,6 +3,7 @@ import { requireExistingAdmin } from './admin-user-guard'
 import { securityHeaders } from './security-headers'
 import { clientIp, rateLimit } from '../lib/rate-limit'
 import { blockLockedCart } from '../lib/cart-lock'
+import { canonicalizeAddress } from '../workflows/hooks/cart-address'
 
 // The product index declares filterable `status` and `sales_channel_ids`, so
 // the route narrows it to published products in the key's sales channels.
@@ -11,7 +12,8 @@ export default defineMiddlewares({
     // H8: ترويسات الأمان لكل مسارات الخلفية
     { matcher: '/*', middlewares: [securityHeaders] },
     // H2: لا تعديل على سلة دفعها عبر ثواني قيد التنفيذ (الإتمام وفكّ القفل مستثنيان)
-    { method: ['POST'], matcher: '/store/carts/:id', middlewares: [blockLockedCart] },
+    // A3: الاسم القياسي للولاية قبل الحفظ
+    { method: ['POST'], matcher: '/store/carts/:id', middlewares: [blockLockedCart, canonicalizeAddress] },
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/line-items', middlewares: [blockLockedCart] },
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/line-items/:line_id', middlewares: [blockLockedCart] },
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/promotions', middlewares: [blockLockedCart] },

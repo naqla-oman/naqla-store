@@ -20,3 +20,23 @@ updateCartWorkflow.hooks.validate(async ({ input }) => {
     throw new MedusaError(MedusaError.Types.INVALID_DATA, `الولاية «${a.city}» لا تتبع محافظة ${gov.name}`)
   }
 })
+
+/**
+ * A3: الاسم القياسي للولاية يُحفظ (لا «ازكي» بل «إزكي») — middleware قبل حفظ عنوان السلة.
+ * يعدّل الجسم والجسم المُتحقَّق معاً، فيعمل أياً كان ترتيب تحقق Medusa.
+ */
+export function canonicalWilayat(province?: string, city?: string): string | null {
+  if (!province || !city) return null
+  const gov = (client() as any).checkout?.governorates?.find((g: any) => g.code === String(province).toLowerCase())
+  const target = normalizeAr(String(city))
+  return (gov?.wilayats ?? []).find((w: string) => normalizeAr(w) === target) ?? null
+}
+
+export function canonicalizeAddress(req: any, _res: any, next: () => void) {
+  for (const body of [req.body, req.validatedBody]) {
+    const a = body?.shipping_address
+    const name = canonicalWilayat(a?.province, a?.city)
+    if (name) a.city = name
+  }
+  next()
+}
