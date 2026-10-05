@@ -1,6 +1,7 @@
 import crypto from "crypto"
 import { ContainerRegistrationKeys, MedusaError, Modules } from "@medusajs/framework/utils"
-import { createStep, createWorkflow, StepResponse, WorkflowResponse } from "@medusajs/framework/workflows-sdk"
+import { createStep, createWorkflow, StepResponse, transform, WorkflowResponse } from "@medusajs/framework/workflows-sdk"
+import { acquireLockStep, releaseLockStep } from "@medusajs/medusa/core-flows"
 import { LOYALTY_MODULE } from "../modules/loyalty"
 import type LoyaltyModuleService from "../modules/loyalty/service"
 
@@ -126,6 +127,13 @@ const recordRedeemStep = createStep(
       code: input.code,
       note: "استبدال بكود خصم",
     })
+    // C4 (خط دفاع ثانٍ): الرصيد بعد الخصم لا يكون سالباً — وإلا يُلغى القيد والكود بالتعويض
+    const raw = (await loyalty.listLoyaltyEntries({ customer_id: input.customer_id, status: "available" }, { take: 100000, select: ["points"] }))
+      .reduce((sum, e) => sum + Number(e.points), 0)
+    if (raw < 0) {
+      await loyalty.deleteLoyaltyEntries(entry.id)
+      throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "الرصيد لا يكفي للاستبدال")
+    }
     return new StepResponse(entry, entry.id)
   },
   async (id, { container }) => {
@@ -134,8 +142,12 @@ const recordRedeemStep = createStep(
 )
 
 export const redeemPointsWorkflow = createWorkflow("redeem-points", (input: RedeemInput & { currency: string }) => {
+  // C4: قفل لكل زبونة — الطلبات المتوازية تُنفَّذ بالتتابع، والرصيد يُعاد حسابه داخل القفل
+  const lockKey = transform({ input }, ({ input }) => `loyalty:${input.customer_id}`)
+  acquireLockStep({ key: lockKey, timeout: 15, ttl: 30 })
   const rules = checkBalanceStep({ customer_id: input.customer_id })
   const promo = createRedeemPromotionStep({ redeemValue: rules.redeemValue, currency: input.currency })
   const entry = recordRedeemStep({ customer_id: input.customer_id, points: rules.redeemPoints, code: promo.code })
+  releaseLockStep({ key: lockKey })
   return new WorkflowResponse({ code: promo.code, entry })
 })
