@@ -1,5 +1,5 @@
 # خلفية متجر واحد (Medusa + لوحة نقلة) — يُبنى لكل متجر بـ --build-arg STORE=<slug>
-# البناء: docker build -f deploy/backend.Dockerfile --build-arg STORE=layan -t naqla-backend-layan .
+# البناء: docker build -f deploy/backend.Dockerfile --build-arg STORE=<slug> -t naqla-backend-<slug> .
 FROM node:22-bookworm-slim AS base
 RUN corepack enable && corepack prepare pnpm@10.28.0 --activate
 WORKDIR /app

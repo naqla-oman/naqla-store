@@ -34,20 +34,20 @@
 	}
 }
 
-# ===== متجر: layan =====
-layan.om, www.layan.om {
+# ===== متجر 1: النطاقات من متغيرات البيئة (deploy/.env) =====
+{$STORE1_DOMAIN}, www.{$STORE1_DOMAIN} {
 	import security
 	import access_log
 	header X-Frame-Options "SAMEORIGIN"
 	header Content-Security-Policy "frame-ancestors 'self'"
-	reverse_proxy storefront-layan:8000
+	reverse_proxy storefront-store1:8000
 }
 
-api.layan.om {
+api.{$STORE1_DOMAIN} {
 	import security
 	import access_log
 	# اللوحة (/app) والـAPI: لا تضمين في إطار إطلاقاً (Medusa يقدّم /app خارج middlewares)
 	header X-Frame-Options "DENY"
 	header Content-Security-Policy "frame-ancestors 'none'"
-	reverse_proxy backend-layan:9000
+	reverse_proxy backend-store1:9000
 }
