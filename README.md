@@ -167,6 +167,7 @@ pnpm store:dev <slug-2>     # المتجر http://localhost:8001 — اللوح�
 - **البناء**: `pnpm --filter @naqla/backend build` = `medusa build` ثم `scripts/backend-postbuild.mjs` (ينسخ `admin-brand` ويربط `.medusa/server/static` بمجلد الصور، لأن Medusa يقدّم `/static` من مجلد التشغيل دون إعداد).
 - **التشغيل**: من `apps/backend/.medusa/server` بـ `medusa start` مع بيئة المتجر و`NODE_ENV=production`.
 - **الأسرار**: `pnpm store:setup <slug>` يولّد `JWT_SECRET` و`COOKIE_SECRET` (48 بايت لكل متجر). الإنتاج يرفض الإقلاع بسر فارغ أو ضعيف.
+- **Redis**: عند ضبط `REDIS_URL` يجب أن يكون متاحاً. في الإنتاج يتوقف الإقلاع بخطأ واضح إن لم يتوفر (يعيد Docker التشغيل)، وفي التطوير تحذير فقط — وللتطوير بلا Redis احذف `REDIS_URL` فتعمل الوحدات في الذاكرة. الجاهزية الحقيقية من `/ready` (قاعدة البيانات + Redis)؛ `/health` المدمج يبقى «OK» حتى مع انقطاع Redis فلا يُعتمد عليه.
 - **رموز الدخول (OTP)**: قفل لكل رقم، وسقف يومي لكل رقم، وحدود لكل IP في الساعة. خلف Caddy: عنوان العميل يُقرأ من آخر قيمة في `X-Forwarded-For`.
 
 ## ملاحظات تقنية
