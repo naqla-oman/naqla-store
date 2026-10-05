@@ -37,6 +37,8 @@ export type TrackingCreds = {
   meta_pixel_id?: string | null
   meta_access_token?: string | null
   meta_test_event_code?: string | null
+  meta_test_event_code_at?: Date | string | null
+  tiktok_test_event_code_at?: Date | string | null
   snap_pixel_id?: string | null
   snap_access_token?: string | null
   snap_test_mode?: boolean | null
@@ -46,6 +48,15 @@ export type TrackingCreds = {
 }
 
 export type Platform = "meta" | "snap" | "tiktok" | "ga4"
+export type SendOpts = { debug?: boolean; test?: boolean }
+
+/** M6: رمز الاختبار يُطبَّق على الأحداث الفعلية 24 ساعة من حفظه فقط (نسيانه كان يحوّل كل المشتريات لنافذة الاختبار) */
+export const TEST_CODE_TTL_MS = 24 * 3600_000
+export function activeTestCode(code?: string | null, at?: Date | string | null, opts: SendOpts = {}) {
+  if (!code) return undefined
+  if (opts.test) return code
+  return at && Date.now() - new Date(at).getTime() < TEST_CODE_TTL_MS ? code : undefined
+}
 export type SendResult = { platform: Platform; ok: boolean; status: number; skipped?: string; response?: string }
 
 // ---------- التجزئة ----------
@@ -85,7 +96,8 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
 }
 
 // ---------- Meta Conversions API ----------
-export async function sendMeta(c: TrackingCreds, e: ServerEvent): Promise<SendResult> {
+export async function sendMeta(c: TrackingCreds, e: ServerEvent, opts: SendOpts = {}): Promise<SendResult> {
+  const testCode = activeTestCode(c.meta_test_event_code, c.meta_test_event_code_at, opts)
   if (!c.meta_pixel_id || !c.meta_access_token) return { platform: "meta", ok: false, status: 0, skipped: "لا يوجد Pixel ID أو رمز وصول" }
   const u = e.user ?? {}
   const body = {
@@ -116,14 +128,14 @@ export async function sendMeta(c: TrackingCreds, e: ServerEvent): Promise<SendRe
           : undefined,
       },
     ],
-    ...(c.meta_test_event_code ? { test_event_code: c.meta_test_event_code } : {}),
+    ...(testCode ? { test_event_code: testCode } : {}),
   }
   const res = await post(`https://graph.facebook.com/v21.0/${c.meta_pixel_id}/events?access_token=${encodeURIComponent(c.meta_access_token)}`, body)
   return { platform: "meta", ok: res.ok, status: res.status, response: await short(res) }
 }
 
 // ---------- Snap Conversions API v3 ----------
-export async function sendSnap(c: TrackingCreds, e: ServerEvent): Promise<SendResult> {
+export async function sendSnap(c: TrackingCreds, e: ServerEvent, _opts: SendOpts = {}): Promise<SendResult> {
   if (!c.snap_pixel_id || !c.snap_access_token) return { platform: "snap", ok: false, status: 0, skipped: "لا يوجد Pixel ID أو رمز وصول" }
   const u = e.user ?? {}
   const body = {
@@ -154,13 +166,14 @@ export async function sendSnap(c: TrackingCreds, e: ServerEvent): Promise<SendRe
 }
 
 // ---------- TikTok Events API v1.3 ----------
-export async function sendTikTok(c: TrackingCreds, e: ServerEvent): Promise<SendResult> {
+export async function sendTikTok(c: TrackingCreds, e: ServerEvent, opts: SendOpts = {}): Promise<SendResult> {
+  const testCode = activeTestCode(c.tiktok_test_event_code, c.tiktok_test_event_code_at, opts)
   if (!c.tiktok_pixel_id || !c.tiktok_access_token) return { platform: "tiktok", ok: false, status: 0, skipped: "لا يوجد Pixel ID أو رمز وصول" }
   const u = e.user ?? {}
   const body = {
     event_source: "web",
     event_source_id: c.tiktok_pixel_id,
-    ...(c.tiktok_test_event_code ? { test_event_code: c.tiktok_test_event_code } : {}),
+    ...(testCode ? { test_event_code: testCode } : {}),
     data: [
       {
         event: NAMES[e.name].tiktok,
@@ -190,7 +203,7 @@ export async function sendTikTok(c: TrackingCreds, e: ServerEvent): Promise<Send
 }
 
 // ---------- GA4 Measurement Protocol ----------
-export async function sendGa4(c: TrackingCreds, e: ServerEvent, opts: { debug?: boolean } = {}): Promise<SendResult> {
+export async function sendGa4(c: TrackingCreds, e: ServerEvent, opts: SendOpts = {}): Promise<SendResult> {
   if (!c.ga4_measurement_id || !c.ga4_api_secret) return { platform: "ga4", ok: false, status: 0, skipped: "لا يوجد Measurement ID أو API secret" }
   const u = e.user ?? {}
   const body = {
@@ -222,7 +235,7 @@ export async function sendGa4(c: TrackingCreds, e: ServerEvent, opts: { debug?: 
 
 const hashCode = (s: string) => [...s].reduce((h, ch) => (Math.imul(31, h) + ch.charCodeAt(0)) | 0, 0)
 
-export const SENDERS: Record<Platform, (c: TrackingCreds, e: ServerEvent, o?: { debug?: boolean }) => Promise<SendResult>> = {
+export const SENDERS: Record<Platform, (c: TrackingCreds, e: ServerEvent, o?: SendOpts) => Promise<SendResult>> = {
   meta: sendMeta,
   snap: sendSnap,
   tiktok: sendTikTok,

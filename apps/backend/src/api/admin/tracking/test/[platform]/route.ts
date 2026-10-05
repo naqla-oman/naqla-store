@@ -22,7 +22,7 @@ export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse)
       url: process.env.STOREFRONT_URL || "http://localhost:8000",
       user: { ip: req.ip, ua: String(req.headers["user-agent"] ?? "naqla-test") },
     },
-    { debug: true }
+    { debug: true, test: true }
   ).catch((e) => ({ platform, ok: false, status: 0, response: String(e?.message ?? e) }))
   res.json({ result })
 }

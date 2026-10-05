@@ -11,11 +11,14 @@ export const TrackingSettings = model.define("tracking_settings", {
   meta_pixel_id: model.text().nullable(),
   meta_access_token: model.text().nullable(),
   meta_test_event_code: model.text().nullable(),
+  /** M6: وقت حفظ رمز الاختبار — يُطبَّق على الأحداث العادية 24 ساعة فقط ثم يتوقف تلقائياً */
+  meta_test_event_code_at: model.dateTime().nullable(),
   snap_pixel_id: model.text().nullable(),
   snap_access_token: model.text().nullable(),
   snap_test_mode: model.boolean().default(false),
   tiktok_pixel_id: model.text().nullable(),
   tiktok_access_token: model.text().nullable(),
   tiktok_test_event_code: model.text().nullable(),
+  tiktok_test_event_code_at: model.dateTime().nullable(),
   clarity_project_id: model.text().nullable(),
 })

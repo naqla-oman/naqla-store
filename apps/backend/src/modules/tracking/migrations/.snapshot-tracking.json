@@ -272,6 +272,22 @@
           "enumItems": [],
           "mappedType": "text"
         },
+        "meta_test_event_code_at": {
+          "name": "meta_test_event_code_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
+        },
         "snap_pixel_id": {
           "name": "snap_pixel_id",
           "type": "text",
@@ -367,6 +383,22 @@
           "comment": null,
           "enumItems": [],
           "mappedType": "text"
+        },
+        "tiktok_test_event_code_at": {
+          "name": "tiktok_test_event_code_at",
+          "type": "timestamptz",
+          "unsigned": false,
+          "autoincrement": false,
+          "primary": false,
+          "nullable": true,
+          "unique": false,
+          "length": 6,
+          "precision": null,
+          "scale": null,
+          "default": null,
+          "comment": null,
+          "enumItems": [],
+          "mappedType": "datetime"
         },
         "clarity_project_id": {
           "name": "clarity_project_id",

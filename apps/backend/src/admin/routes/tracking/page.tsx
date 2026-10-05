@@ -153,6 +153,16 @@ const TrackingPage = () => {
                   onChange={(e) => setS((x) => ({ ...x, [f.key]: e.target.value }))}
                   data-testid={`field-${f.key}`}
                 />
+                {f.key.endsWith("test_event_code") && s[f.key] && (() => {
+                  // M6: رمز الاختبار يطبَّق على المشتريات الفعلية 24 ساعة فقط
+                  const at = s[`${f.key}_at`] ? new Date(String(s[`${f.key}_at`])).getTime() : 0
+                  const left = at ? 24 - (Date.now() - at) / 3600_000 : 0
+                  return left > 0 ? (
+                    <Badge size="2xsmall" color="orange" data-testid={`badge-${f.key}`}>⚠ وضع الاختبار مفعّل للأحداث الفعلية — ينتهي بعد {Math.ceil(left)} ساعة</Badge>
+                  ) : (
+                    <Badge size="2xsmall" color="grey" data-testid={`badge-${f.key}`}>منتهٍ للأحداث الفعلية — لزر الاختبار فقط</Badge>
+                  )
+                })()}
                 {f.secret && String(s[f.key] ?? "").startsWith("••••") && (
                   <Text size="xsmall" className="text-ui-fg-muted" dir="ltr">{String(s[f.key])}</Text>
                 )}

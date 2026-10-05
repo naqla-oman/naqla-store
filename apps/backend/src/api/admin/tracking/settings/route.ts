@@ -28,6 +28,13 @@ export const POST = async (req: AuthenticatedMedusaRequest<Record<string, unknow
     update[k] = s || null
   }
   if ("snap_test_mode" in req.body) update.snap_test_mode = req.body.snap_test_mode === true
+  // M6: وقت حفظ رمز الاختبار يبدأ نافذة الـ24 ساعة (تغيير الرمز يعيدها، وحذفه يلغيها)
+  const current = (await tracking.getSettings()) as any
+  for (const k of ["meta_test_event_code", "tiktok_test_event_code"] as const) {
+    if (!(k in update)) continue
+    if (!update[k]) update[`${k}_at`] = null
+    else if (update[k] !== current[k] || !current[`${k}_at`]) update[`${k}_at`] = new Date()
+  }
   await updateTrackingSettingsWorkflow(req.scope).run({ input: { update } })
   res.json({ settings: await tracking.maskedSettings() })
 }
