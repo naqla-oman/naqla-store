@@ -18,8 +18,11 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   }
   if (process.env.REDIS_URL) {
     try {
-      redis ??= new Redis(process.env.REDIS_URL, { maxRetriesPerRequest: 1, connectTimeout: 2000, enableOfflineQueue: false })
-      checks.redis = (await Promise.race([redis.ping(), new Promise((_, no) => setTimeout(() => no(new Error("timeout")), 2000))])) === "PONG"
+      // الاتصال أولاً ثم ping (مع إيقاف طابور الأوامر دون اتصال، أول ping قبل الجاهزية كان يفشل دائماً)
+      redis ??= new Redis(process.env.REDIS_URL, { lazyConnect: true, maxRetriesPerRequest: 1, connectTimeout: 2000, enableOfflineQueue: false })
+      const timeout = new Promise((_, no) => setTimeout(() => no(new Error("timeout")), 2500))
+      if (redis.status !== "ready") await Promise.race([redis.status === "wait" || redis.status === "end" ? redis.connect() : new Promise((ok) => redis!.once("ready", ok)), timeout])
+      checks.redis = (await Promise.race([redis.ping(), timeout])) === "PONG"
     } catch {
       checks.redis = false
     }
