@@ -69,4 +69,5 @@ apps/storefront/tsconfig.*.json
 dump.rdb
 
 # ملفات التصدير الخاصة (H16)
+.private-files/
 apps/backend/private-files/

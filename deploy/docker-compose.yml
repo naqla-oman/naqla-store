@@ -49,7 +49,8 @@ services:
     env_file: ../.stores/layan.prod.env
     environment:
       REDIS_URL: redis://redis:6379
-    volumes: [uploads_layan:/data/uploads]
+      PRIVATE_FILES_DIR: /data/private
+    volumes: [uploads_layan:/data/uploads, private_layan:/data/private]
     mem_limit: 900m
     # ملاحظة التحقق المستقل: لا يقلع قبل جاهزية Redis (وإلا يموت عامل الأحداث بصمت)،
     # والخلفية نفسها تتوقف بخطأ واضح إن لم يتوفر Redis، وصحتها من /ready (قاعدة البيانات + Redis)
@@ -92,3 +93,4 @@ volumes:
   caddy_data: {}
   caddy_config: {}
   uploads_layan: {}
+  private_layan: {}
