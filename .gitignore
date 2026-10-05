@@ -67,3 +67,6 @@ apps/storefront/tsconfig.*.json
 
 # Redis dump (لا يُتتبَّع)
 dump.rdb
+
+# ملفات التصدير الخاصة (H16)
+apps/backend/private-files/
