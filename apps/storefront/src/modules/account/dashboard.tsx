@@ -135,7 +135,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
               const st = orderStage(o)
               const n = orderNumber(o.display_id)
               return (
-                <LocalizedClientLink key={o.id} href={`/track?no=${n}&phone=${phone}`} className="ord" data-testid="account-order">
+                <LocalizedClientLink key={o.id} href={`/track?no=${n}`} className="ord" data-testid="account-order">
                   <span className="thumbs3">
                     {(o.items ?? []).slice(0, 3).map((i) => (
                       <span key={i.id}>{i.thumbnail && <Image src={i.thumbnail} alt="" fill sizes="34px" />}</span>

@@ -216,11 +216,15 @@ export type TrackedOrder = {
 
 export async function trackOrder(number: string, phone: string): Promise<Result<TrackedOrder>> {
   if (!number.trim()) return { ok: false, error: g("أدخلي رقم الطلب", "أدخل رقم الطلب") }
-  if (!phoneRe.test(phone)) return { ok: false, error: "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7" }
+  // H5: المسجّلة تتتبّع طلباتها بحسابها (لا هاتف في الرابط)؛ الضيفة تحتاج رقم الطلب + الهاتف
+  const auth = await getAuthHeaders()
+  const signedIn = "authorization" in auth
+  if (!signedIn && !phoneRe.test(phone)) return { ok: false, error: "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7" }
   try {
     const { order } = await sdk.client.fetch<{ order: TrackedOrder }>("/store/track", {
       method: "POST",
       body: { number, phone },
+      headers: auth,
       cache: "no-store",
     })
     return { ok: true, data: order }

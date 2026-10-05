@@ -24,14 +24,16 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   const displayId = Number(digits(req.body.number))
   const phone = digits(req.body.phone).slice(-8)
   const notFound = new MedusaError(MedusaError.Types.NOT_FOUND, "لم نجد طلباً بهذا الرقم وهذا الهاتف")
-  if (!displayId || phone.length !== 8) throw notFound
+  // H5: الزبونة المسجّلة تتتبّع طلباتها بحسابها — لا هاتف في الرابط
+  const customerId = (req as any).auth_context?.actor_type === "customer" ? (req as any).auth_context.actor_id : null
+  if (!displayId || (!customerId && phone.length !== 8)) throw notFound
 
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const { data } = await query.graph({
     entity: "order",
     fields: [
       "id", "display_id", "status", "created_at", "total", "metadata",
-      "shipping_address.phone", "shipping_address.province", "shipping_address.city",
+      "customer_id", "shipping_address.phone", "shipping_address.province", "shipping_address.city",
       "shipping_methods.name",
       "items.id", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
       "fulfillments.packed_at", "fulfillments.shipped_at", "fulfillments.delivered_at",
@@ -39,7 +41,8 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     filters: { display_id: displayId } as any, // display_id رقمي في القاعدة
   })
   const o: any = data[0]
-  if (!o || digits(o.shipping_address?.phone).slice(-8) !== phone) throw notFound
+  const own = !!customerId && o?.customer_id === customerId
+  if (!o || (!own && (phone.length !== 8 || digits(o.shipping_address?.phone).slice(-8) !== phone))) throw notFound
 
   const f = (o.fulfillments ?? [])[0] ?? {}
   const meta = o.metadata ?? {}
