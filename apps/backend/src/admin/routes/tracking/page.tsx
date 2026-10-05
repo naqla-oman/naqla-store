@@ -173,6 +173,6 @@ const TrackingPage = () => {
   )
 }
 
-export const config = defineRouteConfig({ label: "أدوات التتبع", icon: ChartBar })
+export const config = defineRouteConfig({ label: "أدوات التتبع", icon: ChartBar, rank: 2 })
 
 export default TrackingPage
