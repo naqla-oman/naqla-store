@@ -146,7 +146,7 @@ export const storeConfig = {
   ticker: c.ticker,
   welcomeCode: c.welcomeCode ?? null,
   home: c.home,
-  builtBy: { name: "نقلة للحلول الرقمية", url: "https://naqla.om" },
+  builtBy: { name: "نقلة للحلول الرقمية", url: "https://naqla.tech" },
   // للسيو (JSON-LD): التوصيل حسب مفاتيح التشغيل، والإرجاع، والمحل
   seo: {
     returnDays: c.returnDays ?? 0,
