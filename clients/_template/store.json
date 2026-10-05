@@ -383,5 +383,6 @@
   "deliveryOffDays": [
     5
   ],
-  "merchantPhones": []
+  "merchantPhones": [],
+  "taxRate": 5
 }

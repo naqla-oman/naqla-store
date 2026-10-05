@@ -1,6 +1,7 @@
 "use client"
 
 import { expressOpen } from "@lib/util/eta"
+import { includedTax } from "@lib/util/tax"
 import { track } from "@lib/tracking/events"
 import Image from "next/image"
 import { applyCode, chooseShipping, DeliveryInput, placeOrderWith, removeCode, saveDelivery } from "@lib/data/checkout"
@@ -264,6 +265,11 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
           )}
           <div className="trow"><span>التوصيل</span><span data-testid="sum-shipping">{shipping === null ? "في الخطوة التالية" : shipping === 0 && shipDiscount > 0 ? <>مجاني <span className="perktag">امتياز عضويتك</span></> : shipping === 0 ? "مجاني" : fmt(shipping)}</span></div>
           <div className="trow final"><span>الإجمالي</span><span>{fmt(total)}</span></div>
+              {/* M15: الضريبة المضمَّنة في الإجمالي */}
+              {(() => {
+                const t = includedTax(total, shipping === null ? null : (cart as any).tax_total)
+                return t.rate > 0 ? <div className="trow taxnote" data-testid="tax-line"><span>منها ضريبة القيمة المضافة {t.rate}٪</span><span>{fmt(t.amount)}</span></div> : null
+              })()}
         </div>
 
         {step === "payment" && methodValid && (

@@ -40,6 +40,8 @@ type ClientStore = {
   currencyLabel: string
   freeShippingOver: number
   cutoffHour: number
+  /** M15: ضريبة القيمة المضافة المضمَّنة في الأسعار (٪) */
+  taxRate?: number
   /** M13: أيام بلا توصيل سريع (0=الأحد … 5=الجمعة) */
   deliveryOffDays?: number[]
   orderPrefix: string
@@ -125,6 +127,7 @@ export const storeConfig = {
   currencyLabel: c.currencyLabel,
   freeShippingOver: c.freeShippingOver,
   cutoffHour: c.cutoffHour,
+  taxRate: c.taxRate ?? 5,
   deliveryOffDays: c.deliveryOffDays ?? [5],
   colors: c.colors,
   defaultTheme: c.defaultTheme ?? "light",

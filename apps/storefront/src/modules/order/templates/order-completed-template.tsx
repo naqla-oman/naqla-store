@@ -11,6 +11,7 @@ import { PurchaseEvent } from "@modules/common/components/track-events"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 import { tailoringNote } from "@lib/util/tailoring"
+import { includedTax } from "@lib/util/tax"
 
 type Props = {
   order: HttpTypes.StoreOrder
@@ -174,6 +175,10 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
                 <div className="kv"><span>هدية</span><span>{extras.gift_message ? `«${extras.gift_message}»` : "تغليف هدية"}</span></div>
               )}
               <div className="kv"><span><b style={{ color: "var(--ink)" }}>الإجمالي</b></span><span><b className="num">{fmt(order.total)}</b></span></div>
+            {(() => {
+              const t = includedTax(Number(order.total), (order as any).tax_total)
+              return t.rate > 0 ? <div className="kv taxnote" data-testid="tax-line"><span>منها ضريبة القيمة المضافة {t.rate}٪</span><span className="num">{fmt(t.amount)}</span></div> : null
+            })()}
             </div>
           </div>
         </div>

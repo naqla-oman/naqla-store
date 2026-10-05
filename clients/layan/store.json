@@ -1151,5 +1151,6 @@
   "returnDays": 14,
   "deliveryOffDays": [
     5
-  ]
+  ],
+  "taxRate": 5
 }
