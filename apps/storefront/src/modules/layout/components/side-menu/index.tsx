@@ -2,6 +2,7 @@
 
 import { Popover, PopoverButton, PopoverPanel, Transition } from "@headlessui/react"
 import { Fragment } from "react"
+import { useParams, useRouter } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Icon from "@modules/common/components/icon"
 import { LogoMark } from "@modules/common/components/brand"
@@ -14,6 +15,8 @@ const EXTRA = [
 ]
 
 const SideMenu = () => {
+  const router = useRouter()
+  const { countryCode } = useParams() as { countryCode: string }
   return (
     <Popover className="h-full flex">
       {({ open, close }) => (
@@ -38,6 +41,20 @@ const SideMenu = () => {
                 <b className="font-display text-lg">{storeConfig.shortName}</b>
                 <button onClick={close} className="iconbtn ms-auto" aria-label="إغلاق"><Icon name="x" /></button>
               </div>
+              {/* H9: بحث في القائمة الجانبية (الجوال) */}
+              <form
+                role="search"
+                className="searchbox m-3 mb-0"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  const q = String(new FormData(e.currentTarget).get("q") ?? "").trim()
+                  close()
+                  router.push(`/${countryCode}/store${q ? `?q=${encodeURIComponent(q)}` : ""}`)
+                }}
+              >
+                <Icon name="search" size={18} />
+                <input type="search" name="q" placeholder="ابحث في المتجر…" aria-label="بحث في المتجر" enterKeyHint="search" data-testid="menu-search" />
+              </form>
               <ul className="p-3 flex flex-col gap-1 overflow-y-auto">
                 {storeConfig.nav.map((n) => (
                   <li key={n.href}>
