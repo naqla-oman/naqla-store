@@ -23,7 +23,8 @@ export const listCartShippingMethods = async (cartId: string) => {
         },
         headers,
         next,
-        cache: "force-cache",
+        // H13: خيارات التوصيل وأسعارها تتبع محتوى السلة لحظياً (حد المجاني، السريع، امتياز المستوى) — لا ذاكرة
+        cache: "no-store",
       }
     )
     .then(({ shipping_options }) => shipping_options)
