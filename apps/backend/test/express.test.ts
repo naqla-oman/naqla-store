@@ -1,5 +1,6 @@
-/** M13: نافذة التوصيل السريع بتوقيت مسقط (UTC+4) */
-process.env.STORE = process.env.STORE || "layan"
+/** M13: نافذة التوصيل السريع بتوقيت مسقط (UTC+4) — STORE=<slug> npx tsx test/express.test.ts */
+// يتطلب STORE=<slug> لعميل قائمة أيام عطلته الجمعة (مثل القالب) — بلا اسم عميل في الكود
+if (!process.env.STORE) { console.error("STORE=<slug> مطلوب"); process.exit(1) }
 import assert from "node:assert/strict"
 const { expressOpen } = require("../src/workflows/hooks/cart-stock")
 // 2026-10-08 الخميس، 2026-10-09 الجمعة، 2026-10-10 السبت — الأوقات UTC (مسقط = +4)
