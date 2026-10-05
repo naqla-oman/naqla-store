@@ -114,6 +114,17 @@ export async function chooseShipping(optionId: string): Promise<ActionResult> {
   }
 }
 
+/**
+ * M7: إعادة اختيار طريقة التوصيل الحالية ليعيد Medusa حساب سعرها (حد المجاني يتغيّر بعد الخصم).
+ * Medusa لا يعيد حساب سعر طريقة التوصيل عند تغيّر الأكواد.
+ */
+async function refreshShipping(cartId: string) {
+  const headers = await getAuthHeaders()
+  const { cart } = await sdk.store.cart.retrieve(cartId, { fields: "shipping_methods.shipping_option_id" }, headers)
+  const optionId = cart.shipping_methods?.[0]?.shipping_option_id
+  if (optionId) await sdk.store.cart.addShippingMethod(cartId, { option_id: optionId }, {}, headers).catch(() => null)
+}
+
 /** تطبيق كود خصم: نتحقق أن Medusa قبله فعلاً (يتجاهل الأكواد غير الصالحة بصمت) */
 export async function applyCode(raw: string): Promise<ActionResult> {
   const code = raw.trim().toUpperCase()
@@ -126,6 +137,7 @@ export async function applyCode(raw: string): Promise<ActionResult> {
       { fields: "*promotions" },
       await getAuthHeaders()
     )
+    await refreshShipping(id)
     await refresh()
     const applied = cart.promotions?.some((p) => p.code?.toUpperCase() === code)
     return applied ? { ok: true } : { ok: false, error: "الكود غير صالح أو منتهي" }
@@ -142,6 +154,7 @@ export async function removeCode(code: string): Promise<ActionResult> {
       body: { promo_codes: [code] },
       headers: await getAuthHeaders(),
     })
+    await refreshShipping(id)
     await refresh()
     return { ok: true }
   } catch (e) {
@@ -173,6 +186,8 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
 
     // Store API لا يوسّع shipping_option داخل طرق التوصيل، فنقرأ نوعه من خيارات السلة
     const optionId = cart.shipping_methods[0].shipping_option_id
+    // M7: سعر التوصيل بحسب السلة الآن (قد يتغيّر بعد كود أو تعديل) قبل الدفع
+    if (optionId) await sdk.store.cart.addShippingMethod(id, { option_id: optionId }, {}, headers).catch(() => null)
     const { shipping_options } = await sdk.store.fulfillment.listCartOptions({ cart_id: id }, headers)
     const shippingCode = (shipping_options.find((o) => o.id === optionId)?.type as any)?.code
     await sdk.store.cart.update(
