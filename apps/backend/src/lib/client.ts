@@ -1,6 +1,7 @@
 import { MedusaError } from "@medusajs/framework/utils"
 import { existsSync, readFileSync } from "node:fs"
-import { join, resolve } from "node:path"
+import { join } from "node:path"
+import { CLIENTS_DIR } from "./paths"
 
 /**
  * بيانات العميل من clients/<STORE>/store.json — المصدر الوحيد لكل ما يخص المتجر.
@@ -66,8 +67,8 @@ export function clientSlug(): string {
 
 /** مجلد العميل: CLIENTS_DIR (للحاويات) أو clients/ في جذر المستودع */
 export function clientDir(): string {
-  const base = process.env.CLIENTS_DIR ? resolve(process.env.CLIENTS_DIR) : resolve(process.cwd(), "../../clients")
-  const dir = join(base, clientSlug())
+  // C8: من الجذر الثابت لا من مجلد التشغيل
+  const dir = join(CLIENTS_DIR, clientSlug())
   if (!existsSync(join(dir, "store.json"))) throw new MedusaError(MedusaError.Types.NOT_FOUND, `لا يوجد ${join(dir, "store.json")} — أنشئي العميل بـ pnpm store:new ${clientSlug()}`)
   return dir
 }

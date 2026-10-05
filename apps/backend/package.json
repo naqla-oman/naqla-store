@@ -13,7 +13,7 @@
     "medusa"
   ],
   "scripts": {
-    "build": "medusa build",
+    "build": "medusa build && node ../../scripts/backend-postbuild.mjs",
     "start": "medusa start",
     "dev": "medusa develop",
     "lint": "medusa lint",

@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { client, clientDir } from "../../../lib/client"
+import { ADMIN_BRAND_DIR } from "../../../lib/paths"
 
 /**
  * ملفات هوية لوحة نقلة (عامة، تُطلب قبل الدخول أيضاً):
@@ -21,7 +22,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
     file === "client-logo.png"
       ? join(clientDir(), "icons", "icon-192.png")
       : /^[a-z0-9-]+\.(png|ico)$/.test(file)
-        ? join(process.cwd(), "admin-brand", "public", "naqla", file)
+        ? join(ADMIN_BRAND_DIR, "public", "naqla", file)
         : ""
   if (!path || !existsSync(path)) return res.status(404).json({ message: "غير موجود" })
   res.setHeader("Content-Type", TYPES[file.split(".").pop()!] ?? "application/octet-stream")
