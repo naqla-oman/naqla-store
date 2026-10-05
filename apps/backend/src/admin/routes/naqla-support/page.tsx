@@ -3,7 +3,7 @@ import { Phone } from "@medusajs/icons"
 import { Button, Container, Heading, Text } from "@medusajs/ui"
 import { PageHead, useNaqla } from "../../components/naqla-ui"
 
-type S = { contact: Record<string, string>; store: { name: string; slug: string }; platform: { medusa: string } }
+type S = { contact: Record<string, string>; store: { name: string; slug: string }; platform: { version: string } }
 
 /** بطاقة «الدعم الفني من نقلة» */
 const SupportPage = () => {
@@ -28,7 +28,7 @@ const SupportPage = () => {
             {c.website && <Text>الموقع: <a dir="ltr" href={c.website} target="_blank" rel="noopener noreferrer" className="text-ui-fg-interactive">{c.website.replace(/^https?:\/\//, "")}</a></Text>}
             <div className="mt-2 rounded-lg bg-ui-bg-subtle p-3">
               <Heading level="h3" className="mb-1">عند طلب الدعم اذكر:</Heading>
-              <Text size="small" className="text-ui-fg-subtle">المتجر: {d.store.name} (<span dir="ltr">{d.store.slug}</span>){d.platform.medusa ? ` · المنصة ${d.platform.medusa}` : ""}</Text>
+              <Text size="small" className="text-ui-fg-subtle">المتجر: {d.store.name} (<span dir="ltr">{d.store.slug}</span>){d.platform.version ? ` · إصدار نقلة ${d.platform.version}` : ""}</Text>
             </div>
           </div>
         </Container>

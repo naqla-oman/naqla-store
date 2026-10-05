@@ -1,7 +1,7 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { ChartPie } from "@medusajs/icons"
 import { Badge, Text } from "@medusajs/ui"
-import { BarList, Card, Kpi, money, PageHead, useNaqla } from "../../components/naqla-ui"
+import { BarList, Card, count, Kpi, money, N, PageHead, useNaqla } from "../../components/naqla-ui"
 
 type Dash = {
   currencyLabel: string
@@ -26,8 +26,8 @@ const NaqlaDashboard = () => {
       {d && (
         <>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            <Kpi testid="kpi-today" label="مبيعات اليوم" value={money(d.today.sales, cur)} hint={`${d.today.orders} طلبات`} />
-            <Kpi testid="kpi-month" label="مبيعات الشهر" value={money(d.month.sales, cur)} hint={`${d.month.orders} طلباً · متوسط السلة ${money(d.month.average, cur)}`} tone="navy" />
+            <Kpi testid="kpi-today" label="مبيعات اليوم" value={money(d.today.sales, cur)} hint={count(d.today.orders, N.orders)} />
+            <Kpi testid="kpi-month" label="مبيعات الشهر" value={money(d.month.sales, cur)} hint={`${count(d.month.orders, N.orders)} · متوسط السلة ${money(d.month.average, cur)}`} tone="navy" />
             <Kpi testid="kpi-pending" label="بانتظار التجهيز" value={d.pending.count} hint="طلبات بلا تنفيذ بعد" tone="gold" />
             <Kpi testid="kpi-low" label="مخزون منخفض" value={d.lowStock.count} hint={`متغيّرات متاحها ${d.lowStock.threshold} أو أقل`} tone="green" />
           </div>
@@ -57,13 +57,13 @@ const NaqlaDashboard = () => {
               ) : <Text size="small" className="text-ui-fg-muted">لا متغيّرات تحت الحد</Text>}
             </Card>
             <Card title="أفضل المنتجات (30 يوماً)" testid="card-top">
-              <BarList rows={d.topProducts.map((p) => ({ name: p.title, value: p.quantity, sub: money(p.revenue, cur) }))} label={(n) => `${n} قطعة`} />
+              <BarList rows={d.topProducts.map((p) => ({ name: p.title, value: p.quantity, sub: money(p.revenue, cur) }))} label={(n) => count(n, N.pieces)} />
             </Card>
             <Card title="المبيعات حسب المحافظة (30 يوماً)" testid="card-gov">
-              <BarList rows={d.byGovernorate.map((g) => ({ name: g.name, value: g.total, sub: `${g.orders} طلبات` }))} label={(n) => money(n, cur)} />
+              <BarList rows={d.byGovernorate.map((g) => ({ name: g.name, value: g.total, sub: count(g.orders, N.orders) }))} label={(n) => money(n, cur)} />
             </Card>
             <Card title="المبيعات حسب مصدر الطلب (30 يوماً)" testid="card-source">
-              <BarList rows={d.bySource.map((g) => ({ name: g.name, value: g.total, sub: `${g.orders} طلبات` }))} label={(n) => money(n, cur)} />
+              <BarList rows={d.bySource.map((g) => ({ name: g.name, value: g.total, sub: count(g.orders, N.orders) }))} label={(n) => money(n, cur)} />
             </Card>
           </div>
         </>

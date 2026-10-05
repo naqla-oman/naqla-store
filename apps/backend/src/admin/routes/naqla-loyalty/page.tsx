@@ -1,7 +1,7 @@
 import { defineRouteConfig } from "@medusajs/admin-sdk"
 import { Gift } from "@medusajs/icons"
 import { Badge, Text } from "@medusajs/ui"
-import { Card, Kpi, PageHead, useNaqla } from "../../components/naqla-ui"
+import { Card, count, Kpi, N, PageHead, useNaqla } from "../../components/naqla-ui"
 
 type L = {
   enabled: boolean
@@ -26,8 +26,8 @@ const LoyaltyPage = () => {
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <Kpi label="الكسب" value={`${d.rules.pointsPerUnit} نقاط`} hint={`لكل 1 ${d.rules.currencyLabel}`} />
             <Kpi label="الاستبدال" value={`${d.rules.redeemPoints} نقطة`} hint={`= كود خصم ${d.rules.redeemValue} ${d.rules.currencyLabel} لاستخدام واحد`} tone="navy" />
-            <Kpi label="نقاط معلّقة" value={d.totals.pending} hint={`لدى ${d.totals.members} زبوناً`} tone="gold" />
-            <Kpi label="نقاط متاحة" value={d.totals.available} hint={`${d.totals.redeemedCodes} كود استُبدل`} tone="green" />
+            <Kpi label="نقاط معلّقة" value={d.totals.pending} hint={d.totals.members ? `لدى ${count(d.totals.members, N.customers)}` : "لا نقاط معلّقة"} tone="gold" />
+            <Kpi label="نقاط متاحة" value={d.totals.available} hint={count(d.totals.redeemedCodes, N.codes)} tone="green" />
           </div>
           <Card title="المستويات" testid="loyalty-tiers">
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -38,7 +38,7 @@ const LoyaltyPage = () => {
                     <Text size="xsmall" className="text-ui-fg-muted">{t.min ? `من ${t.min} نقطة مؤكَّدة` : "للجميع"}</Text>
                   </div>
                   <Text size="small" className="mt-2">{t.perk || "—"}</Text>
-                  {t.members !== null && <Text size="xsmall" className="mt-2 text-ui-fg-subtle">{t.members} أعضاء في «{t.group}» (انضمام تلقائي)</Text>}
+                  {t.members !== null && <Text size="xsmall" className="mt-2 text-ui-fg-subtle">{count(t.members, N.members)} في «{t.group}» (انضمام تلقائي)</Text>}
                 </div>
               ))}
             </div>
