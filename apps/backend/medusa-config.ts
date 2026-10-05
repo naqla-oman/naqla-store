@@ -60,6 +60,18 @@ function secret(name: "JWT_SECRET" | "COOKIE_SECRET") {
   return v || "dev-only-insecure-secret-do-not-use-in-production"
 }
 
+/**
+ * سر إبطال ذاكرة المتجر (H1): الخلفية ترسله لـ /api/revalidate في الواجهة، والواجهة ترفض أقل من 32 حرفاً.
+ * سر فارغ أو قصير كان يُفشل الإبطال بصمت (401 في السجل فقط) فتبقى الأسعار والمنتجات قديمة في المتجر.
+ * في الإنتاج: رفض الإقلاع برسالة واضحة. في التطوير: تحذير.
+ */
+const revalidateSecret = process.env.REVALIDATE_SECRET ?? ""
+if (revalidateSecret.length < 32) {
+  const msg = `REVALIDATE_SECRET ${revalidateSecret ? `قصير (${revalidateSecret.length} حرفاً، المطلوب 32 على الأقل)` : "فارغ"} — إبطال ذاكرة المتجر سيفشل بصمت (401). شغّلي pnpm store:setup ${store.slug} --force لتوليده`
+  if (process.env.NODE_ENV === "production") throw new MedusaError(MedusaError.Types.INVALID_DATA, msg)
+  console.warn(`[naqla] ${msg}`)
+}
+
 /** ثواني لا يُحمَّل إلا عند THAWANI_ENABLED=true ووجود المفتاحين */
 const thawaniEnabled =
   process.env.THAWANI_ENABLED === 'true' &&
