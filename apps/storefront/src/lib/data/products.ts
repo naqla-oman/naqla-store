@@ -107,21 +107,34 @@ export const listProductsWithSort = async ({
   queryParams?: HttpTypes.FindParams & HttpTypes.StoreProductParams
 }> => {
   const limit = queryParams?.limit || 12
+  const pageParam = (Math.max(page, 1) - 1) * limit
 
-  const {
-    response: { products, count },
-  } = await listProducts({
-    pageParam: 0,
-    queryParams: {
-      ...queryParams,
-      limit: 100,
-    },
-    countryCode,
-  })
+  // M22: «الأحدث» يُرتَّب ويُقسَّم في Medusa مباشرة (-created_at + limit/offset الحقيقيين) —
+  // كان يجلب أول 100 تصاعدياً فتختفي أحدث المنتجات عند تجاوز 100
+  if (sortBy === "created_at") {
+    const { response } = await listProducts({
+      pageParam: Math.max(page, 1),
+      queryParams: { ...queryParams, limit, order: "-created_at" } as any,
+      countryCode,
+    })
+    return {
+      response,
+      nextPage: response.count > pageParam + limit ? pageParam + limit : null,
+      queryParams,
+    }
+  }
 
-  const sortedProducts = sortProducts(products, sortBy)
+  // الترتيب بالسعر: Medusa لا يرتّب بالسعر المحسوب ← نجلب الكل على دفعات (حتى 1000) ثم نرتّب ونقسّم
+  const all: HttpTypes.StoreProduct[] = []
+  let count = 0
+  for (let p = 1; p <= 10; p++) {
+    const { response } = await listProducts({ pageParam: p, queryParams: { ...queryParams, limit: 100 }, countryCode })
+    all.push(...response.products)
+    count = response.count
+    if (all.length >= count || !response.products.length) break
+  }
 
-  const pageParam = (page - 1) * limit
+  const sortedProducts = sortProducts(all, sortBy)
 
   const nextPage = count > pageParam + limit ? pageParam + limit : null
 
