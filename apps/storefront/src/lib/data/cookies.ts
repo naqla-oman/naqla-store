@@ -54,7 +54,9 @@ export const setAuthToken = async (token: string) => {
   cookies.set("_medusa_jwt", token, {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
-    sameSite: "strict",
+    // C6: lax لا strict — العودة من بوابة الدفع (ثواني) تنقّل من موقع آخر، وstrict يمنع إرسال الكوكي فيضيع الطلب بعد الخصم.
+    // lax يُرسل في التنقل العلوي GET فقط ويبقى محمياً من طلبات POST عبر المواقع.
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   })
 }
@@ -76,7 +78,9 @@ export const setCartId = async (cartId: string) => {
   cookies.set("_medusa_cart_id", cartId, {
     maxAge: 60 * 60 * 24 * 7,
     httpOnly: true,
-    sameSite: "strict",
+    // C6: lax لا strict — العودة من بوابة الدفع (ثواني) تنقّل من موقع آخر، وstrict يمنع إرسال الكوكي فيضيع الطلب بعد الخصم.
+    // lax يُرسل في التنقل العلوي GET فقط ويبقى محمياً من طلبات POST عبر المواقع.
+    sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
   })
 }
