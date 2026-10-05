@@ -75,6 +75,47 @@ const HEAD_SCRIPT = String.raw`
   };
   new MutationObserver(fix).observe(document.head, { childList: true, subtree: true, characterData: true });
   fix();
+
+  // عملات الخليج: Intl بلغة متصفح إنجليزية يعطي «OMR» رمزاً مختصراً فتظهر «OMR 10.000 OMR».
+  // نغلّف Intl.NumberFormat لهذه العملات فقط (style=currency + narrowSymbol) ليظهر رمزها العربي.
+  // النقطة هنا U+2024 (․) لا «.»: Medusa يحذف [.,] من الرمز فتصير «ر.ع.» «رع»
+  var SYM = { OMR: "ر\u2024ع\u2024", SAR: "ر\u2024س", AED: "د\u2024إ", KWD: "د\u2024ك", BHD: "د\u2024ب", QAR: "ر\u2024ق" };
+  var NF = Intl.NumberFormat;
+  var Wrapped = function (locales, opts) {
+    var f = new NF(locales, opts);
+    var code = opts && opts.style === "currency" && opts.currencyDisplay === "narrowSymbol" && String(opts.currency || "").toUpperCase();
+    if (!code || !SYM[code] || f.format(0).indexOf(code) < 0) return f;
+    // format في Intl.NumberFormat خاصية getter فقط على النموذج: الإسناد العادي يفشل بصمت، لذا defineProperty
+    var w = Object.create(f);
+    var def = function (k, fn) { Object.defineProperty(w, k, { value: fn, configurable: true }); };
+    def("format", function (n) { return f.format(n).replace(code, SYM[code]); });
+    def("formatToParts", function (n) { return f.formatToParts(n).map(function (p) { return p.type === "currency" ? { type: p.type, value: SYM[code] } : p; }); });
+    def("resolvedOptions", function () { return f.resolvedOptions(); });
+    return w;
+  };
+  Wrapped.prototype = NF.prototype;
+  Wrapped.supportedLocalesOf = NF.supportedLocalesOf;
+  Intl.NumberFormat = Wrapped;
+
+  // نصوص ثابتة خارج الترجمة (من @medusajs/ui وإضافة المسودات): تُستبدل عند التطابق التام فقط
+  var TEXT = { "Drafts": "المسودات", "Show password": "إظهار كلمة المرور", "Hide password": "إخفاء كلمة المرور" };
+  var swap = function (node) {
+    if (node.nodeType === 3) { var v = TEXT[node.nodeValue.trim()]; if (v) node.nodeValue = v; return; }
+    if (node.nodeType !== 1) return;
+    var it = document.createTreeWalker(node, 4), t;
+    while ((t = it.nextNode())) { var r = TEXT[t.nodeValue.trim()]; if (r) t.nodeValue = r; }
+  };
+  var start = function () {
+    swap(document.body);
+    new MutationObserver(function (list) {
+      for (var i = 0; i < list.length; i++) {
+        var m = list[i];
+        if (m.type === "characterData") swap(m.target);
+        for (var j = 0; j < m.addedNodes.length; j++) swap(m.addedNodes[j]);
+      }
+    }).observe(document.body, { childList: true, subtree: true, characterData: true });
+  };
+  if (document.body) start(); else document.addEventListener("DOMContentLoaded", start);
 })();
 `
 

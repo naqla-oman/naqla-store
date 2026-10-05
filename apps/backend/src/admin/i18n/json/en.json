@@ -1,4 +1,20 @@
 {
-  "login": { "title": "Welcome to Naqla", "hint": "Sign in to manage your store" },
-  "app": { "nav": { "common": { "extensions": "Naqla" } } }
+  "login": {
+    "title": "Welcome to Naqla",
+    "hint": "Sign in to manage your store"
+  },
+  "app": {
+    "nav": {
+      "common": {
+        "extensions": "Naqla"
+      }
+    }
+  },
+  "orders": {
+    "fulfillment": {
+      "status": {
+        "notFulfilled": "Not fulfilled"
+      }
+    }
+  }
 }
