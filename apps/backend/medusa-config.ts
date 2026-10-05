@@ -140,6 +140,16 @@ module.exports = defineConfig({
       resolve: '@medusajs/medusa/notification',
       options: {
         providers: [
+          // H16: قناة feed (جرس اللوحة + إشعارات التصدير) — مزوّد Medusa المحلي
+          { resolve: '@medusajs/medusa/notification-local', id: 'local-feed', options: { channels: ['feed'] } },
+          // H17: البريد (استعادة كلمة المرور ودعوات المستخدمين): SendGrid عند ضبطه، وإلا يُكتب في السجل (تطوير)
+          process.env.SENDGRID_API_KEY
+            ? {
+                resolve: '@medusajs/medusa/notification-sendgrid',
+                id: 'sendgrid',
+                options: { channels: ['email'], api_key: process.env.SENDGRID_API_KEY, from: process.env.SENDGRID_FROM ?? 'no-reply@naqla.tech' },
+              }
+            : { resolve: '@medusajs/medusa/notification-local', id: 'local-email', options: { channels: ['email'] } },
           {
             resolve: './src/modules/whatsapp-notification',
             id: 'whatsapp',
