@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next"
 import { sdk } from "@lib/config"
 import { getBaseURL } from "@lib/util/env"
+import { PAGES, readPage } from "@lib/pages/content"
 
 /**
  * sitemap.xml ديناميكي من Medusa: الصفحة الرئيسية والمتجر، المنتجات، الأقسام، المجموعات.
@@ -33,6 +34,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: `${base}/${cc}`, changeFrequency: "daily", priority: 1 },
     { url: `${base}/${cc}/store`, changeFrequency: "daily", priority: 0.8 },
+    // H12: صفحات السياسات والمعلومات الموجودة لهذا المتجر
+    ...PAGES.filter((p) => readPage(p)).map((p) => ({ url: `${base}/${cc}/pages/${p}`, changeFrequency: "monthly" as const, priority: 0.3 })),
     ...categories.map((c) => ({ url: `${base}/${cc}/categories/${c.handle}`, lastModified: at(c.updated_at), changeFrequency: "weekly" as const, priority: 0.7 })),
     ...collections.map((c) => ({ url: `${base}/${cc}/collections/${c.handle}`, lastModified: at(c.updated_at), changeFrequency: "weekly" as const, priority: 0.6 })),
     ...products
