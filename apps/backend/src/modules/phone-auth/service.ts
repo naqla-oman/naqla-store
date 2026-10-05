@@ -15,6 +15,12 @@ type Options = {
   ttlSeconds?: number
   resendSeconds?: number
   maxAttempts?: number
+  /** رموز لكل رقم في اليوم */
+  maxSendsPerDay?: number
+  /** طلبات رمز لكل IP في الساعة */
+  ipSendsPerHour?: number
+  /** محاولات تحقق لكل IP في الساعة */
+  ipVerifiesPerHour?: number
 }
 
 type Deps = {
@@ -27,6 +33,9 @@ type OtpState = {
   otp_expires_at?: number | null
   otp_sent_at?: number | null
   otp_attempts?: number
+  /** سقف يومي للإرسال لكل رقم (يبقى بعد إعادة التشغيل) */
+  otp_day?: string
+  otp_day_count?: number
 }
 
 export const OTP_EVENT = "phone-auth.otp.generated"
@@ -37,6 +46,45 @@ export const OTP_EVENT = "phone-auth.otp.generated"
  *   POST /auth/customer/phone-auth/callback  ?phone&otp      → يتحقق ويعيد JWT
  * الرمز: 6 أرقام من crypto.randomInt، يُخزَّن كـ HMAC، صالح 5 دقائق، 5 محاولات، إعادة إرسال كل 60 ثانية.
  */
+/* ===== C2: أقفال وحدود ===== */
+
+/** قفل لكل مفتاح (رقم): العمليات على الرقم نفسه تُنفَّذ بالتتابع، فلا تُقرأ المحاولات قديمة */
+const locks = new Map<string, Promise<unknown>>()
+async function withLock<T>(key: string, fn: () => Promise<T>): Promise<T> {
+  const prev = locks.get(key) ?? Promise.resolve()
+  const run = prev.catch(() => undefined).then(fn)
+  const tail = run.catch(() => undefined)
+  locks.set(key, tail)
+  try {
+    return await run
+  } finally {
+    if (locks.get(key) === tail) locks.delete(key)
+  }
+}
+
+/** نافذة منزلقة لكل IP (في الذاكرة؛ تنتقل إلى Redis مع ربطه — H6) */
+const hits = new Map<string, number[]>()
+function overLimit(key: string, max: number, windowMs: number) {
+  const now = Date.now()
+  const list = (hits.get(key) ?? []).filter((t) => now - t < windowMs)
+  if (list.length >= max) {
+    hits.set(key, list)
+    return true
+  }
+  list.push(now)
+  hits.set(key, list)
+  if (hits.size > 50_000) hits.clear() // حماية الذاكرة من مفاتيح عشوائية
+  return false
+}
+const ipOf = (data: AuthenticationInput) => {
+  const h = (data.headers ?? {}) as Record<string, string | string[] | undefined>
+  const fwd = h["x-forwarded-for"]
+  // أقرب عنوان وضعه الوكيل الموثوق (Caddy) هو الأخير في السلسلة
+  const chain = String(Array.isArray(fwd) ? fwd.join(",") : fwd ?? "").split(",").map((x) => x.trim()).filter(Boolean)
+  return chain[chain.length - 1] || String(h["x-real-ip"] ?? "unknown")
+}
+const today = () => new Date().toISOString().slice(0, 10)
+
 class PhoneAuthService extends AbstractAuthModuleProvider {
   static identifier = "phone-auth"
   static DISPLAY_NAME = "رمز واتساب"
@@ -61,6 +109,9 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
       ttlSeconds: 300,
       resendSeconds: 60,
       maxAttempts: 5,
+      maxSendsPerDay: 8,
+      ipSendsPerHour: 20,
+      ipVerifiesPerHour: 60,
       ...options,
     }
   }
@@ -89,7 +140,13 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
   async authenticate(data: AuthenticationInput, svc: AuthIdentityProviderService): Promise<AuthenticationResponse> {
     const phone = this.normalize((data.body as any)?.phone)
     if (!phone) return { success: false, error: "رقم الهاتف غير صحيح" }
+    if (overLimit(`send:${ipOf(data)}`, this.options_.ipSendsPerHour, 3600_000)) {
+      return { success: false, error: "طلبات كثيرة من هذا الجهاز — حاول بعد ساعة" }
+    }
+    return withLock(`otp:${phone}`, () => this.sendCode(phone, svc))
+  }
 
+  protected async sendCode(phone: string, svc: AuthIdentityProviderService): Promise<AuthenticationResponse> {
     let identity: any
     try {
       identity = await svc.retrieve({ entity_id: phone })
@@ -104,6 +161,13 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
       return { success: false, error: `انتظري ${wait} ثانية قبل طلب رمز جديد` }
     }
 
+    // سقف يومي لكل رقم (يحمي من استنزاف رسائل واتساب المدفوعة على رقم واحد)
+    const day = today()
+    const sentToday = state.otp_day === day ? state.otp_day_count ?? 0 : 0
+    if (sentToday >= this.options_.maxSendsPerDay) {
+      return { success: false, error: "تجاوزت عدد الرموز المسموح اليوم لهذا الرقم — حاول غداً أو تواصل معنا" }
+    }
+
     const otp = crypto.randomInt(0, 1_000_000).toString().padStart(6, "0")
     await svc.update(phone, {
       provider_metadata: {
@@ -111,6 +175,8 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
         otp_expires_at: now + this.options_.ttlSeconds * 1000,
         otp_sent_at: now,
         otp_attempts: 0,
+        otp_day: day,
+        otp_day_count: sentToday + 1,
       } satisfies OtpState,
     })
 
@@ -123,7 +189,14 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
     const phone = this.normalize(src.phone)
     const otp = String(src.otp ?? "").replace(/\D/g, "")
     if (!phone || otp.length !== 6) return { success: false, error: "أدخلي الرمز المكوّن من 6 أرقام" }
+    if (overLimit(`verify:${ipOf(data)}`, this.options_.ipVerifiesPerHour, 3600_000)) {
+      return { success: false, error: "محاولات كثيرة من هذا الجهاز — حاول بعد ساعة" }
+    }
+    // C2: القراءة والعدّ والكتابة داخل قفل الرقم — الطلبات المتوازية تُعدّ واحدة واحدة
+    return withLock(`otp:${phone}`, () => this.checkCode(phone, otp, svc))
+  }
 
+  protected async checkCode(phone: string, otp: string, svc: AuthIdentityProviderService): Promise<AuthenticationResponse> {
     let identity: any
     try {
       identity = await svc.retrieve({ entity_id: phone })
@@ -154,7 +227,7 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
 
     // رمز صحيح: يُستهلك مرة واحدة
     const updated = await svc.update(phone, {
-      provider_metadata: { otp_hash: null, otp_expires_at: null, otp_sent_at: state.otp_sent_at ?? null, otp_attempts: 0 },
+      provider_metadata: { ...state, otp_hash: null, otp_expires_at: null, otp_attempts: 0 },
     })
     return { success: true, authIdentity: updated }
   }
