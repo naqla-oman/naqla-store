@@ -2,6 +2,7 @@ import { authenticate, configureStoreSearch, defineMiddlewares } from '@medusajs
 import { requireExistingAdmin } from './admin-user-guard'
 import { securityHeaders } from './security-headers'
 import { clientIp, rateLimit } from '../lib/rate-limit'
+import { blockLockedCart } from '../lib/cart-lock'
 
 // The product index declares filterable `status` and `sales_channel_ids`, so
 // the route narrows it to published products in the key's sales channels.
@@ -9,6 +10,12 @@ export default defineMiddlewares({
   routes: [
     // H8: ترويسات الأمان لكل مسارات الخلفية
     { matcher: '/*', middlewares: [securityHeaders] },
+    // H2: لا تعديل على سلة دفعها عبر ثواني قيد التنفيذ (الإتمام وفكّ القفل مستثنيان)
+    { method: ['POST'], matcher: '/store/carts/:id', middlewares: [blockLockedCart] },
+    { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/line-items', middlewares: [blockLockedCart] },
+    { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/line-items/:line_id', middlewares: [blockLockedCart] },
+    { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/promotions', middlewares: [blockLockedCart] },
+    { method: ['POST'], matcher: '/store/carts/:id/shipping-methods', middlewares: [blockLockedCart] },
     // H5: حدود المعدل (Redis عند توفره)
     {
       // دخول الأدمن: 20 محاولة لكل IP و10 لكل بريد في 15 دقيقة
