@@ -49,13 +49,27 @@ async function assertCartStock(container: MedusaContainer, cartId: string, chang
   }
 }
 
+/** M24: الطول بالسنتيمتر ضمن نطاق store.json (product.lengthField.min/max) — لا 999 */
+function assertLength(metadata: any) {
+  if (metadata?.length_cm == null || metadata.length_cm === "") return
+  const lf = (client() as any).product?.lengthField ?? {}
+  const min = Number(lf.min ?? 120)
+  const max = Number(lf.max ?? 200)
+  const v = Number(metadata.length_cm)
+  if (!Number.isInteger(v) || v < min || v > max) {
+    throw new MedusaError(MedusaError.Types.INVALID_DATA, `الطول يجب أن يكون بين ${min} و${max} سم`)
+  }
+}
+
 addToCartWorkflow.hooks.validate(async ({ input }, { container }) => {
   const i = input as any
+  for (const it of i.items ?? []) assertLength(it.metadata)
   await assertCartStock(container, i.cart_id ?? i.cart?.id, { add: (i.items ?? []).filter((x: any) => x.variant_id) })
 })
 
 updateLineItemInCartWorkflow.hooks.validate(async ({ input }, { container }) => {
   const i = input as any
+  assertLength(i.update?.metadata)
   const quantity = i.update?.quantity
   if (quantity == null) return
   await assertCartStock(container, i.cart_id ?? i.cart?.id, { set: { item_id: i.item_id, quantity: Number(quantity) } })

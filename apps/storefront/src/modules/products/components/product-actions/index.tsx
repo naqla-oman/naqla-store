@@ -109,6 +109,14 @@ export default function ProductActions({ product, disabled }: Props) {
       boxRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
       return
     }
+    // M24: الطول ضمن النطاق (والخادم يتحقق أيضاً)
+    const lmin = Number((cfg.lengthField as any).min ?? 120)
+    const lmax = Number((cfg.lengthField as any).max ?? 200)
+    if (wantsLength && len && (Number(len) < lmin || Number(len) > lmax)) {
+      setToast({ ok: false, msg: `الطول يجب أن يكون بين ${lmin} و${lmax} سم` })
+      document.getElementById("lenIn")?.focus()
+      return
+    }
     setAdding(true)
     try {
       await addToCart({
@@ -242,8 +250,9 @@ export default function ProductActions({ product, disabled }: Props) {
                 id="lenIn"
                 type="number"
                 inputMode="numeric"
-                min={120}
-                max={200}
+                min={Number((cfg.lengthField as any).min ?? 120)}
+                max={Number((cfg.lengthField as any).max ?? 200)}
+                aria-invalid={!!len && (Number(len) < Number((cfg.lengthField as any).min ?? 120) || Number(len) > Number((cfg.lengthField as any).max ?? 200))}
                 placeholder="مثال: 160"
                 value={len}
                 onChange={(e) => setLen(e.target.value.replace(/\D/g, "").slice(0, 3))}

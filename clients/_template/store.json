@@ -303,6 +303,12 @@
     "availability": {
       "inStock": "متوفر في المحل",
       "outOfStock": "سنعيد توفيره قريباً"
+    },
+    "lengthField": {
+      "categories": [],
+      "note": "تعديل الطول مجاناً",
+      "min": 120,
+      "max": 200
     }
   },
   "location": {
