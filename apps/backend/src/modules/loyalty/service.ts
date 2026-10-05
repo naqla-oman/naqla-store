@@ -25,7 +25,14 @@ class LoyaltyModuleService extends MedusaService({ LoyaltyEntry }) {
   constructor(container: Record<string, unknown>, options: LoyaltyOptions = {}) {
     // @ts-ignore
     super(...arguments)
-    this.opts_ = { ...DEFAULTS, ...options }
+    // C1: Medusa يمرّر مع خيارات الوحدة إعداداته الداخلية (منها database.clientUrl بكلمة المرور).
+    // نحتفظ بالحقول المعروفة فقط، فلا يمكن أن يتسرّب غيرها من أي مكان يقرأ options.
+    this.opts_ = {
+      pointsPerUnit: Number(options.pointsPerUnit ?? DEFAULTS.pointsPerUnit),
+      redeemPoints: Number(options.redeemPoints ?? DEFAULTS.redeemPoints),
+      redeemValue: Number(options.redeemValue ?? DEFAULTS.redeemValue),
+      tiers: (options.tiers ?? DEFAULTS.tiers).map((t) => ({ key: String(t.key), name: String(t.name), min: Number(t.min) })),
+    }
   }
 
   get options() {

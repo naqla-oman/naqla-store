@@ -12,7 +12,13 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     confirmed: s.confirmed,
     tier: s.tier,
     next_tier: s.next,
-    rules: s.rules,
+    // C1: قائمة صريحة — لا يُعاد كائن الإعدادات كما هو
+    rules: {
+      pointsPerUnit: s.rules.pointsPerUnit,
+      redeemPoints: s.rules.redeemPoints,
+      redeemValue: s.rules.redeemValue,
+      tiers: s.rules.tiers.map((t) => ({ key: t.key, name: t.name, min: t.min })),
+    },
     entries: s.entries.slice(0, 30).map((e) => ({
       id: e.id,
       kind: e.kind,
