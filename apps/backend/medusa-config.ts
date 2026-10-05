@@ -167,6 +167,8 @@ module.exports = defineConfig({
                 order_shipped: process.env.WHATSAPP_TPL_ORDER_SHIPPED,
                 order_ready_pickup: process.env.WHATSAPP_TPL_ORDER_READY_PICKUP,
                 order_delivered: process.env.WHATSAPP_TPL_ORDER_DELIVERED,
+                order_canceled: process.env.WHATSAPP_TPL_ORDER_CANCELED,
+                merchant_new_order: process.env.WHATSAPP_TPL_MERCHANT_NEW_ORDER,
               },
               language: process.env.WHATSAPP_TEMPLATE_LANG || 'ar',
             },

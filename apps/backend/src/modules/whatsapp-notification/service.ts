@@ -13,7 +13,7 @@ type Options = {
   /** اسم قالب المصادقة المعتمد في Meta (فئة Authentication) */
   otpTemplate?: string
   /** أسماء قوالب الطلبات المعتمدة (Utility) — مفتاح النوع ← اسم القالب في Meta */
-  orderTemplates?: Partial<Record<"order_placed" | "order_shipped" | "order_ready_pickup" | "order_delivered", string>>
+  orderTemplates?: Partial<Record<"order_placed" | "order_shipped" | "order_ready_pickup" | "order_canceled" | "merchant_new_order" | "order_delivered", string>>
   language?: string
   apiVersion?: string
 }
