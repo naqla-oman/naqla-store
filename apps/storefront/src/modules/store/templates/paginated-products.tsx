@@ -1,6 +1,7 @@
 import { ListEvent } from "@modules/common/components/track-events"
 import { listProductsWithSort } from "@lib/data/products"
 import { searchProducts } from "@lib/data/search"
+import { g } from "@lib/voice"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { getRegion } from "@lib/data/regions"
 import ProductPreview from "@modules/products/components/product-preview"
@@ -57,7 +58,7 @@ export default async function PaginatedProducts({
         <div className="empty-search" data-testid="search-empty">
           <ListEvent listName="search" items={[]} searchTerm={q.trim()} />
           <p className="es-title">لم نجد نتائج لـ «{q.trim()}»</p>
-          <p className="es-hint">جرّب كلمة أقصر أو تصفّح الأقسام:</p>
+          <p className="es-hint">{g("جرّبي كلمة أقصر أو تصفّحي الأقسام:", "جرّب كلمة أقصر أو تصفّح الأقسام:")}</p>
           <div className="catchips">
             {found.categories.map((c) => (
               <LocalizedClientLink key={c.handle} href={`/categories/${c.handle}`} className="catchip">{c.name}</LocalizedClientLink>
