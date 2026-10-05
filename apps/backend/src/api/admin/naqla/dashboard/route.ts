@@ -30,20 +30,31 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
   const { data: orders } = await query.graph({
     entity: "order",
     fields: ["id", "display_id", "status", "total", "created_at", "currency_code", "metadata",
-      "shipping_address.province", "shipping_address.first_name", "fulfillments.id",
+      "is_draft_order", "shipping_address.province", "shipping_address.first_name", "fulfillments.id", "fulfillments.canceled_at",
       "items.product_id", "items.product_title", "items.quantity", "items.unit_price"],
     filters: { created_at: { $gte: since } } as any,
     pagination: { take: 5000, order: { created_at: "DESC" } },
   })
 
-  const live = (orders as any[]).filter((o) => o.status !== "canceled")
+  // H15: المسودات ليست مبيعات
+  const real = (o: any) => o.status !== "canceled" && o.status !== "draft" && !o.is_draft_order
+  const live = (orders as any[]).filter(real)
+  // H14: تنفيذ ملغى ليس تنفيذاً
+  const fulfilled = (o: any) => (o.fulfillments ?? []).some((f: any) => !f.canceled_at)
   const sum = (list: any[]) => list.reduce((s, o) => s + Number(o.total || 0), 0)
   const todays = live.filter((o) => dayKey(new Date(o.created_at)) === today)
   const months = live.filter((o) => dayKey(new Date(o.created_at)).startsWith(month))
   const last30 = live.filter((o) => now.getTime() - new Date(o.created_at).getTime() <= 30 * 86400000)
 
   // بانتظار التجهيز: لا تنفيذ بعد
-  const pending = live.filter((o) => !(o.fulfillments ?? []).length)
+  // H14: بانتظار التجهيز بلا قيد تاريخ (طلب أقدم من 35 يوماً لم يُجهَّز يبقى ظاهراً) وباستبعاد التنفيذ الملغى
+  const { data: openOrders } = await query.graph({
+    entity: "order",
+    fields: ["id", "display_id", "status", "total", "created_at", "is_draft_order", "shipping_address.first_name", "fulfillments.id", "fulfillments.canceled_at"],
+    filters: { status: { $nin: ["canceled", "draft", "completed", "archived"] } } as any,
+    pagination: { take: 2000, order: { created_at: "ASC" } },
+  })
+  const pending = (openOrders as any[]).filter((o) => real(o) && !fulfilled(o))
 
   // أفضل المنتجات (30 يوماً) بالكمية ثم الإيراد — الخدمات (التفصيل) ضمنها لأنها مبيعات فعلية
   const products = new Map<string, { title: string; quantity: number; revenue: number }>()

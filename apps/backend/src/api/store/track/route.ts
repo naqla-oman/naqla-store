@@ -36,7 +36,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
       "customer_id", "shipping_address.phone", "shipping_address.province", "shipping_address.city",
       "shipping_methods.name",
       "items.id", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
-      "fulfillments.packed_at", "fulfillments.shipped_at", "fulfillments.delivered_at",
+      "fulfillments.packed_at", "fulfillments.shipped_at", "fulfillments.delivered_at", "fulfillments.canceled_at", "fulfillments.created_at",
     ],
     filters: { display_id: displayId } as any, // display_id رقمي في القاعدة
   })
@@ -44,7 +44,10 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   const own = !!customerId && o?.customer_id === customerId
   if (!o || (!own && (phone.length !== 8 || digits(o.shipping_address?.phone).slice(-8) !== phone))) throw notFound
 
-  const f = (o.fulfillments ?? [])[0] ?? {}
+  // H14: المرحلة من كل التنفيذات غير الملغاة (أبعد مرحلة)، لا من أول تنفيذ — تنفيذ ملغى لا يُحتسب
+  const active = ((o.fulfillments ?? []) as any[]).filter((x) => !x.canceled_at)
+  const pick = (k: string) => active.map((x) => x[k]).filter(Boolean).sort()[0] ?? null
+  const f = { packed_at: pick("packed_at") ?? (active.length ? active[0].created_at : null), shipped_at: pick("shipped_at"), delivered_at: pick("delivered_at") }
   const meta = o.metadata ?? {}
   res.json({
     order: {

@@ -22,7 +22,8 @@ const STATUS: Record<string, string> = { pending: "معلّقة حتى التو�
 
 function orderStage(o: HttpTypes.StoreOrder) {
   if (o.status === "canceled") return { t: "ملغى", c: "no" }
-  const f = (o.fulfillments ?? []) as any[]
+  // H14: التنفيذ الملغى لا يُحتسب
+  const f = ((o.fulfillments ?? []) as any[]).filter((x) => !x.canceled_at)
   if (f.some((x) => x.delivered_at)) return { t: "تم التوصيل", c: "ok" }
   if (f.some((x) => x.shipped_at)) return { t: "في الطريق", c: "go" }
   return { t: "قيد التجهيز", c: "go" }
