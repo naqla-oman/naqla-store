@@ -44,7 +44,11 @@ function validate(f: DeliveryInput): Errors {
   if (f.name.trim().split(/\s+/).filter(Boolean).length < 2) e.name = g("أدخلي اسمك الكامل (الاسم والعائلة)", "أدخل اسمك الكامل (الاسم والعائلة)")
   if (!phoneRe.test(f.phone)) e.phone = "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7"
   if (!f.province) e.province = g("اختاري المحافظة", "اختر المحافظة")
-  if (!f.city.trim()) e.city = g("أدخلي الولاية", "أدخل الولاية")
+  if (!f.city.trim()) e.city = g("اختاري الولاية", "اختر الولاية")
+  else {
+    const list = checkout.governorates.find((x) => x.code === f.province)?.wilayats ?? []
+    if (list.length && !list.includes(f.city)) e.city = "الولاية لا تتبع المحافظة المختارة"
+  }
   if (f.email.trim() && !emailRe.test(f.email.trim())) e.email = g("تحققي من البريد، مثال: name@example.com", "تحقق من البريد، مثال: name@example.com")
   return e
 }
@@ -327,7 +331,19 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               <div className="f2">
                 <div className={`field ${showErr("province") ? "err" : ""}`}>
                   <label htmlFor="fGov">المحافظة</label>
-                  <select id="fGov" value={form.province} onChange={(e) => set("province", e.target.value)} aria-invalid={!!showErr("province")} aria-describedby="eGov">
+                  <select
+                    id="fGov"
+                    value={form.province}
+                    onChange={(e) => {
+                      const code = e.target.value
+                      set("province", code)
+                      // الولاية السابقة لا تنتمي للمحافظة الجديدة ← تُفرَّغ
+                      const list = checkout.governorates.find((x) => x.code === code)?.wilayats ?? []
+                      if (list.length && !list.includes(form.city)) set("city", "")
+                    }}
+                    aria-invalid={!!showErr("province")}
+                    aria-describedby="eGov"
+                  >
                     <option value="">{g("اختاري المحافظة", "اختر المحافظة")}</option>
                     {checkout.governorates.map((g) => <option key={g.code} value={g.code}>{g.name}</option>)}
                   </select>
@@ -335,7 +351,20 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                 </div>
                 <div className={`field ${showErr("city") ? "err" : ""}`}>
                   <label htmlFor="fCity">الولاية</label>
-                  <input id="fCity" value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="مثال: السيب" autoComplete="address-level2" aria-invalid={!!showErr("city")} aria-describedby="eCity" />
+                  {/* M18: قائمة ولايات المحافظة المختارة (61 ولاية) بدل نص حر */}
+                  {(() => {
+                    const list = checkout.governorates.find((x) => x.code === form.province)?.wilayats ?? []
+                    return list.length ? (
+                      <select id="fCity" value={form.city} onChange={(e) => set("city", e.target.value)} autoComplete="address-level2" aria-invalid={!!showErr("city")} aria-describedby="eCity">
+                        <option value="">{g("اختاري الولاية", "اختر الولاية")}</option>
+                        {list.map((w) => <option key={w} value={w}>{w}</option>)}
+                      </select>
+                    ) : (
+                      <select id="fCity" value="" disabled aria-describedby="eCity">
+                        <option value="">{g("اختاري المحافظة أولاً", "اختر المحافظة أولاً")}</option>
+                      </select>
+                    )
+                  })()}
                   <span className="ferr" id="eCity">{showErr("city")}</span>
                 </div>
               </div>
