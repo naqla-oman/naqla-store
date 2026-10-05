@@ -48,7 +48,8 @@ export type ClientStore = {
   loyalty: { pointsPerUnit: number; redeemPoints: number; redeemValue: number; tiers: ClientTier[] }
   location: { name: string; city: string; address: string }
   shipping: ClientShipping[]
-  promotions?: { code: string; type: "percentage" | "fixed"; value: number; description?: string }[]
+  /** firstOrderOnly: لأول طلب فقط (حساب/بريد/هاتف) — exclusive: لا يُجمع مع أكواد أخرى — limit: حد الاستخدام الكلي */
+  promotions?: { code: string; type: "percentage" | "fixed"; value: number; description?: string; firstOrderOnly?: boolean; exclusive?: boolean; limit?: number }[]
   categories: { handle: string; name: string }[]
   collections: { handle: string; title: string }[]
   tags: { value: string; label: string }[]
