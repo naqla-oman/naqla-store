@@ -61,6 +61,11 @@ aside .sticky.top-0 button[aria-haspopup="menu"] > span:first-child > span {
 // String.raw: الشرطات العكسية في التعابير النمطية تبقى كما هي (`\s` في قالب عادي تصبح «s» فتفشل المطابقة)
 const HEAD_SCRIPT = String.raw`
 (function () {
+  // H8: اللوحة لا تعمل داخل إطار (clickjacking). الترويسات الكاملة يضيفها Caddy لـ /app لأن Medusa يقدّم اللوحة خارج middlewares
+  if (window.top !== window.self) {
+    try { window.top.location.replace(window.self.location.href); } catch (e) { document.documentElement.style.display = "none"; }
+    return;
+  }
   try {
     if (!localStorage.getItem("lng") && document.cookie.indexOf("i18next=") < 0) localStorage.setItem("lng", "ar");
   } catch (e) {}
