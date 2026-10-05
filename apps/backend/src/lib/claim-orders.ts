@@ -17,12 +17,14 @@ export async function claimOrdersByPhone(container: MedusaContainer, customerId:
 
   const { data } = await query.graph({
     entity: "order",
-    fields: ["id", "customer_id", "customer.has_account", "shipping_address.phone"],
+    fields: ["id", "customer_id", "customer.has_account", "shipping_address.phone", "metadata"],
     pagination: { take: 1000, order: { created_at: "DESC" } },
   })
   const ids = data
     .filter((o: any) => digits(o.shipping_address?.phone) === target)
     .filter((o: any) => o.customer_id !== customerId && !o.customer?.has_account)
+    // M11: طلب الهدية هاتف توصيله للمستلِمة — لا يُنسب لها (ولا نقاطه) إن أنشأت حساباً
+    .filter((o: any) => !o.metadata?.gift)
     .map((o: any) => o.id as string)
 
   if (ids.length) {
