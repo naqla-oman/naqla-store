@@ -2,7 +2,6 @@
 
 import {
   Popover,
-  PopoverButton,
   PopoverPanel,
   Transition,
 } from "@headlessui/react"
@@ -82,12 +81,13 @@ const CartDropdown = ({
       onMouseLeave={close}
     >
       <Popover className="relative h-full">
-        <PopoverButton as="div" className="h-full flex items-center">
+        {/* M28: عنصر عادي — القائمة تُفتح بالمرور (حالة cartDropdownOpen)؛ PopoverButton كـ div كان يحمل aria-expanded غير المسموح */}
+        <div className="h-full flex items-center">
           <LocalizedClientLink className="iconbtn" href="/cart" data-testid="nav-cart-link" aria-label={`السلة (${totalItems})`}>
             <Icon name="bag" />
             {totalItems > 0 && <span className="badge">{totalItems}</span>}
           </LocalizedClientLink>
-        </PopoverButton>
+        </div>
         <Transition
           show={cartDropdownOpen}
           as={Fragment}

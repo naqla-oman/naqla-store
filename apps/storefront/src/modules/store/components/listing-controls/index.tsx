@@ -53,7 +53,7 @@ export default function ListingControls({ searchAction }: { searchAction: string
       </form>
       <label className="sortsel">
         <span>ترتيب</span>
-        <select value={params.get("sortBy") ?? "created_at"} onChange={(e) => sort(e.target.value)} data-testid="sort-select">
+        <select value={params.get("sortBy") ?? "created_at"} onChange={(e) => sort(e.target.value)} data-testid="sort-select" aria-label="ترتيب المنتجات">
           {SORTS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
         </select>
       </label>

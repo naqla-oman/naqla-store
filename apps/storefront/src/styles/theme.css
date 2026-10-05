@@ -66,7 +66,7 @@ nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 45; background:
 .btn.ghost { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
 .btn.ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--surface); }
 .btn.copper { background: var(--copper); color: var(--copper-ink); }
-.btn.wa { background: #1f9d5a; color: #fff; }
+.btn.wa { background: #167f4a; color: #fff; } /* M28: أخضر أغمق — 5.04:1 مع الأبيض (كان 3.48) */
 .btn.wa:hover { background: #17874c; }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
 

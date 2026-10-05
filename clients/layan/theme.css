@@ -8,12 +8,12 @@
   --surface-2: #faf7f2;
   --ink: #17201d;
   --ink-2: #4b5550;
-  --muted: #75706a;
+  --muted: #6b665f; /* M28: كان #75706a (4.36:1 على الخلفية) */
   --accent: #0f4a3c;
   --accent-2: #0a3328;
   --accent-soft: #e6f0ec;
   --accent-ink: #ffffff;
-  --copper: #c98b62;
+  --copper: #93552f; /* M28: كان #c98b62 (2.85:1) — ≥4.5 على الأبيض والخلفية والصبغة النحاسية الفاتحة */
   --copper-ink: #ffffff;
   --copper-soft: #f6e8dd;
   --line: #e3ded4;
