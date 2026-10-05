@@ -59,7 +59,7 @@ export default function Tailoring({ product, service }: Props) {
     setBusy(true)
     setMsg(null)
     try {
-      await addToCart({
+      const r = await addToCart({
         variantId: chosen.v!.id,
         quantity: 1,
         countryCode,
@@ -72,6 +72,10 @@ export default function Tailoring({ product, service }: Props) {
           },
         },
       })
+      if (!r.ok) {
+        setMsg({ ok: false, t: r.message })
+        return
+      }
       track("add_to_cart", { value: price, items: [{ id: chosen.v!.id, name: chosen.s.title, price, quantity: 1, category: chosen.s.title }] })
       setMsg({ ok: true, t: `أُضيف «${chosen.s.title}» إلى السلة` })
       setM({})

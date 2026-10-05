@@ -114,6 +114,20 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
     .catch(medusaError)
 }
 
+/**
+ * M25: نتيجة بدل throw — Next يخفي رسائل أخطاء server actions في الإنتاج (رسالة عامة برمز)،
+ * فكانت «الكمية غير متوفرة» ورسائل الخادم الواضحة (الطول…) تختفي عند الزبونة.
+ */
+export type CartResult = { ok: true } | { ok: false; code: "out_of_stock" | "invalid" | "error"; message: string }
+
+function cartFail(e: unknown): CartResult {
+  const msg = String((e as any)?.message ?? "")
+  if (/inventory|stock|غير متوفرة|المخزون|تتوفر/i.test(msg)) return { ok: false, code: "out_of_stock", message: "الكمية المطلوبة غير متوفرة حالياً" }
+  // رسائل خادمنا العربية الواضحة (الطول، قفل الدفع…) تُعرض كما هي
+  if (/[\u0600-\u06FF]/.test(msg)) return { ok: false, code: "invalid", message: msg.slice(0, 160) }
+  return { ok: false, code: "error", message: "تعذّر تحديث السلة، حاول مرة أخرى" }
+}
+
 export async function addToCart({
   variantId,
   quantity,
@@ -125,22 +139,18 @@ export async function addToCart({
   countryCode: string
   /** بيانات إضافية للسطر، مثل طول العباءة المطلوب */
   metadata?: Record<string, unknown>
-}) {
-  if (!variantId) {
-    throw new Error("Missing variant ID when adding to cart")
-  }
+}): Promise<CartResult> {
+  if (!variantId) return { ok: false, code: "invalid", message: "اختر المقاس أو اللون أولاً" }
 
   const cart = await getOrSetCart(countryCode)
 
-  if (!cart) {
-    throw new Error("Error retrieving or creating cart")
-  }
+  if (!cart) return { ok: false, code: "error", message: "تعذّر إنشاء السلة، حاول مرة أخرى" }
 
   const headers = {
     ...(await getAuthHeaders()),
   }
 
-  await sdk.store.cart
+  return sdk.store.cart
     .createLineItem(
       cart.id,
       {
@@ -157,8 +167,9 @@ export async function addToCart({
 
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
+      return { ok: true } as CartResult
     })
-    .catch(medusaError)
+    .catch(cartFail)
 }
 
 export async function updateLineItem({
@@ -167,22 +178,18 @@ export async function updateLineItem({
 }: {
   lineId: string
   quantity: number
-}) {
-  if (!lineId) {
-    throw new Error("Missing lineItem ID when updating line item")
-  }
+}): Promise<CartResult> {
+  if (!lineId) return { ok: false, code: "invalid", message: "السطر غير موجود" }
 
   const cartId = await getCartId()
 
-  if (!cartId) {
-    throw new Error("Missing cart ID when updating line item")
-  }
+  if (!cartId) return { ok: false, code: "error", message: "السلة غير موجودة" }
 
   const headers = {
     ...(await getAuthHeaders()),
   }
 
-  await sdk.store.cart
+  return sdk.store.cart
     .updateLineItem(cartId, lineId, { quantity }, {}, headers)
     .then(async () => {
       const cartCacheTag = await getCacheTag("carts")
@@ -190,8 +197,9 @@ export async function updateLineItem({
 
       const fulfillmentCacheTag = await getCacheTag("fulfillment")
       revalidateTag(fulfillmentCacheTag)
+      return { ok: true } as CartResult
     })
-    .catch(medusaError)
+    .catch(cartFail)
 }
 
 export async function deleteLineItem(lineId: string) {

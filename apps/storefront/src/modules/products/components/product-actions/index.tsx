@@ -119,12 +119,17 @@ export default function ProductActions({ product, disabled }: Props) {
     }
     setAdding(true)
     try {
-      await addToCart({
+      const r = await addToCart({
         variantId: variant.id,
         quantity: qty,
         countryCode,
         metadata: wantsLength && len ? { length_cm: Number(len) } : undefined,
       })
+      // M25: النتيجة بدل الاستثناء — الرسالة تصل في الإنتاج
+      if (!r.ok) {
+        setToast({ ok: false, msg: r.message })
+        return
+      }
       track("add_to_cart", { value: price * qty, items: [itemOf(product, variant, price, qty)] })
       setToast({ ok: true, msg: `أُضيفت إلى السلة${selectionText ? ` — ${selectionText}` : ""}` })
     } catch (e: any) {

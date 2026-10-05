@@ -29,7 +29,12 @@ export default function CartLines({ items }: { items: HttpTypes.StoreCartLineIte
     setError(null)
     start(async () => {
       try {
-        await fn()
+        const r = (await fn()) as { ok?: boolean; message?: string } | undefined
+        // M25: رسالة الخادم (الكمية غير متوفرة…) تصل في الإنتاج
+        if (r && r.ok === false) {
+          setError(r.message ?? g("تعذّر تحديث السلة، حاولي مرة أخرى", "تعذّر تحديث السلة، حاول مرة أخرى"))
+          return
+        }
         router.refresh()
       } catch {
         setError(g("تعذّر تحديث السلة، حاولي مرة أخرى", "تعذّر تحديث السلة، حاول مرة أخرى"))
