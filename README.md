@@ -174,7 +174,7 @@ pnpm store:dev <slug-2>     # المتجر http://localhost:8001 — اللوح�
 
 الملفات في `deploy/`: `backend.Dockerfile`، `storefront.Dockerfile`، `docker-compose.yml`، `Caddyfile`.
 
-1. على الخادم: انسخي المستودع، وأنشئي `deploy/.env` فيه `POSTGRES_PASSWORD` و`LAYAN_PUBLISHABLE_KEY` و`ACME_EMAIL`.
+1. على الخادم: انسخي المستودع، وأنشئي `deploy/.env` فيه `POSTGRES_PASSWORD` و`ACME_EMAIL` ومعرّفات كل متجر `STORE1_SLUG` و`STORE1_DOMAIN` و`STORE1_PUBLISHABLE_KEY`.
 2. بيئة كل متجر في `.stores/<slug>.prod.env` (صلاحيات 600): الأسرار من `store:setup`، و`DATABASE_URL` على `postgres`، والنطاقات الحقيقية في CORS و`MEDUSA_BACKEND_URL` و`STOREFRONT_URL`، و`NODE_ENV=production`.
 3. `docker compose -f deploy/docker-compose.yml up -d --build`.
 
