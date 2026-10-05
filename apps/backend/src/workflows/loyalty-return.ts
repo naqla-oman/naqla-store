@@ -17,7 +17,7 @@ const recalcStep = createStep("recalc", async ({ order_id }: Input, { container 
   // (items.total لا يُحسب لأسطر الطلب في query.graph — كان يعطي 0 فتُلغى النقاط كلها)
   const { data } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({
     entity: "order",
-    fields: ["id", "item_total", "items.quantity", "items.unit_price", "items.detail.return_received_quantity"],
+    fields: ["id", "status", "item_total", "items.quantity", "items.unit_price", "items.detail.return_received_quantity", "fulfillments.delivered_at", "fulfillments.canceled_at"],
     filters: { id: order_id },
   })
   const o: any = data[0]
@@ -30,13 +30,15 @@ const recalcStep = createStep("recalc", async ({ order_id }: Input, { container 
     keptValue += Number(i.unit_price) * (q - back)
   }
   const kept = all > 0 ? Number(o?.item_total ?? 0) * (keptValue / all) : 0
+  const delivered = ((o?.fulfillments ?? []) as any[]).some((f) => f.delivered_at && !f.canceled_at)
   const points = await loyalty.pointsFor(kept)
   const before = { id: entry.id, points: entry.points, status: entry.status }
   if (points === Number(entry.points)) return new StepResponse({ customer_id: entry.customer_id, points, changed: false }, null)
   await loyalty.updateLoyaltyEntries({
     id: entry.id,
     points,
-    status: points === 0 ? "canceled" : entry.status,
+    // ملغاة عند إرجاع الكل؛ وإلا حالة الطلب (متاحة إن سُلِّم، معلّقة قبله) — لا تبقى ملغاة إن لم يُلغَ الطلب
+    status: points === 0 ? "canceled" : entry.status !== "canceled" ? entry.status : o?.status === "canceled" ? "canceled" : delivered ? "available" : "pending",
     note: `بعد الإرجاع: ${points} نقطة (كانت ${entry.points})`,
   } as any)
   return new StepResponse({ customer_id: entry.customer_id, points, changed: true }, before)
