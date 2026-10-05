@@ -7,6 +7,30 @@ import { naqlaAdminBrand } from './admin-brand/vite-plugin'
 // C8: .env من مجلد الخادم الثابت (بعد البناء يعمل من .medusa/server)
 loadEnv(process.env.NODE_ENV || 'development', BACKEND_DIR)
 
+/**
+ * A2: X-Content-Type-Options: nosniff على /static — Medusa يقدّمه بـ express.static قبل أي middleware ولا يتيح إعداده.
+ * نغلّف express.static لنسخة express التي يستخدمها إطار Medusa نفسها (تُحمَّل قبل express-loader).
+ * طبقة ثانية: توقيع الملف يُفحص عند الرفع (safe-file)، وCaddy يضيف الترويسة في الإنتاج.
+ */
+try {
+  const expressPath = require.resolve('express', { paths: [require.resolve('@medusajs/framework/http')] })
+  const ex = require(expressPath)
+  if (!ex.__naqlaNosniff) {
+    const original = ex.static
+    ex.static = (root: string, opts: any = {}) =>
+      original(root, {
+        ...opts,
+        setHeaders(res: any, path: string, stat: any) {
+          res.setHeader('X-Content-Type-Options', 'nosniff')
+          opts.setHeaders?.(res, path, stat)
+        },
+      })
+    ex.__naqlaNosniff = true
+  }
+} catch (e) {
+  console.warn(`[naqla] تعذّر إضافة nosniff إلى /static: ${(e as Error).message}`)
+}
+
 // العميل من STORE (إلزامي) — كل ما يخص المتجر في clients/<STORE>/store.json
 const store = client()
 
