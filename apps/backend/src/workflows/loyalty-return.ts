@@ -4,8 +4,8 @@ import { LOYALTY_MODULE } from "../modules/loyalty"
 import type LoyaltyModuleService from "../modules/loyalty/service"
 
 /**
- * M9: نقاط الطلب بعد الإرجاع = قيمة ما احتفظت به الزبونة × معدل الكسب.
- * تُحسب من الصفر في كل مرة (return_received_quantity لكل سطر) فتصح مع الإرجاع الجزئي والمتكرر.
+ * M9: نقاط الطلب بعد الإرجاع = نقاط item_total الصافي (Medusa يخصم المرتجعات المستلمة منه).
+ * تُحسب من الصفر في كل مرة فتصح مع الإرجاع الجزئي والمتكرر.
  */
 type Input = { order_id: string }
 
@@ -13,23 +13,15 @@ const recalcStep = createStep("recalc", async ({ order_id }: Input, { container 
   const loyalty = container.resolve<LoyaltyModuleService>(LOYALTY_MODULE)
   const [entry] = await loyalty.listLoyaltyEntries({ order_id, kind: "earn" }, { take: 1 })
   if (!entry) return new StepResponse(null, null)
-  // نفس أساس الكسب الأصلي (item_total للطلب بعد الخصم) × حصة ما احتُفظ به بسعر الوحدة
-  // (items.total لا يُحسب لأسطر الطلب في query.graph — كان يعطي 0 فتُلغى النقاط كلها)
+  // Medusa يخصم المرتجعات المستلمة من item_total للطلب — فهو صافي ما احتفظت به الزبونة بعد الخصومات.
+  // النقاط = نقاط item_total الحالي (نفس معادلة الكسب الأصلي) — لا نضرب في حصة ثانية (كان خصماً مزدوجاً)
   const { data } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({
     entity: "order",
-    fields: ["id", "status", "item_total", "items.quantity", "items.unit_price", "items.detail.return_received_quantity", "fulfillments.delivered_at", "fulfillments.canceled_at"],
+    fields: ["id", "status", "item_total", "fulfillments.delivered_at", "fulfillments.canceled_at"],
     filters: { id: order_id },
   })
   const o: any = data[0]
-  let all = 0
-  let keptValue = 0
-  for (const i of (o?.items ?? []) as any[]) {
-    const q = Number(i.quantity) || 0
-    const back = Math.min(q, Number(i.detail?.return_received_quantity ?? 0))
-    all += Number(i.unit_price) * q
-    keptValue += Number(i.unit_price) * (q - back)
-  }
-  const kept = all > 0 ? Number(o?.item_total ?? 0) * (keptValue / all) : 0
+  const kept = Math.max(0, Number(o?.item_total ?? 0))
   const delivered = ((o?.fulfillments ?? []) as any[]).some((f) => f.delivered_at && !f.canceled_at)
   const points = await loyalty.pointsFor(kept)
   const before = { id: entry.id, points: entry.points, status: entry.status }
