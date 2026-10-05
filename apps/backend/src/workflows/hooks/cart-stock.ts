@@ -1,6 +1,6 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
-import { addToCartWorkflow, completeCartWorkflow, updateCartPromotionsWorkflow, updateLineItemInCartWorkflow } from "@medusajs/medusa/core-flows"
+import { addShippingMethodToCartWorkflow, addToCartWorkflow, completeCartWorkflow, updateCartPromotionsWorkflow, updateLineItemInCartWorkflow } from "@medusajs/medusa/core-flows"
 import { client } from "../../lib/client"
 
 /**
@@ -59,6 +59,31 @@ updateLineItemInCartWorkflow.hooks.validate(async ({ input }, { container }) => 
   const quantity = i.update?.quantity
   if (quantity == null) return
   await assertCartStock(container, i.cart_id ?? i.cart?.id, { set: { item_id: i.item_id, quantity: Number(quantity) } })
+})
+
+/* ===== M13: التوصيل السريع «اليوم» قبل ساعة القطع وفي أيام العمل فقط (بتوقيت المتجر) ===== */
+export function expressOpen(now = new Date()) {
+  const c = client() as any
+  const tz = c.product?.delivery?.timezone ?? "Asia/Muscat"
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hourCycle: "h23", weekday: "short" }).formatToParts(now).map((p) => [p.type, p.value]))
+  const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.weekday)
+  const hour = Number(parts.hour)
+  return hour < Number(c.cutoffHour ?? 15) && !((c.deliveryOffDays ?? [5]) as number[]).includes(day)
+}
+const hourLabel = (h: number) => (h < 12 ? `${h} صباحاً` : h === 12 ? "12 ظهراً" : h <= 13 ? `${h - 12} ظهراً` : h < 18 ? `${h - 12} عصراً` : `${h - 12} مساءً`)
+const EXPRESS_CLOSED = `التوصيل السريع «اليوم» متاح قبل الساعة ${hourLabel(Number((client() as any).cutoffHour ?? 15))} في أيام العمل — اختر طريقة توصيل أخرى`
+
+async function expressCodes(container: MedusaContainer, optionIds: string[]) {
+  if (!optionIds.length) return []
+  const { data } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({ entity: "shipping_option", fields: ["id", "type.code"], filters: { id: optionIds } })
+  return (data as any[]).filter((o) => o.type?.code === "express").map((o) => o.id)
+}
+
+addShippingMethodToCartWorkflow.hooks.validate(async ({ input }, { container }) => {
+  const ids = ((input as any).options ?? []).map((o: any) => o.id)
+  if ((await expressCodes(container, ids)).length && !expressOpen()) {
+    throw new MedusaError(MedusaError.Types.NOT_ALLOWED, EXPRESS_CLOSED)
+  }
 })
 
 /* ===== H4: شروط الأكواد من store.json (لأول طلب، لا يُجمع) ===== */
@@ -124,6 +149,12 @@ updateCartPromotionsWorkflow.hooks.validate(async ({ input }, { container }) => 
 completeCartWorkflow.hooks.validate(async ({ input }, { container }) => {
   const id = (input as any).id
   await assertCartStock(container, id)
+  // M13: من اختارت السريع قبل الثالثة وأكملت بعدها
+  if (!expressOpen()) {
+    const { data } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({ entity: "cart", fields: ["shipping_methods.shipping_option_id"], filters: { id } })
+    const opts = (((data[0] as any)?.shipping_methods ?? []) as any[]).map((m) => m.shipping_option_id).filter(Boolean)
+    if ((await expressCodes(container, opts)).length) throw new MedusaError(MedusaError.Types.NOT_ALLOWED, EXPRESS_CLOSED)
+  }
   // H4: عند الإتمام الهوية كاملة (البريد والهاتف) — ضيفة لا تطبّق كود الطلب الأول قبل إدخال بياناتها
   const cart = await cartIdentity(container, id)
   const codes = (cart?.promotions ?? []).filter((p: any) => !p.is_automatic && p.code).map((p: any) => p.code as string)

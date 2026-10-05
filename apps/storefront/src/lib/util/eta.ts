@@ -29,3 +29,11 @@ export const governorateName = (code?: string | null) =>
 
 export const orderNumber = (displayId?: number | null) =>
   `${storeConfig.checkout.orderPrefix}${String(displayId ?? "").padStart(4, "0")}`
+
+/** M13: التوصيل السريع «اليوم» قبل ساعة القطع وفي أيام العمل (نفس قاعدة الخادم) */
+export function expressOpen(now = new Date()) {
+  const tz = storeConfig.product.delivery.timezone
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: tz, hour: "numeric", hourCycle: "h23", weekday: "short" }).formatToParts(now).map((p) => [p.type, p.value]))
+  const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(parts.weekday)
+  return Number(parts.hour) < storeConfig.cutoffHour && !(storeConfig.deliveryOffDays ?? [5]).includes(day)
+}
