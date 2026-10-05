@@ -62,7 +62,7 @@ export default function Footer() {
             <span>طرق دفع آمنة ومتنوعة</span>
             <div className="logos">
               {/* M12: شعار ثواني فقط إن كان مفعّلاً */}
-              {c.features.thawani && <span><img src="/img/pay/thawani.png" alt="" /> ثواني</span>}
+              {c.checkout.payments.some((p) => p.key === "thawani") && <span><img src="/img/pay/thawani.png" alt="" /> ثواني</span>}
               <span><img src="/img/pay/visa.svg" alt="Visa" /></span>
               <span><img src="/img/pay/mastercard.svg" alt="Mastercard" /></span>
               <span><img src="/img/pay/applepay.svg" alt="Apple Pay" /></span>
