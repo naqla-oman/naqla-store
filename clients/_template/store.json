@@ -384,5 +384,9 @@
     5
   ],
   "merchantPhones": [],
-  "taxRate": 5
+  "taxRate": 5,
+  "shippingWeights": {
+    "default": 500,
+    "categories": {}
+  }
 }

@@ -35,6 +35,7 @@ import {
   updatePricePreferencesWorkflow,
 } from "@medusajs/medusa/core-flows";
 import { client, feature } from "../lib/client";
+import { weightFor } from "../lib/weights";
 
 export default async function initial_data_seed({ container }: { container: MedusaContainer }) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
@@ -245,6 +246,8 @@ export default async function initial_data_seed({ container }: { container: Medu
               sku,
               options: Object.fromEntries(keys.map((k) => [titleOf(k), values[k]])),
               manage_inventory: true,
+              // M21: وزن الشحن بالجرام (المنتج ← القسم ← الافتراضي)
+              weight: weightFor(p),
               prices: [{ amount: p.prices?.[head] ?? p.price, currency_code: cur }],
               metadata: { compare_at_price: p.compare_at ?? null },
             };

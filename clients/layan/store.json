@@ -1152,5 +1152,14 @@
   "deliveryOffDays": [
     5
   ],
-  "taxRate": 5
+  "taxRate": 5,
+  "shippingWeights": {
+    "default": 500,
+    "categories": {
+      "abayas": 900,
+      "dresses": 700,
+      "bags": 600,
+      "scarves": 200
+    }
+  }
 }

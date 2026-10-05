@@ -686,5 +686,14 @@
   "deliveryOffDays": [
     5
   ],
-  "taxRate": 5
+  "taxRate": 5,
+  "shippingWeights": {
+    "default": 400,
+    "categories": {
+      "women": 350,
+      "men": 350,
+      "oud-oils": 150,
+      "bakhoor": 300
+    }
+  }
 }
