@@ -104,7 +104,18 @@ const HEAD_SCRIPT = String.raw`
 
   // نصوص ثابتة خارج الترجمة (من @medusajs/ui وإضافة المسودات): تُستبدل عند التطابق التام فقط
   var TEXT = { "Drafts": "المسودات", "Show password": "إظهار كلمة المرور", "Hide password": "إخفاء كلمة المرور" };
+  // H16: روابط ملفات التصدير الخاصة ← مسار التنزيل المحمي (الملف ليس في static)
+  var PRIV = /\/static\/[^\/]+\/(private-[A-Za-z0-9._-]+)/;
+  var fixLinks = function (root) {
+    if (!root.querySelectorAll) return;
+    var links = root.querySelectorAll('a[href*="/private-"]');
+    for (var i = 0; i < links.length; i++) {
+      var m = links[i].getAttribute("href").match(PRIV);
+      if (m) links[i].setAttribute("href", "/admin/naqla/files/" + m[1]);
+    }
+  };
   var swap = function (node) {
+    if (node.nodeType === 1) fixLinks(node);
     if (node.nodeType === 3) { var v = TEXT[node.nodeValue.trim()]; if (v) node.nodeValue = v; return; }
     if (node.nodeType !== 1) return;
     var it = document.createTreeWalker(node, 4), t;

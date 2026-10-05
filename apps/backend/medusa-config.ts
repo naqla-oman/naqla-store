@@ -1,6 +1,6 @@
 import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/utils'
 import { client } from './src/lib/client'
-import { BACKEND_DIR, UPLOADS_DIR } from './src/lib/paths'
+import { BACKEND_DIR, PRIVATE_FILES_DIR, UPLOADS_DIR } from './src/lib/paths'
 import { join } from 'node:path'
 import { naqlaAdminBrand } from './admin-brand/vite-plugin'
 
@@ -105,6 +105,8 @@ module.exports = defineConfig({
               // مجلد لكل متجر حتى لا تختلط الملفات عند تشغيل أكثر من متجر على الخادم نفسه
               // C8: مسار مطلق خارج .medusa — البناء لا يحذف الصور (و.medusa/server/static رابط إليه بعد البناء)
               upload_dir: join(UPLOADS_DIR, store.slug),
+              // H16: لا في static (الافتراضي process.cwd()/static يجعل ملفات التصدير عامة)
+              private_upload_dir: join(PRIVATE_FILES_DIR, store.slug),
               backend_url: `${process.env.MEDUSA_BACKEND_URL || 'http://localhost:9000'}/static/${store.slug}`,
             },
           },
