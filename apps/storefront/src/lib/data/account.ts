@@ -52,10 +52,11 @@ export async function requestOtp(phone: string): Promise<Result> {
 /** الخطوة 2: التحقق من الرمز. needsProfile=true يعني زبونة جديدة تحتاج اسمها */
 export async function verifyOtp(phone: string, otp: string, localWishlist: string[] = []): Promise<Result<{ needsProfile: boolean }>> {
   try {
-    const { token } = await sdk.client.fetch<{ token: string }>(
-      `/auth/customer/phone-auth/callback?phone=${encodeURIComponent(full(phone))}&otp=${encodeURIComponent(otp)}`,
-      { method: "POST" }
-    )
+    // M2: الرمز في جسم الطلب لا في الرابط (الروابط تُسجَّل في سجلات الخوادم والوكلاء)
+    const { token } = await sdk.client.fetch<{ token: string }>("/auth/customer/phone-auth/callback", {
+      method: "POST",
+      body: { phone: full(phone), otp },
+    })
     await setAuthToken(token)
     if (!jwtPayload(token).actor_id) return { ok: true, data: { needsProfile: true } }
     await afterLogin(localWishlist)
