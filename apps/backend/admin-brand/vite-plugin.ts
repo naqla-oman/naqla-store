@@ -143,7 +143,10 @@ export function naqlaAdminBrand(): Plugin {
     name: "naqla-admin-brand",
     transformIndexHtml(html: string): { html: string; tags: HtmlTag[] } {
       return {
-        html: html.replace(/<title>[\s\S]*?<\/title>/, "<title>لوحة نقلة</title>").replace(/<link[^>]+rel="icon"[^>]*>/g, ""),
+        html: html.replace(/<title>[\s\S]*?<\/title>/, "<title>لوحة نقلة</title>").replace(/<link[^>]+rel="icon"[^>]*>/g, "")
+          // M30: إعلان الترميز المتأخر يُحذف (إعلان واحد فقط مسموح، والمحقون أول الرأس)
+          .replace(/<meta[^>]+http-equiv="Content-Type"[^>]*>/gi, "")
+          .replace(/<meta[^>]+charset=[^>]*>/gi, ""),
         tags: [
           { tag: "link", attrs: { rel: "icon", type: "image/png", sizes: "32x32", href: "/naqla-brand/favicon-32.png" }, injectTo: "head" },
           { tag: "link", attrs: { rel: "icon", type: "image/png", sizes: "16x16", href: "/naqla-brand/favicon-16.png" }, injectTo: "head" },
@@ -153,6 +156,8 @@ export function naqlaAdminBrand(): Plugin {
           { tag: "link", attrs: { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap", media: "print", onload: "this.media='all'" }, injectTo: "head" },
           { tag: "meta", attrs: { name: "theme-color", content: TEAL }, injectTo: "head" },
           { tag: "style", attrs: { id: "naqla-brand" }, children: BRAND_CSS, injectTo: "head" },
+          // M30: الترميز أول ما في الرأس (المتصفح يبحث عنه في أول 1024 بايت فقط) — قبل السكربت العربي (~5KB)
+          { tag: "meta", attrs: { charset: "utf-8" }, injectTo: "head-prepend" },
           { tag: "script", children: HEAD_SCRIPT, injectTo: "head-prepend" },
         ],
       }
