@@ -99,7 +99,8 @@ module.exports = defineConfig({
       options: {
         providers: [
           {
-            resolve: '@medusajs/medusa/file-local',
+            // M3: نفس المزوّد المحلي مع قائمة سماح (صور نقطية فقط للملفات العامة)
+            resolve: './src/modules/safe-file',
             id: 'local',
             options: {
               // مجلد لكل متجر حتى لا تختلط الملفات عند تشغيل أكثر من متجر على الخادم نفسه
