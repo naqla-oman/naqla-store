@@ -1,4 +1,4 @@
-import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys } from '@medusajs/framework/utils'
+import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/utils'
 import { client } from './src/lib/client'
 import { naqlaAdminBrand } from './admin-brand/vite-plugin'
 
@@ -6,6 +6,22 @@ loadEnv(process.env.NODE_ENV || 'development', process.cwd())
 
 // العميل من STORE (إلزامي) — كل ما يخص المتجر في clients/<STORE>/store.json
 const store = client()
+
+/**
+ * C3: أسرار JWT/الكوكي لكل متجر (يولّدها store:setup بطول 48 بايت).
+ * في الإنتاج يُرفض الإقلاع بسر فارغ أو افتراضي أو قصير؛ في التطوير تحذير فقط.
+ */
+const WEAK = new Set(["supersecret", "secret", "change-me", "changeme", "test"])
+function secret(name: "JWT_SECRET" | "COOKIE_SECRET") {
+  const v = process.env[name] ?? ""
+  if (!v || v.length < 32 || WEAK.has(v)) {
+    if (process.env.NODE_ENV === "production") {
+      throw new MedusaError(MedusaError.Types.INVALID_DATA, `${name} فارغ أو ضعيف — شغّلي pnpm store:setup ${store.slug} --force لتوليد أسرار المتجر`)
+    }
+    console.warn(`[naqla] ${name} ضعيف أو غير مضبوط — مقبول في التطوير فقط`)
+  }
+  return v || "dev-only-insecure-secret-do-not-use-in-production"
+}
 
 /** ثواني لا يُحمَّل إلا عند THAWANI_ENABLED=true ووجود المفتاحين */
 const thawaniEnabled =
@@ -25,8 +41,8 @@ module.exports = defineConfig({
       storeCors: process.env.STORE_CORS!,
       adminCors: process.env.ADMIN_CORS!,
       authCors: process.env.AUTH_CORS!,
-      jwtSecret: process.env.JWT_SECRET,
-      cookieSecret: process.env.COOKIE_SECRET,
+      jwtSecret: secret("JWT_SECRET"),
+      cookieSecret: secret("COOKIE_SECRET"),
       // الزبونات: رمز واتساب (phone-auth) — المسؤولون: البريد وكلمة المرور
       authMethodsPerActor: {
         user: ['emailpass'],
