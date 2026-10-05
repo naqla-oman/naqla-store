@@ -75,37 +75,19 @@ const nextConfig = {
     ...(process.env.NEXT_TSCONFIG ? { tsconfigPath: process.env.NEXT_TSCONFIG } : {}),
   },
   images: {
-    remotePatterns: [
-      {
-        protocol: "http",
-        hostname: "localhost",
-      },
-      {
-        protocol: "https",
-        hostname: "medusa-public-images.s3.eu-west-1.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "medusa-server-testing.s3.amazonaws.com",
-      },
-      {
-        protocol: "https",
-        hostname: "medusa-server-testing.s3.us-east-1.amazonaws.com",
-      },
-      // صور المنتجات من وحدة الملفات في Medusa (<backend>/static/...)
-      ...(BACKEND_HOST && BACKEND_HOST.hostname !== "localhost"
-        ? [{ protocol: BACKEND_HOST.protocol.replace(":", ""), hostname: BACKEND_HOST.hostname, pathname: "/static/**" }]
-        : []),
-      ...(S3_HOSTNAME && S3_PATHNAME
-        ? [
-            {
-              protocol: "https",
-              hostname: S3_HOSTNAME,
-              pathname: S3_PATHNAME,
-            },
-          ]
-        : []),
-    ],
+    // M5: محسّن الصور يجلب من الخلفية فقط — مضيفها ومنفذها ومسار /static/** (لا أي مسار على localhost: SSRF)،
+    // وlocalhost في التطوير فقط. حذف حاويات Medusa التجريبية من القالب.
+    remotePatterns: BACKEND_HOST
+      ? [
+          {
+            protocol: BACKEND_HOST.protocol.replace(":", ""),
+            hostname: BACKEND_HOST.hostname,
+            ...(BACKEND_HOST.port ? { port: BACKEND_HOST.port } : {}),
+            pathname: "/static/**",
+          },
+        ].filter((p) => p.hostname !== "localhost" || process.env.NODE_ENV !== "production")
+      : [],
+
   },
 }
 
