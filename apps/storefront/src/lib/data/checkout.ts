@@ -214,6 +214,12 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
       const url = session?.data?.checkout_url as string | undefined
       await refresh()
       if (!url) return { ok: false, error: g("تعذّر فتح صفحة ثواني، اختاري طريقة دفع أخرى", "تعذّر فتح صفحة ثواني، اختر طريقة دفع أخرى") }
+      // H2: قفل السلة قبل التحويل — تعديلها أثناء الدفع كان يحذف الجلسة فيُخصم المبلغ بلا طلب
+      const locked = await sdk.client
+        .fetch(`/store/carts/${id}/payment-lock`, { method: "POST", headers, body: { session_id: session?.data?.session_id } })
+        .then(() => true)
+        .catch(() => false)
+      if (!locked) return { ok: false, error: g("تعذّر تجهيز الدفع، حاولي مجدداً", "تعذّر تجهيز الدفع، حاول مجدداً") }
       return { ok: true, data: { orderId: "", displayId: 0, redirectUrl: url } }
     }
 
@@ -230,4 +236,11 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
     if (/inventory|stock/i.test(msg)) return { ok: false, error: "بعض المنتجات لم تعد متوفرة بالكمية المطلوبة" }
     return fail(e, g("تعذّر تأكيد الطلب، حاولي مرة أخرى", "تعذّر تأكيد الطلب، حاول مرة أخرى"))
   }
+}
+
+/** H2: فكّ قفل السلة عند العودة من ثواني بعد الإلغاء */
+export async function releasePaymentLock() {
+  const id = await getCartId()
+  if (!id) return
+  await sdk.client.fetch(`/store/carts/${id}/payment-lock`, { method: "DELETE", headers: await getAuthHeaders() }).catch(() => null)
 }

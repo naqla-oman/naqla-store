@@ -1,4 +1,5 @@
 import { listCartOptions, retrieveCart } from "@lib/data/cart"
+import { releasePaymentLock } from "@lib/data/checkout"
 import { listCartPaymentMethods } from "@lib/data/payment"
 import { retrieveCustomer } from "@lib/data/customer"
 import { CART_FIELDS } from "@lib/util/cart-fields"
@@ -19,6 +20,8 @@ type Props = {
 export default async function Checkout(props: Props) {
   const { countryCode } = await props.params
   const { step, error } = await props.searchParams
+  // H2: عادت من ثواني بالإلغاء → فكّ قفل السلة لتتمكن من تعديلها أو اختيار طريقة أخرى
+  if (error === "thawani_cancelled") await releasePaymentLock()
   const cart = await retrieveCart(undefined, CART_FIELDS)
 
   if (!cart?.items?.length) redirect(`/${countryCode}/cart`)
