@@ -80,6 +80,10 @@ writeFileSync(
     `NEXT_PUBLIC_BASE_URL=${storefrontUrl}`,
     `ADMIN_EMAIL=${adminEmail}`,
     `ADMIN_PASSWORD=${adminPassword}`,
+    // المفاتيح التي أضافها المسؤول يدوياً (ثواني، واتساب، البريد…) تبقى عند إعادة الإعداد
+    ...Object.entries(prev)
+      .filter(([k]) => !(k in env) && !["BACKEND_PORT", "STOREFRONT_PORT", "NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY", "NEXT_PUBLIC_BASE_URL", "ADMIN_EMAIL", "ADMIN_PASSWORD"].includes(k))
+      .map(([k, v]) => `${k}=${v}`),
     "",
   ].join("\n")
 )
