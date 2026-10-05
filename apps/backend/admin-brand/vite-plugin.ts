@@ -56,6 +56,9 @@ aside .sticky.top-0::before {
 aside .sticky.top-0 button[aria-haspopup="menu"] > span:first-child > span {
   font-size: 0 !important; background: url(/naqla-brand/client-logo.png) center / cover no-repeat !important;
 }
+
+/* M29: روابط توثيق Medusa لا تظهر لعملاء لوحة نقلة (الدعم من نقلة) */
+a[href*="docs.medusajs.com"], a[href*="medusajs.com/"] { display: none !important; }
 `
 
 // String.raw: الشرطات العكسية في التعابير النمطية تبقى كما هي (`\s` في قالب عادي تصبح «s» فتفشل المطابقة)
@@ -103,7 +106,7 @@ const HEAD_SCRIPT = String.raw`
   Intl.NumberFormat = Wrapped;
 
   // نصوص ثابتة خارج الترجمة (من @medusajs/ui وإضافة المسودات): تُستبدل عند التطابق التام فقط
-  var TEXT = { "Drafts": "المسودات", "Show password": "إظهار كلمة المرور", "Hide password": "إخفاء كلمة المرور" };
+  var TEXT = { "Not fulfilled": "غير منفّذ", "Fulfilled": "منفّذ", "Partially fulfilled": "منفّذ جزئياً", "Shipped": "تم الشحن", "Partially shipped": "شُحن جزئياً", "Delivered": "تم التسليم", "Partially delivered": "سُلِّم جزئياً", "Canceled": "ملغى", "Returned": "مُرتجع", "Partially returned": "مُرتجع جزئياً", "Not paid": "غير مدفوع", "Awaiting": "بانتظار الدفع", "Authorized": "مفوَّض", "Partially authorized": "مفوَّض جزئياً", "Captured": "مُحصَّل", "Partially captured": "مُحصَّل جزئياً", "Refunded": "مُسترد", "Partially refunded": "مُسترد جزئياً", "Requires action": "يتطلب إجراء", "Pending": "معلّق", "Completed": "مكتمل", "Draft": "مسودة", "Archived": "مؤرشف", "Items": "المنتجات", "Shipping from": "الشحن من", "Manual": "يدوي", "Tracking": "التتبّع", "Oman": "عُمان", "Omani Rial": "ريال عُماني", "Drafts": "المسودات", "Show password": "إظهار كلمة المرور", "Hide password": "إخفاء كلمة المرور" };
   // H16: روابط ملفات التصدير الخاصة ← مسار التنزيل المحمي (الملف ليس في static)
   var PRIV = /\/static\/[^\/]+\/(private-[A-Za-z0-9._-]+)/;
   var fixLinks = function (root) {
