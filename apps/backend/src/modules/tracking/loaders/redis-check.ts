@@ -5,13 +5,15 @@ import Redis from "ioredis"
 /**
  * H7 (ملاحظة التحقق المستقل): إن أقلع الخادم وRedis غير متاح يموت عامل event-bus-redis بصمت
  * فتتراكم الأحداث (لا رموز دخول ولا إشعارات). هنا: عند ضبط REDIS_URL نتحقق قبل الجاهزية،
- * ونُنهي العملية بخطأ واضح بعد محاولات قصيرة — ليعيد Docker تشغيلها حين يصبح Redis جاهزاً.
+ * في الإنتاج ننهي العملية بخطأ واضح بعد محاولات قصيرة (ليعيد Docker تشغيلها حين يصبح Redis جاهزاً)؛
+ * في التطوير تحذير واضح والاستمرار، حتى لا يموت medusa develop عند إعادة التشغيل التلقائي.
  */
 export default async function redisCheck({ container }: LoaderOptions) {
   const url = process.env.REDIS_URL
   if (!url) return
-  const logger = container.resolve(ContainerRegistrationKeys.LOGGER) as { info: (m: string) => void; error: (m: string) => void }
-  for (let attempt = 1; attempt <= 5; attempt++) {
+  const logger = container.resolve(ContainerRegistrationKeys.LOGGER) as { info: (m: string) => void; warn: (m: string) => void; error: (m: string) => void }
+  const attempts = process.env.NODE_ENV === "production" ? 5 : 2
+  for (let attempt = 1; attempt <= attempts; attempt++) {
     const r = new Redis(url, { lazyConnect: true, maxRetriesPerRequest: 0, connectTimeout: 3000, retryStrategy: () => null })
     try {
       await r.connect()
@@ -27,6 +29,10 @@ export default async function redisCheck({ container }: LoaderOptions) {
     }
     await new Promise((ok) => setTimeout(ok, 2000))
   }
-  logger.error(`[naqla] Redis غير متاح على ${new URL(url).host} بعد 5 محاولات — الإيقاف (الأحداث ورموز الدخول تعتمد عليه)`)
-  process.exit(1)
+  const where = new URL(url).host
+  if (process.env.NODE_ENV === "production") {
+    logger.error(`[naqla] Redis غير متاح على ${where} بعد 5 محاولات — الإيقاف (الأحداث ورموز الدخول تعتمد عليه)`)
+    process.exit(1)
+  }
+  logger.warn(`[naqla] تحذير: Redis غير متاح على ${where} — الأحداث ورموز الدخول والإشعارات لن تعمل حتى يعود ثم يُعاد تشغيل الخادم (في الإنتاج يتوقف الخادم هنا)`)
 }
