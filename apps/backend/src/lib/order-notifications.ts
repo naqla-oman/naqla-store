@@ -6,7 +6,7 @@ import { orderNumber, storeData } from "./store-data"
  * إشعارات واتساب لمراحل الطلب. كل نوع يقابل قالباً معتمداً (Utility) في Meta،
  * ومتغيراته بالترتيب في params — نفس الترتيب يجب أن يكون في نص القالب عند اعتماده.
  */
-export type OrderNotice = "order_placed" | "order_shipped" | "order_ready_pickup" | "order_delivered"
+export type OrderNotice = "order_placed" | "order_shipped" | "order_ready_pickup" | "order_delivered" | "order_canceled" | "merchant_new_order"
 
 type Built = { params: string[]; preview: string }
 
@@ -14,7 +14,7 @@ const money = (n: number, cur: string) =>
   `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(n)} ${cur === "omr" ? "ر.ع" : cur.toUpperCase()}`
 
 /** نص كل قالب ومتغيراته — يُستخدم للمعاينة في السجل ولتوثيق القوالب المطلوب اعتمادها */
-export function build(kind: OrderNotice, o: { name: string; number: string; total: string; shipping: string; track: string }): Built {
+export function build(kind: OrderNotice, o: { name: string; number: string; total: string; shipping: string; track: string; payment?: string }): Built {
   // النصوص مطابقة حرفياً لقوالب Meta في docs/whatsapp-templates.md:
   // لا يبدأ المتن ولا ينتهي بمتغير (شرط Meta)، والمتغيرات بترتيب ظهورها {{1}}، {{2}}…
   const s = storeData()
@@ -40,6 +40,18 @@ export function build(kind: OrderNotice, o: { name: string; number: string; tota
         params: [o.name, o.number],
         // «تسليم» تشمل التوصيل والاستلام من المشغل
         preview: `مرحباً ${o.name}، تم تسليم طلبك ${o.number}. نتمنى أن تسعدك القطعة — شكراً لثقتك في ${s.name}.`,
+      }
+    case "order_canceled":
+      // M14: إشعار الإلغاء للزبونة
+      return {
+        params: [o.name, o.number],
+        preview: `مرحباً ${o.name}، أُلغي طلبك ${o.number}. إن كان الدفع إلكترونياً يُعاد المبلغ خلال 7 أيام عمل، ولأي استفسار راسلنا — ${s.name}.`,
+      }
+    case "merchant_new_order":
+      // M14: تنبيه التاجر بطلب جديد (لرقمه الشخصي في merchantPhones)
+      return {
+        params: [o.number, o.name, o.total, o.payment ?? ""],
+        preview: `طلب جديد ${o.number} من ${o.name} بقيمة ${o.total} — الدفع: ${o.payment ?? ""}. افتح لوحة نقلة لتجهيزه — ${s.name}.`,
       }
   }
 }

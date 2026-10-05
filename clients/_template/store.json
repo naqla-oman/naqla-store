@@ -299,5 +299,6 @@
   "returnDays": 7,
   "deliveryOffDays": [
     5
-  ]
+  ],
+  "merchantPhones": []
 }
