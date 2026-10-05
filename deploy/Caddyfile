@@ -1,0 +1,53 @@
+# Caddy لمنصة نقلة: HTTPS تلقائي، ترويسات الأمان، وسجلات بلا أسرار.
+# متجر جديد = نسخ كتلتي النطاقين أدناه.
+{
+	email {$ACME_EMAIL:info@naqla.tech}
+}
+
+(security) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(self)"
+		-X-Powered-By
+		-Server
+	}
+}
+
+# سجل الوصول بلا رمز الدخول (otp) ولا التوكنات والكوكيز (M2)
+(access_log) {
+	log {
+		output file /data/logs/access.log {
+			roll_size 50MiB
+			roll_keep 10
+		}
+		format filter {
+			request>uri query {
+				delete otp
+			}
+			request>headers>Authorization delete
+			request>headers>Cookie delete
+			resp_headers>Set-Cookie delete
+			wrap json
+		}
+	}
+}
+
+# ===== متجر: layan =====
+layan.om, www.layan.om {
+	import security
+	import access_log
+	header X-Frame-Options "SAMEORIGIN"
+	header Content-Security-Policy "frame-ancestors 'self'"
+	reverse_proxy storefront-layan:8000
+}
+
+api.layan.om {
+	import security
+	import access_log
+	# اللوحة (/app) والـAPI: لا تضمين في إطار إطلاقاً (Medusa يقدّم /app خارج middlewares)
+	header X-Frame-Options "DENY"
+	header Content-Security-Policy "frame-ancestors 'none'"
+	reverse_proxy backend-layan:9000
+}

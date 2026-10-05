@@ -170,6 +170,19 @@ pnpm store:dev <slug-2>     # المتجر http://localhost:8001 — اللوح�
 - **Redis**: عند ضبط `REDIS_URL` يجب أن يكون متاحاً. في الإنتاج يتوقف الإقلاع بخطأ واضح إن لم يتوفر (يعيد Docker التشغيل)، وفي التطوير تحذير فقط — وللتطوير بلا Redis احذف `REDIS_URL` فتعمل الوحدات في الذاكرة. الجاهزية الحقيقية من `/ready` (قاعدة البيانات + Redis)؛ `/health` المدمج يبقى «OK» حتى مع انقطاع Redis فلا يُعتمد عليه.
 - **رموز الدخول (OTP)**: قفل لكل رقم، وسقف يومي لكل رقم، وحدود لكل IP في الساعة. خلف Caddy: عنوان العميل يُقرأ من آخر قيمة في `X-Forwarded-For`.
 
+## النشر على خادم (Docker + Caddy)
+
+الملفات في `deploy/`: `backend.Dockerfile`، `storefront.Dockerfile`، `docker-compose.yml`، `Caddyfile`.
+
+1. على الخادم: انسخي المستودع، وأنشئي `deploy/.env` فيه `POSTGRES_PASSWORD` و`LAYAN_PUBLISHABLE_KEY` و`ACME_EMAIL`.
+2. بيئة كل متجر في `.stores/<slug>.prod.env` (صلاحيات 600): الأسرار من `store:setup`، و`DATABASE_URL` على `postgres`، والنطاقات الحقيقية في CORS و`MEDUSA_BACKEND_URL` و`STOREFRONT_URL`، و`NODE_ENV=production`.
+3. `docker compose -f deploy/docker-compose.yml up -d --build`.
+
+- الخلفية لا تقلع قبل جاهزية Postgres وRedis (`depends_on … service_healthy`)، وتتوقف بخطأ واضح إن لم يتوفر Redis، وصحتها من `/ready`.
+- الصور في volume دائم (`/data/uploads`) يُربط بـ `static` عند كل تشغيل؛ والترحيلات تعمل تلقائياً قبل الخادم.
+- Caddy: HTTPS تلقائي، HSTS، منع تضمين اللوحة (`/app`) في إطار، حذف `X-Powered-By`، وسجلات بلا `otp` ولا التوكنات والكوكيز.
+- متجر جديد = نسخ كتلتي `backend-<slug>`/`storefront-<slug>` في compose وكتلتي النطاقين في Caddyfile.
+
 ## ملاحظات تقنية
 
 - **فحص الخلفية:** `medusa develop` يشغّل `medusa lint` قبل البدء ويرفض التشغيل عند أي خطأ. شغّلي `pnpm --filter @naqla/backend lint` قبل كل commit.

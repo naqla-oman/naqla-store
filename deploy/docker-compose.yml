@@ -1,0 +1,94 @@
+# منصة نقلة على خادم واحد: Caddy + Postgres + Redis + (خلفية + واجهة) لكل متجر.
+# الأسرار في ../.stores/<slug>.prod.env (صلاحيات 600، خارج Git). متجر جديد = نسخ كتلتي backend/storefront.
+name: naqla
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  caddy:
+    image: caddy:2.10
+    <<: *restart
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      storefront-layan: { condition: service_healthy }
+      backend-layan: { condition: service_healthy }
+
+  postgres:
+    image: postgres:16
+    <<: *restart
+    environment:
+      POSTGRES_USER: naqla
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?ضع POSTGRES_PASSWORD في deploy/.env}
+    volumes: [pg_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U naqla"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    <<: *restart
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes: [redis_data:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # ===== متجر: layan =====
+  backend-layan:
+    build: { context: .., dockerfile: deploy/backend.Dockerfile, args: { STORE: layan } }
+    <<: *restart
+    env_file: ../.stores/layan.prod.env
+    environment:
+      REDIS_URL: redis://redis:6379
+    volumes: [uploads_layan:/data/uploads]
+    mem_limit: 900m
+    # ملاحظة التحقق المستقل: لا يقلع قبل جاهزية Redis (وإلا يموت عامل الأحداث بصمت)،
+    # والخلفية نفسها تتوقف بخطأ واضح إن لم يتوفر Redis، وصحتها من /ready (قاعدة البيانات + Redis)
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:9000/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 90s
+
+  storefront-layan:
+    build:
+      context: ..
+      dockerfile: deploy/storefront.Dockerfile
+      args:
+        STORE: layan
+        NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY: ${LAYAN_PUBLISHABLE_KEY:?}
+        NEXT_PUBLIC_BASE_URL: https://layan.om
+        MEDUSA_BACKEND_URL: http://backend-layan:9000
+    <<: *restart
+    env_file: ../.stores/layan.prod.env
+    environment:
+      MEDUSA_BACKEND_URL: http://backend-layan:9000
+    mem_limit: 400m
+    depends_on:
+      backend-layan: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://localhost:8000/robots.txt').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+volumes:
+  pg_data: {}
+  redis_data: {}
+  caddy_data: {}
+  caddy_config: {}
+  uploads_layan: {}
