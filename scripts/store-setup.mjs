@@ -55,6 +55,8 @@ await run("npx", ["medusa", "db:create", "--db", dbName, "--no-interactive"], { 
 
 console.log(c.d("2/3 الترحيلات + البذرة + الدفع + الضريبة + الصور + المستويات…"))
 const out = await run("npx", ["medusa", "db:migrate"], { cwd: BACKEND, env }).catch((e) => fail(`فشل الترحيل:\n${(e.out ?? e.message).slice(-3000)}`))
+// M12: مزوّدو الدفع حسب features والمسجّل فعلاً (ثواني بعد تفعيله يظهر دون تدخّل)
+await run("npx", ["medusa", "exec", "./src/scripts/sync-payment-providers.ts"], { cwd: BACKEND, env: { ...process.env, ...env } }).catch(() => console.log(c.y("تنبيه: تعذّرت مزامنة مزوّدي الدفع")))
 const pk = (out.match(/Publishable key: (pk_[a-f0-9]+)/) || [])[1] || prev.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 if (!pk) fail("لم يُعثر على مفتاح النشر في مخرجات البذرة — هل كانت القاعدة مستخدمة سابقاً؟ استخدمي قاعدة جديدة")
 for (const line of out.split("\n").filter((l) => /checkout-setup|product-images|loyalty-tiers|tax-inclusive|Seeded/.test(l))) {

@@ -14,16 +14,10 @@ import {
   updateRegionsWorkflow,
 } from "@medusajs/medusa/core-flows"
 import { client, feature } from "../lib/client"
+import { syncPaymentProviders } from "../lib/payment-providers"
 
 type Shipping = { code: string; name: string; desc: string; amount: number; free_over?: number; provinces?: string[] }
 type Promo = { code: string; type: "percentage" | "fixed"; value: number; description?: string; limit?: number }
-
-// مزوّد الدفع ← مفتاح تشغيله في store.json → features
-const PROVIDER_FEATURE: Record<string, string> = {
-  pp_cod_offline: "cod",
-  pp_whatsapp_offline: "whatsappOrder",
-  pp_thawani_thawani: "thawani",
-}
 
 export default async function checkout_setup({ container }: { container: MedusaContainer }) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
@@ -47,14 +41,8 @@ export default async function checkout_setup({ container }: { container: MedusaC
     return
   }
 
-  // ---------- طرق الدفع ----------
-  const registered = (await payment.listPaymentProviders({})).map((p) => p.id)
-  // المفعّل في store.json والمسجّل فعلاً في الخادم (ثواني يتطلب أيضاً THAWANI_ENABLED)
-  const wanted = Object.keys(PROVIDER_FEATURE).filter((id) => feature(PROVIDER_FEATURE[id]) && registered.includes(id))
-  await updateRegionsWorkflow(container).run({
-    input: { selector: { id: region.id }, update: { payment_providers: wanted } },
-  })
-  logger.info(`checkout-setup: طرق الدفع للمنطقة → ${wanted.join(", ")}`)
+  // ---------- طرق الدفع (المنطق المشترك مع مزامنة الإقلاع — M12) ----------
+  await syncPaymentProviders(container)
 
   // ---------- التوصيل المقيّد بمحافظات ----------
   const { data: options } = await query.graph({

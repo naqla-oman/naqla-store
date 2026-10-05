@@ -22,4 +22,4 @@ WORKDIR /app/apps/backend/.medusa/server
 RUN ln -sfn /app/apps/backend/node_modules node_modules
 EXPOSE 9000
 # static ← مجلد الصور الدائم (volume) عند كل تشغيل، ثم الترحيلات، ثم الخادم
-CMD ["sh", "-c", "mkdir -p \"$UPLOADS_DIR\" && ln -sfn \"$UPLOADS_DIR\" static && npx medusa db:migrate && exec npx medusa start -p 9000"]
+CMD ["sh", "-c", "mkdir -p \"$UPLOADS_DIR\" && ln -sfn \"$UPLOADS_DIR\" static && npx medusa db:migrate && npx medusa exec ./src/scripts/sync-payment-providers.js && exec npx medusa start -p 9000"]
