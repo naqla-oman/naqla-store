@@ -183,6 +183,13 @@ pnpm store:dev <slug-2>     # المتجر http://localhost:8001 — اللوح�
 - Caddy: HTTPS تلقائي، HSTS، منع تضمين اللوحة (`/app`) في إطار، حذف `X-Powered-By`، وسجلات بلا `otp` ولا التوكنات والكوكيز.
 - متجر جديد = نسخ كتلتي `backend-<slug>`/`storefront-<slug>` في compose وكتلتي النطاقين في Caddyfile.
 
+## اختبار ثواني (UAT)
+
+- فعّلي في `.stores/<slug>.env`: `THAWANI_ENABLED=true` و`THAWANI_MODE=uat` ومفتاحي UAT العامين (في `apps/backend/.env.template`)، واربطي `pp_thawani_thawani` بالمنطقة من اللوحة (الإعدادات ← المناطق) إن لم يكن مرتبطاً.
+- بطاقة الاختبار: `4242 4242 4242 4242`، الانتهاء أي تاريخ قادم، CVV `123`، ثم رمز التحقق (OTP) `1234` ← «Verify & Pay».
+- حقول صفحة ثواني بقناع إدخال: تُكتب حرفاً حرفاً (لصق التاريخ دفعة واحدة يُرفض بـ «Please complete the Date»).
+- بعد الدفع تعود الزبونة إلى `/checkout/thawani?cart_id=…` فيُنشأ الطلب، والدفعة «captured» بفاتورة ثواني ومبلغ مطابق.
+
 ## ملاحظات تقنية
 
 - **فحص الخلفية:** `medusa develop` يشغّل `medusa lint` قبل البدء ويرفض التشغيل عند أي خطأ. شغّلي `pnpm --filter @naqla/backend lint` قبل كل commit.
