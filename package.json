@@ -20,7 +20,8 @@
     "store:dev": "node scripts/store-dev.mjs",
     "console:setup": "pnpm --filter @naqla/console run setup",
     "console:dev": "pnpm --filter @naqla/console run dev",
-    "console:worker": "pnpm --filter @naqla/console run worker"
+    "console:worker": "pnpm --filter @naqla/console run worker",
+    "test:console": "node scripts/test-console.mjs"
   },
   "pnpm": {
     "overrides": {
