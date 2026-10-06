@@ -69,7 +69,95 @@ async function auth() {
   ok(out.status === 303 && (await get("/", good.cookie)).status === 307, "الخروج يُبطل الجلسة")
 }
 
-const sections = { auth }
+// ══ الاختبار الحاسم: إنشاء ← تشغيل ← شراء ← إيقاف/استئناف ← نسخة/استعادة ← حذف ══
+const ROOT = new URL("..", import.meta.url).pathname
+const { existsSync, readdirSync } = await import("node:fs")
+const storeEnv = (slug) => { const f = `${ROOT}.stores/${slug}.env`; return existsSync(f) ? Object.fromEntries(readFileSync(f, "utf8").split("\n").filter((l) => /^\w+=/.test(l)).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)])) : {} }
+let cookie = null
+async function session() { if (!cookie) { const r = await login(); cookie = r.cookie } return cookie }
+const api = async (method, path, body) => { const r = await fetch(`${BASE}${path}`, { method, headers: { "Content-Type": "application/json", Cookie: await session() }, body: body ? JSON.stringify(body) : undefined }); return { status: r.status, body: await r.json().catch(() => ({})) } }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+async function waitJob(id, label, minutes = 15) {
+  const end = Date.now() + minutes * 60_000
+  for (;;) {
+    const { body: j } = await api("GET", `/api/jobs/${id}`)
+    if (j?.status === "done" || j?.status === "failed") { ok(j.status === "done", `${label} (مهمة #${id})`, j.status === "failed" ? `${j.error} | ${j.steps.find((s) => s.status === "failed")?.log?.slice(-3).join(" / ")}` : j.steps.map((s) => s.key).join("→")); return j }
+    if (Date.now() > end) { ok(false, `${label}: انتهت المهلة`); return j }
+    await sleep(5000)
+  }
+}
+async function storeApi(slug, method, path, body) {
+  const e = storeEnv(slug)
+  const r = await fetch(`${e.MEDUSA_BACKEND_URL}${path}`, { method, headers: { "Content-Type": "application/json", "x-publishable-api-key": e.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY }, body: body ? JSON.stringify(body) : undefined })
+  return { status: r.status, body: await r.json().catch(() => ({})) }
+}
+/** طلب شراء كامل (الدفع عند الاستلام) عبر واجهة المتجر البرمجية */
+async function purchase(slug) {
+  const reg = (await storeApi(slug, "GET", "/store/regions")).body.regions[0].id
+  const prods = (await storeApi(slug, "GET", `/store/products?limit=50&region_id=${reg}&fields=handle,metadata,*variants,+variants.inventory_quantity`)).body.products
+  const v = prods.filter((p) => !p.metadata?.service).flatMap((p) => p.variants).find((x) => (x.inventory_quantity ?? 0) >= 1)
+  const cart = (await storeApi(slug, "POST", "/store/carts", { region_id: reg, email: "buyer@example.com" })).body.cart.id
+  await storeApi(slug, "POST", `/store/carts/${cart}/line-items`, { variant_id: v.id, quantity: 1 })
+  await storeApi(slug, "POST", `/store/carts/${cart}`, { metadata: { payment_channel: "cod" }, shipping_address: { first_name: "زبونة", last_name: "تجريبية", phone: "+96892220011", country_code: "om", province: "om-ma", city: "السيب", address_1: "حي 1" } })
+  const so = (await storeApi(slug, "GET", `/store/shipping-options?cart_id=${cart}`)).body.shipping_options.find((o) => o.type?.code === "standard")
+  await storeApi(slug, "POST", `/store/carts/${cart}/shipping-methods`, { option_id: so.id })
+  const pc = (await storeApi(slug, "POST", "/store/payment-collections", { cart_id: cart })).body.payment_collection.id
+  await storeApi(slug, "POST", `/store/payment-collections/${pc}/payment-sessions`, { provider_id: "pp_cod_offline" })
+  return (await storeApi(slug, "POST", `/store/carts/${cart}/complete`, {})).body.order
+}
+const orderCount = async (slug) => { const c = new pg.Client({ connectionString: storeEnv(slug).DATABASE_URL }); await c.connect(); const n = Number((await c.query(`select count(*) n from "order" where deleted_at is null`)).rows[0].n); await c.end(); return n }
+
+function crucialFor(slug, template, name, palette) {
+  return async function () {
+    console.log(`\n— المتجر «${name}» من قالب ${template} —`)
+    await q(`delete from stores where slug=$1 and status in ('deleted','failed')`, [slug])
+    const logo = readFileSync(`${ROOT}templates/${template}/icons/icon-512.png`).toString("base64")
+    const bad = await api("POST", "/api/stores", { slug: "layan", name, phone: "96891234567", email: "x@y.om", template })
+    ok(bad.status === 400, "رمز مستخدم مرفوض", bad.body.error)
+    const c = await api("POST", "/api/stores", { slug, name, phone: "96891234567", email: `owner@${slug}.example`, template, palette, font: "hayawi", voice: "f", logo: `data:image/png;base64,${logo}`, domainType: "sub", features: { cod: true, whatsappOrder: true, thawani: false, loyalty: true, loyaltyTiers: true } })
+    ok(c.status === 200 && c.body.jobId, "طلب الإنشاء من اللوحة", JSON.stringify(c.body))
+    const j = await waitJob(c.body.jobId, "التجهيز كاملاً حتى /ready", 20)
+    if (j?.status !== "done") return
+    const notify = j.steps.find((s) => s.key === "notify")?.log.join(" ") ?? ""
+    ok(/store_ready → \+96891234567/.test(notify) && /reset-password\?token=/.test(notify), "رسالة واتساب للعميل برابط اللوحة ورابط التعيين")
+    ok(!/ADMIN_PASSWORD|password=/i.test(JSON.stringify(j.steps)), "لا كلمة مرور في أي رسالة أو سجل خطوة")
+    const [row] = await q(`select * from stores where slug=$1`, [slug])
+    ok(row.status === "running" && row.health === "ok", "الحالة «يعمل» والصحة /ready")
+    const e = storeEnv(slug), sj = JSON.parse(readFileSync(`${ROOT}clients/${slug}/store.json`, "utf8"))
+    ok(sj.name === name && sj.theme?.palette === palette && sj.brand?.logo === "logo.png" && sj.features.thawani === false, "الهوية من المعالج في store.json", `${sj.theme?.palette} / ${sj.brand?.logo}`)
+    const home = await fetch(`${e.STOREFRONT_URL}/om`, { redirect: "follow" }).then((r) => r.text()).catch(() => "")
+    ok(home.includes(name) && home.includes("naqla-identity"), "المتجر يعمل بالاسم واللوحة المختارة")
+    const o1 = await purchase(slug)
+    ok(!!o1?.display_id, "طلب شراء كامل", `#${o1?.display_id} بقيمة ${o1?.total}`)
+    // إيقاف مؤقت ← صفحة صيانة ← استئناف
+    await waitJob((await api("POST", `/api/stores/${slug}/pause`)).body.jobId, "إيقاف مؤقت")
+    const m = await fetch(`${e.STOREFRONT_URL}/om`).catch(() => null)
+    ok(m?.status === 503 && m.headers.get("x-naqla-maintenance") === "1", "صفحة الصيانة (503) أثناء الإيقاف")
+    await waitJob((await api("POST", `/api/stores/${slug}/resume`)).body.jobId, "استئناف حتى /ready", 10)
+    ok((await fetch(`${e.MEDUSA_BACKEND_URL}/ready`)).ok, "المتجر يعمل بعد الاستئناف")
+    // نسخة ← طلب جديد ← استعادة (الطلب الجديد يختفي)
+    await waitJob((await api("POST", `/api/stores/${slug}/backup`)).body.jobId, "نسخة احتياطية الآن")
+    const before = await orderCount(slug)
+    await purchase(slug)
+    ok((await orderCount(slug)) === before + 1, "طلب بعد النسخة", `${before} ← ${before + 1}`)
+    const [bk] = await q(`select id from backups where store_slug=$1 and kind='manual' order by id desc limit 1`, [slug])
+    ok((await api("POST", `/api/stores/${slug}/restore`, { backupId: Number(bk.id), confirm: "wrong" })).status === 400, "الاستعادة بلا تأكيد مكتوب مرفوضة")
+    await waitJob((await api("POST", `/api/stores/${slug}/restore`, { backupId: Number(bk.id), confirm: slug })).body.jobId, "الاستعادة حتى /ready", 12)
+    ok((await orderCount(slug)) === before, "الاستعادة أعادت الحالة (الطلب اللاحق اختفى)", `${await orderCount(slug)} طلب`)
+    // الحذف بأرشفة ونسخة أخيرة
+    ok((await api("POST", `/api/stores/${slug}/delete`, { confirm: "no" })).status === 400, "الحذف بلا تأكيد مكتوب مرفوض")
+    await waitJob((await api("POST", `/api/stores/${slug}/delete`, { confirm: slug })).body.jobId, "حذف المتجر")
+    const [after] = await q(`select status from stores where slug=$1`, [slug])
+    const dbs = (await q(`select 1 from pg_database where datname=$1`, [`naqla_${slug.replace(/-/g, "_")}`])).length
+    const archived = readdirSync(`${ROOT}.archive`).some((d) => d.startsWith(`${slug}-`))
+    const [fin] = await q(`select count(*) n from backups where store_slug=$1 and kind='final'`, [slug])
+    ok(after.status === "deleted" && dbs === 0 && !existsSync(`${ROOT}clients/${slug}`) && archived && Number(fin.n) === 1, "حُذف: القاعدة والمجلد أُزيلا، والأرشيف والنسخة الأخيرة موجودان")
+    const audit = await q(`select action from audit where target=$1`, [slug])
+    ok(["store.create", "store.pause", "store.resume", "store.backup", "store.restore", "store.delete"].every((x) => audit.some((a) => a.action === x)), "كل عملية في سجل العمليات")
+  }
+}
+
+const sections = { auth, fashion: crucialFor("t-fashion", "fashion", "بوتيك الاختبار", "ward-jabal"), perfume: crucialFor("t-perfume", "perfume", "عطور الاختبار", "lail-dhahab") }
 const want = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(sections)
 for (const s of want) await sections[s]()
 await db.end()
