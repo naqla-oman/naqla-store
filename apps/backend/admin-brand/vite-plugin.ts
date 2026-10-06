@@ -119,10 +119,13 @@ const HEAD_SCRIPT = String.raw`
   };
   var swap = function (node) {
     if (node.nodeType === 1) fixLinks(node);
-    if (node.nodeType === 3) { var v = TEXT[node.nodeValue.trim()]; if (v) node.nodeValue = v; return; }
+    // M32: بريد زبونات الهاتف الداخلي (968XXXXXXXX@phone.invalid) ← رقم الهاتف منسّقاً
+    var PH = /^(?:\+?)968(\d{4})(\d{4})@phone\.invalid$/;
+    var phoneOf = function (t) { var m = t.trim().match(PH); return m ? "+968 " + m[1] + " " + m[2] : null; };
+    if (node.nodeType === 3) { var ph = phoneOf(node.nodeValue); if (ph) { node.nodeValue = ph; return; } var v = TEXT[node.nodeValue.trim()]; if (v) node.nodeValue = v; return; }
     if (node.nodeType !== 1) return;
     var it = document.createTreeWalker(node, 4), t;
-    while ((t = it.nextNode())) { var r = TEXT[t.nodeValue.trim()]; if (r) t.nodeValue = r; }
+    while ((t = it.nextNode())) { var p2 = phoneOf(t.nodeValue); if (p2) { t.nodeValue = p2; continue; } var r = TEXT[t.nodeValue.trim()]; if (r) t.nodeValue = r; }
   };
   var start = function () {
     swap(document.body);
