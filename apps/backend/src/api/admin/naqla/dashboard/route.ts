@@ -78,7 +78,7 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
     const lowRows = await rows(`select v.id, v.title as variant, v.sku, p.id as product_id, p.title as product,
           coalesce(sum(l.stocked_quantity - l.reserved_quantity), 0)::numeric as available, count(*) over () as n
         from product_variant v
-        join product p on p.id = v.product_id and p.deleted_at is null and coalesce(p.metadata->>'service', 'false') <> 'true'
+        join product p on p.id = v.product_id and p.deleted_at is null and p.status = 'published' and coalesce(p.metadata->>'service', 'false') <> 'true' -- منخفضة: لا مسودات
         left join product_variant_inventory_item pvi on pvi.variant_id = v.id and pvi.deleted_at is null
         left join inventory_level l on l.inventory_item_id = pvi.inventory_item_id and l.deleted_at is null
        where v.deleted_at is null and v.manage_inventory = true
