@@ -1,7 +1,7 @@
 // pnpm test:i18n [slug] — الاختبار الحاسم لتعدد اللغات (العربية الأصل، الإنجليزية /en). يفعّل الإنجليزية من إعدادات اللوحة ثم يعيدها.
 import { readFileSync } from "node:fs"
 import { execFileSync } from "node:child_process"
-const slug = process.argv[2] || "layan"
+const slug = process.argv[2] || process.env.STORE || (() => { throw new Error("الاستخدام: pnpm test:i18n <slug>") })()
 const env = Object.fromEntries(readFileSync(new URL(`../.stores/${slug}.env`, import.meta.url), "utf8").split("\n").filter((l) => /^\w+=/.test(l)).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]))
 const S = env.STOREFRONT_URL, B = env.MEDUSA_BACKEND_URL
 let pass = 0, failn = 0
