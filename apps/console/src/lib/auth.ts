@@ -35,8 +35,10 @@ export async function login(email: string, password: string, code: string): Prom
   const fail = async (why: string) => { await audit("login", { email, ok: false, detail: { why } }); return { ok: false as const, error: "بيانات الدخول أو الرمز غير صحيحة" } }
   if (!a || !checkPassword(String(password), a.password_hash)) return fail("password")
   const step = verify(a.totp_secret, String(code).trim())
-  if (step === null || step <= Number(a.totp_last_step)) return fail(step === null ? "totp" : "totp_replay")
-  await q(`update admins set totp_last_step=$1 where id=$2`, [step, a.id])
+  if (step === null) return fail("totp")
+  // ذري: طلبان متزامنان بنفس الرمز ← واحد فقط يحجز الخطوة (كان كلاهما يفتح جلسة)
+  const claimed = await q(`update admins set totp_last_step=$1 where id=$2 and totp_last_step < $1 returning id`, [step, a.id])
+  if (!claimed.length) return fail("totp_replay")
   const token = randomBytes(32).toString("base64url")
   await q(`insert into sessions (token_hash, admin_id, ip) values ($1,$2,$3)`, [sha(token), a.id, ip])
   await audit("login", { email: a.email })
