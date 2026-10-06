@@ -3,6 +3,8 @@ import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { build } from "../lib/order-notifications"
 import { client } from "../lib/client"
 import { orderNumber } from "../lib/store-data"
+import { money } from "../lib/order-notifications"
+import { num } from "../lib/money"
 
 /**
  * M14: تنبيه التاجر بطلب جديد —
@@ -24,7 +26,7 @@ export default async function notifyMerchant({ event: { data }, container }: Sub
     const c = client() as any
     const number = orderNumber(o.display_id)
     const name = [o.shipping_address?.first_name, o.shipping_address?.last_name].filter(Boolean).join(" ") || "زبونة"
-    const total = `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(Number(o.total))} ${c.currencyLabel ?? "ر.ع"}`
+    const total = money(num(o.total), o.currency_code ?? c.currency)
     const payment = PAY[o.metadata?.payment_channel] ?? (o.metadata?.payment_channel || "—")
     const notifications = container.resolve(Modules.NOTIFICATION)
     await notifications.createNotifications({

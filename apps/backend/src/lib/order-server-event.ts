@@ -4,6 +4,7 @@ import { TRACKING_MODULE } from "../modules/tracking"
 import type TrackingModuleService from "../modules/tracking/service"
 import { SENDERS, type Platform, type SendResult, type ServerEvent, type ServerEventName } from "./server-events"
 import { client } from "./client"
+import { num, round } from "./money"
 
 /**
  * يبني حدث الخادم من الطلب ويرسله لكل منصة مضبوطة.
@@ -29,11 +30,12 @@ export async function sendOrderServerEvent(container: MedusaContainer, orderId: 
       name,
       event_id: `${name === "purchase" ? "purchase" : "delivered"}_${o.id}`,
       time: name === "purchase" ? Math.floor(new Date(o.created_at).getTime() / 1000) : undefined,
-      value: Number(o.total),
+      // منخفضة: قيم مقرّبة لدقة العملة وكميات رقمية (BigNumber كان يُرسل كائناً)
+      value: round(o.total, o.currency_code),
       currency: o.currency_code,
       order_id: o.id,
       url: `${base}/${client().country}/order/${o.id}/confirmed`,
-      contents: (o.items ?? []).map((i: any) => ({ id: i.variant_id ?? i.product_id, quantity: i.quantity, price: Number(i.unit_price) })),
+      contents: (o.items ?? []).map((i: any) => ({ id: i.variant_id ?? i.product_id, quantity: num(i.quantity), price: round(i.unit_price, o.currency_code) })),
       user: {
         email: o.email,
         phone: o.shipping_address?.phone,

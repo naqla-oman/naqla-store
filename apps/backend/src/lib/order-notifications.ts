@@ -1,6 +1,7 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { orderNumber, storeData } from "./store-data"
+import { decimalsOf, round } from "./money"
 
 /**
  * إشعارات واتساب لمراحل الطلب. كل نوع يقابل قالباً معتمداً (Utility) في Meta،
@@ -10,8 +11,11 @@ export type OrderNotice = "order_placed" | "order_shipped" | "order_ready_pickup
 
 type Built = { params: string[]; preview: string }
 
-const money = (n: number, cur: string) =>
-  `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(n)} ${cur === "omr" ? "ر.ع" : cur.toUpperCase()}`
+// منخفضة: منازل العملة (الريال 3، والريال السعودي/الدرهم 2…) لا 3 لكل العملات
+export const money = (n: number, cur: string) => {
+  const d = decimalsOf(cur)
+  return `${new Intl.NumberFormat("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }).format(round(n, cur))} ${cur === "omr" ? "ر.ع" : cur.toUpperCase()}`
+}
 
 /** نص كل قالب ومتغيراته — يُستخدم للمعاينة في السجل ولتوثيق القوالب المطلوب اعتمادها */
 export function build(kind: OrderNotice, o: { name: string; number: string; total: string; shipping: string; track: string; payment?: string; awb?: string; awbUrl?: string }): Built {
