@@ -9,7 +9,9 @@ export async function sendStoreReady(p: { phone: string; name: string; panel: st
   const token = process.env.CONSOLE_WHATSAPP_TOKEN, phoneId = process.env.CONSOLE_WHATSAPP_PHONE_ID
   if (!token || !phoneId) {
     if (process.env.NODE_ENV === "production") throw new Error("واتساب نقلة غير مضبوط (CONSOLE_WHATSAPP_TOKEN)")
-    log(`[whatsapp:dev] store_ready → +${to} | متجرك «${p.name}» جاهز. لوحتك: ${p.panel} — عيّن كلمة المرور: ${p.reset}`)
+    // التطوير: الرابط الكامل في مخرجات المنفّذ فقط؛ وسجل الخطوة (في القاعدة) يحمل نسخة مخفية الرمز
+    console.log(`[whatsapp:dev] store_ready → +${to} | ${p.panel} | ${p.reset}`)
+    log(`[whatsapp:dev] store_ready → +${to} | متجرك «${p.name}» جاهز. لوحتك: ${p.panel} — عيّن كلمة المرور: ${p.reset.replace(/token=[^&]+/, "token=••••")}`)
     return
   }
   const r = await fetch(`https://graph.facebook.com/v21.0/${phoneId}/messages`, {

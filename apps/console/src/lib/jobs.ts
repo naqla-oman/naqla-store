@@ -35,6 +35,7 @@ export const JOBS: Record<string, { title: string; steps: Step[]; rollback?: (c:
         const [s] = await q(`select backend_port from stores where slug=$1`, [c.spec.slug])
         const panel = `http://localhost:${s.backend_port}/app`
         await sendStoreReady({ phone: c.spec.phone, name: c.spec.name, panel, reset: c.state.resetUrl }, c.log)
+        delete c.state.resetUrl // لا يبقى الرابط في حالة المهمة بعد الإرسال
       } },
     ],
     rollback: async (c) => { await driver().rollback(c.spec.slug, c.log) },

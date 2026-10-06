@@ -24,7 +24,8 @@ function run(cmd: string, args: string[], log: Log, opts: { cwd?: string; env?: 
   return new Promise((resolve, reject) => {
     const p = spawn(cmd, args, { cwd: opts.cwd ?? ROOT, env: { ...process.env, ...opts.env }, stdio: ["ignore", "pipe", "pipe"] })
     let out = ""
-    const take = (b: Buffer) => { const s = b.toString(); out += s; for (const l of s.split("\n")) if (l.trim()) log(l.replace(/\x1b\[[0-9;]*m/g, "").slice(0, 300)) }
+    // أسرار المخرجات (رمز تعيين كلمة المرور) لا تُكتب في سجل الخطوة المحفوظ في القاعدة
+    const take = (b: Buffer) => { const s = b.toString(); out += s; for (const l of s.split("\n")) if (l.trim()) log(l.replace(/\x1b\[[0-9;]*m/g, "").replace(/RESET_TOKEN=\S+/, "RESET_TOKEN=••••").slice(0, 300)) }
     p.stdout.on("data", take); p.stderr.on("data", take)
     p.on("close", (code) => (code === 0 ? resolve(out) : reject(Object.assign(new Error(`${cmd} ${args[0] ?? ""} انتهى بالرمز ${code}`), { out }))))
   })
