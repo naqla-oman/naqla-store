@@ -32,7 +32,7 @@ export default function WishlistView() {
 
   return (
     <div className="wrap" style={{ paddingBottom: 28 }}>
-      <div className="secthead"><div><h1>{t("s501839")}</h1><p>{nProducts(t, ids.length)} محفوظة{!loggedIn && ids.length ? t("s277e4f") : ""}</p></div></div>
+      <div className="secthead"><div><h1>{t("s501839")}</h1><p>{t("savedCount", { count: ids.length })}{!loggedIn && ids.length ? t("s277e4f") : ""}</p></div></div>
       {!loggedIn && ids.length > 0 && (
         <div className="guest" style={{ marginBottom: 16 }}>
           <Icon name="user" size={15} /> <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{t("s33c19c")}</LocalizedClientLink> {t("wishSync")}

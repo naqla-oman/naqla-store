@@ -117,7 +117,7 @@ export default function PhoneLogin() {
                 <Icon name="whatsapp" size={18} /> {busy ? t("s172044") : t("sa3838d")}
               </button>
               <div className="perkline">
-                {storeConfig.features.loyalty && <div><Icon name="sparkle" size={15} /> {storeConfig.loyalty.pointsPerUnit} نقاط ولاء لكل ريال</div>}
+                {storeConfig.features.loyalty && <div><Icon name="sparkle" size={15} /> {t("pointsPerRial", { n: storeConfig.loyalty.pointsPerUnit })}</div>}
                 <div><Icon name="box" size={15} /> {t("sdd473a")}</div>
                 <div><Icon name="heart" size={15} /> {t("s1892f8")}</div>
               </div>

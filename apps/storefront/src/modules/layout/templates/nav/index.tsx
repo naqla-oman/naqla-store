@@ -9,23 +9,24 @@ import HeaderSearch from "@modules/layout/components/header-search"
 import { storeConfig } from "../../../../store.config"
 import { getFreeShippingOver } from "@lib/data/shipping-threshold"
 import LangSwitch from "@modules/layout/components/lang-switch"
-import { getT } from "@/i18n/t"
+import { getCurrencyLabel, getT } from "@/i18n/t"
 
 export default async function Nav() {
   const t = await getT("layout")
+  const CUR = await getCurrencyLabel()
   // M19: الحد من قاعدة Medusa الفعلية (null = لا توصيل مجاني ← لا يظهر الشريط)
   const freeOver = await getFreeShippingOver()
   return (
     <div className="sticky top-0 inset-x-0 z-50">
       <div className="announce hidden small:flex">
-        {freeOver != null && <span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {freeOver} ر.ع</span>}
+        {freeOver != null && <span><Icon name="truck" size={14} /> {t("freeOver", { amount: `${freeOver} ${CUR}` })}</span>}
         {/* منخفضة: مدة الاستبدال من إعداد العميل (كانت ١٤ ثابتة لكل العملاء) */}
-        {storeConfig.seo.returnDays > 0 && <span><Icon name="refresh" size={14} /> استبدال مجاني خلال {storeConfig.seo.returnDays} يوماً</span>}
+        {storeConfig.seo.returnDays > 0 && <span><Icon name="refresh" size={14} /> {t("exchangeDays", { count: storeConfig.seo.returnDays })}</span>}
         {storeConfig.welcomeCode && (
-          <span><Icon name="gift" size={14} /> {storeConfig.welcomeCode.text} بكود {storeConfig.welcomeCode.code}</span>
+          <span><Icon name="gift" size={14} /> {storeConfig.welcomeCode.text} {t("withCode", { code: storeConfig.welcomeCode.code })}</span>
         )}
       </div>
-      {freeOver != null && <div className="announce small:hidden"><span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {freeOver} ر.ع</span></div>}
+      {freeOver != null && <div className="announce small:hidden"><span><Icon name="truck" size={14} /> {t("freeOver", { amount: `${freeOver} ${CUR}` })}</span></div>}
       <header className="hdr">
         <nav className="wrap flex items-center gap-3 h-[66px]" aria-label={t("s31d46b")}>
           <div className="small:hidden"><SideMenu /></div>

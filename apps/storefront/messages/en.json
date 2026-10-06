@@ -140,7 +140,8 @@
     "sc58c52": "Total before delivery",
     "sea028b": "Qty:",
     "s8580bc": "Could not move your cart to your account",
-    "cartAria": "Cart ({n})"
+    "cartAria": "Cart ({n})",
+    "byAddress": "Based on address"
   },
   "cartActions": {
     "s68650b": "The requested quantity is not available right now",
@@ -231,7 +232,9 @@
     "tierTailoring": "{tier} members: {pct}% off tailoring, applied automatically in the cart",
     "addNamed": "Add {title} to cart · {price}",
     "ratingOf": "Rated {rating} out of 5",
-    "reviewsCount": "{count, plural, one {# review} other {# reviews}}"
+    "reviewsCount": "{count, plural, one {# review} other {# reviews}}",
+    "soldThisWeek": "Bought by {count, plural, one {# customer} other {# customers}} this week",
+    "fromCategory": "From {cat}"
   },
   "account": {
     "sc0f526": "My account",
@@ -318,7 +321,10 @@
     "otpNote": "We send you a code on WhatsApp — no password needed.",
     "digitN": "Digit {n}",
     "resendIn": "Resend in {s}s",
-    "wishSync": "to keep your wishlist on all your devices"
+    "wishSync": "to keep your wishlist on all your devices",
+    "tierInClub": "{tier} member of the {store} club",
+    "pointsPerRial": "{n} loyalty points per rial",
+    "savedCount": "{count, plural, =0 {No saved products} one {# saved product} other {# saved products}}"
   },
   "tracking": {
     "s9241c5": "Track your order",
@@ -357,7 +363,9 @@
     "se0fc0d": "Customize",
     "s918b7c": "Cookies",
     "se67f41": "We use cookies to improve your experience and measure our ads. Choose what suits you — you can change it later from the bottom of the page.",
-    "waHelp": "Hello {store}, I need help with my order {number}"
+    "waHelp": "Hello {store}, I need help with my order {number}",
+    "noLogin": "No sign-in needed",
+    "expectedDelivery": "Expected delivery:"
   },
   "order": {
     "s414e71": "Your order has been received!",
@@ -398,7 +406,8 @@
     "taxIncluded": "includes {rate}% VAT",
     "thanksWa": "Thank you for shopping at {store} — we'll contact you on WhatsApp to confirm the order",
     "sendOnWa": "Send the order on WhatsApp",
-    "pointsToAccount": "to add them to your account with this order"
+    "pointsToAccount": "to add them to your account with this order",
+    "prepNote": "Pressing, packaging{gift} and a final check"
   },
   "layout": {
     "sc50746": "Message us on WhatsApp",
@@ -439,7 +448,10 @@
     "privacySettings": "Privacy settings",
     "waUs": "Message us on WhatsApp",
     "about": "About {store}",
-    "rights": "All rights reserved."
+    "rights": "All rights reserved.",
+    "freeOver": "Free delivery on orders over {amount}",
+    "exchangeDays": "Free exchange within {count, plural, one {# day} other {# days}}",
+    "withCode": "with code {code}"
   },
   "store": {
     "s115428": "Sort",

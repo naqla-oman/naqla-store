@@ -62,7 +62,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
               <div className="av">{name.slice(0, 1)}</div>
               <div>
                 <b className="hi">{t("hello", { name })}</b>
-                {F.loyaltyTiers && tier && <span className="tier"><Icon name="sparkle" size={12} /> {t("s5bf48a")} {tier.name} في نادي {storeConfig.shortName}</span>}
+                {F.loyaltyTiers && tier && <span className="tier"><Icon name="sparkle" size={12} /> {t("tierInClub", { tier: tier.name, store: storeConfig.shortName })}</span>}
               </div>
             </div>
             {F.loyaltyTiers && myPerks.length > 0 && (

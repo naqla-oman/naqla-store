@@ -54,7 +54,7 @@ export default function TrackOrder({ initialNo, initialPhone, signedIn = false }
   return (
     <div className="wrap">
       <div className="trackpage">
-        <div className="secthead"><div><h1>{t("s9241c5")}</h1><p>بلا تسجيل دخول — {t("s5fc949")}</p></div></div>
+        <div className="secthead"><div><h1>{t("s9241c5")}</h1><p>{t("noLogin")} — {t("s5fc949")}</p></div></div>
         <form className="panelbox" onSubmit={search} noValidate>
           <div className="f2">
             <div className="field">
@@ -88,7 +88,7 @@ export default function TrackOrder({ initialNo, initialPhone, signedIn = false }
               </div>
             )}
             {stage >= 0 && stage < 3 && (
-              <div className="etasum" style={{ marginTop: 14 }}><Icon name="clock" size={15} /> التوصيل المتوقع: {deliveryEta(t, locale, order.shipping_code, order.province, new Date(order.times.placed))}</div>
+              <div className="etasum" style={{ marginTop: 14 }}><Icon name="clock" size={15} /> {t("expectedDelivery")} {deliveryEta(t, locale, order.shipping_code, order.province, new Date(order.times.placed))}</div>
             )}
             {stage >= 0 && (
               <ul className="tl" style={{ marginTop: 16 }}>

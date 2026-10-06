@@ -167,7 +167,7 @@ export default function ProductActions({ product, disabled }: Props) {
         )}
         <span className="vat">
           {t("scdc880")}
-          {sold >= 5 && <span className="hot"><Icon name="fire" size={12} /> {t("s021671")} {sold} {t("s8425ba")} هذا الأسبوع</span>}
+          {sold >= 5 && <span className="hot"><Icon name="fire" size={12} /> {t("soldThisWeek", { count: sold })}</span>}
         </span>
       </div>
 

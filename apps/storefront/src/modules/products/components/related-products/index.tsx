@@ -18,7 +18,7 @@ export default async function RelatedProducts({ product, region }: { product: Ht
 
   return (
     <section>
-      <div className="sechead"><div><h2>{t("scea111")}</h2><p>من {product.categories?.[0]?.name}</p></div></div>
+      <div className="sechead"><div><h2>{t("scea111")}</h2><p>{t("fromCategory", { cat: product.categories?.[0]?.name ?? "" })}</p></div></div>
       <div className="pgrid">
         {products.map((p) => <ProductPreview key={p.id} product={p} region={region} />)}
       </div>

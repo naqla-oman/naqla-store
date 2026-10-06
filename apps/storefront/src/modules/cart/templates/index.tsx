@@ -65,7 +65,7 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
                   <span className="off"><Signed sign="−" value={formatAmount(d.amount)} /> {storeConfig.currencyLabel}</span>
                 </div>
               ))}
-              <div className="trow"><span>{t("s30ecbc")}</span><span>{left > 0 ? "حسب العنوان" : t("s5abc46")}</span></div>
+              <div className="trow"><span>{t("s30ecbc")}</span><span>{left > 0 ? t("byAddress") : t("s5abc46")}</span></div>
               <div className="trow final"><span>{t("s88fc73")}</span><Money amount={subtotal - discount} className="" /></div>
             </div>
             <LocalizedClientLink href="/checkout" className="btn block lg" data-testid="checkout-button">

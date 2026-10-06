@@ -62,7 +62,7 @@ export default function CartLines({ items }: { items: HttpTypes.StoreCartLineIte
               </LocalizedClientLink>
               <div className="info">
                 <LocalizedClientLink href={`/products/${i.product_handle}`} className="cname">{i.product_title}</LocalizedClientLink>
-                <div className="opt">{i.variant_title?.replace(" / ", " · ")}{len ? ` · طول ${len} سم` : ""}</div>
+                <div className="opt">{i.variant_title?.replace(" / ", " · ")}{len ? ` · ${t("common.lengthCm", { len })}` : ""}</div>
                 {tailoringNote(i.metadata, t) && <div className="opt tnote" data-testid="tailoring-note">{tailoringNote(i.metadata, t)}</div>}
                 <div className="row">
                   <div className="qty" aria-label={t("s510165")}>

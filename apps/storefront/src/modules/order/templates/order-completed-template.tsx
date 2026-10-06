@@ -136,7 +136,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
               </li>
               <li className="now">
                 <i><Icon name="scissors" size={13} /></i>
-                <div><b>{t("s4b3fe2")}</b><span>كيّ وتغليف{extras.gift ? t("s527426") : ""} وفحص نهائي للقطعة</span></div>
+                <div><b>{t("s4b3fe2")}</b><span>{t("prepNote", { gift: extras.gift ? t("s527426") : "" })}</span></div>
                 <small>{t("s9cb7fa")}</small>
               </li>
               <li>
@@ -162,7 +162,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
                   <div className="mini">{i.thumbnail && <Image src={i.thumbnail} alt="" fill sizes="46px" />}</div>
                   <div>
                     {i.product_title}
-                    <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? ` · طول ${len} سم` : ""}</div>
+                    <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? ` · ${t("common.lengthCm", { len })}` : ""}</div>
                     {tailoringNote(i.metadata, t) && <div className="q tnote">{tailoringNote(i.metadata, t)}</div>}
                   </div>
                   <span className="pr">{formatAmount(i.unit_price * i.quantity)}</span>
