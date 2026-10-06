@@ -216,10 +216,12 @@ export default function ProductActions({ product, disabled }: Props) {
                           aria-label={v}
                           title={st === 0 ? `${v} — نفد` : v}
                           className={`dot ${on ? "on" : ""} ${st === 0 ? "out" : ""}`}
-                          style={{ background: sw ? `linear-gradient(150deg, ${sw[0]}, ${sw[1]})` : "linear-gradient(150deg, var(--line), var(--muted))" }}
                           onClick={() => pick(d.key, v)}
                           disabled={disabled}
-                        />
+                        >
+                          {/* منخفضة: الزر 44px للمس، والدائرة الظاهرة 36px بداخله */}
+                          <span className="sw" style={{ background: sw ? `linear-gradient(150deg, ${sw[0]}, ${sw[1]})` : "linear-gradient(150deg, var(--line), var(--muted))" }} />
+                        </button>
                       )
                     }
                     return (

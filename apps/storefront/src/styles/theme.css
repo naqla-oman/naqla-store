@@ -232,11 +232,8 @@ footer.site a { display: inline-flex; align-items: center; min-height: 44px; }
 footer.site .social a { min-width: 44px; min-height: 44px; justify-content: center; }
 .hdr a[aria-label]:not(.iconbtn) { min-height: 44px; }
 /* منطقة لمس 44px مع بقاء الشكل كما هو: هامش داخلي يقابله هامش سالب مساوٍ */
-.dot { position: relative; }
-.dot::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
 .cartline .cname { padding-block: 12px; margin-block: -12px; }
 .cartline .rm { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; margin-block: -12px; }
 .crumbs a { padding-block: 12px; margin-block: -12px; display: inline-block; }
 .linkbtn { min-width: 44px; justify-content: center; }
-.dot { z-index: 1; }
 .sechead a { padding-block: 11px; margin-block: -11px; }

@@ -67,9 +67,12 @@
 .selbox .label a { color: var(--accent); font-size: 12px; display: inline-flex; align-items: center; gap: 4px; }
 .lowstock { color: var(--copper); }
 .opts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
-.dot { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1.5px var(--line); cursor: pointer; padding: 0; transition: transform .15s, box-shadow .15s; }
-.dot:hover { transform: scale(1.08); }
-.dot.on { box-shadow: 0 0 0 2.5px var(--accent); }
+/* منخفضة: الزر 44px (منطقة اللمس) والدائرة الظاهرة .sw بـ36px — الشكل كما كان */
+.opts:has(.dot) { gap: 0; }
+.dot { width: 44px; height: 44px; border-radius: 50%; border: 0; background: none; cursor: pointer; padding: 0; display: grid; place-items: center; }
+.dot .sw { width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--surface); box-shadow: 0 0 0 1.5px var(--line); transition: transform .15s, box-shadow .15s; }
+.dot:hover .sw { transform: scale(1.08); }
+.dot.on .sw { box-shadow: 0 0 0 2.5px var(--accent); }
 .size { min-width: 50px; height: var(--h-ctl); border-radius: 12px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font-size: 13.5px; cursor: pointer; padding: 0 12px; transition: border-color .15s, background .15s; position: relative; font-variant-numeric: tabular-nums; }
 .size:hover { border-color: var(--ink); }
 .size.on { background: var(--ink); color: var(--bg); border-color: var(--ink); font-weight: 700; }
@@ -171,8 +174,8 @@
 .pcard .wish:focus-visible, .iconbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* لون نفد مخزونه */
-.dot.out { opacity: .45; background-blend-mode: luminosity; position: relative; }
-.dot.out::after { content: ""; position: absolute; inset: 45% -2px; background: var(--muted); transform: rotate(-45deg); border-radius: 2px; }
+.dot.out .sw { opacity: .45; background-blend-mode: luminosity; position: relative; }
+.dot.out .sw::after { content: ""; position: absolute; inset: 45% -2px; background: var(--muted); transform: rotate(-45deg); border-radius: 2px; }
 
 /* التفصيل الخاص */
 .tailor { margin-top: 14px; }
