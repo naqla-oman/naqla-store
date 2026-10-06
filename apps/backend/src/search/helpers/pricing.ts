@@ -1,5 +1,6 @@
 import type { SearchTypes } from "@medusajs/framework/types";
 import { QueryContext, search } from "@medusajs/framework/utils";
+import { client } from "../../lib/client";
 
 /**
  * The currencies the index holds prices in. Each gets its own set of price
@@ -7,9 +8,13 @@ import { QueryContext, search } from "@medusajs/framework/utils";
  * change: the module reindexes on the next boot. Keep in sync with the
  * storefront's `SEARCH_PRICE_CURRENCIES`.
  */
-export const PRICE_CURRENCIES = ["eur", "usd"] as const;
+// منخفضة: عملات المتجر من store.json (العملة الأساسية + المفعّلة) — كانت eur/usd من القالب والمتجر بالريال
+const store = client() as any;
+export const PRICE_CURRENCIES: string[] = [
+  ...new Set([store.currency, ...((store.currencies?.enabled ?? []) as string[])].filter(Boolean).map((c: string) => c.toLowerCase())),
+];
 
-export type PriceCurrency = (typeof PRICE_CURRENCIES)[number];
+export type PriceCurrency = string;
 
 // Read once per currency, since the Pricing Module calculates for a single
 // currency per query.
