@@ -1,7 +1,7 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import type { AdminOrder, DetailWidgetProps } from "@medusajs/framework/types"
 import { Badge, Container, Heading, Text } from "@medusajs/ui"
-import { GOVERNORATES, PAYMENT, SHIPPING } from "../lib/oman"
+import { useStoreLabels } from "../lib/labels"
 
 /**
  * بطاقة «تفاصيل التوصيل» في صفحة الطلب: المحافظة بالاسم، الهدية ورسالة البطاقة،
@@ -49,6 +49,8 @@ const VisitRow = ({ label, v }: { label: string; v: ReturnType<typeof describeVi
   ) : null
 
 const OrderDeliveryDetailsWidget = ({ data: order }: DetailWidgetProps<AdminOrder>) => {
+  // منخفضة: أسماء المحافظات والتوصيل من إعداد العميل (لا خرائط عُمانية ثابتة)
+  const { governorates: GOVERNORATES, shipping: SHIPPING, payment: PAYMENT } = useStoreLabels()
   const meta = (order.metadata ?? {}) as Record<string, any>
   const addr = order.shipping_address
   const code = (addr?.province ?? "").toLowerCase()
