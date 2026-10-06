@@ -12,9 +12,13 @@ import { checkPassword } from "./auth-hash"
 export { hashPassword } from "./auth-hash"
 const sha = (s: string) => createHash("sha256").update(s).digest("hex")
 
+/** عنوان العميل: X-Forwarded-For (آخر قيمة) فقط عندما تعمل اللوحة خلف وكيل موثوق (TRUST_PROXY=1)؛ وإلا يُتجاهل */
 export async function clientIp() {
   const h = await headers()
-  return (h.get("x-forwarded-for") ?? "").split(",").map((x) => x.trim()).filter(Boolean).pop() || h.get("x-real-ip") || "local"
+  if (process.env.TRUST_PROXY === "1") {
+    return (h.get("x-forwarded-for") ?? "").split(",").map((x) => x.trim()).filter(Boolean).pop() || h.get("x-real-ip") || "direct"
+  }
+  return "direct"
 }
 
 export async function audit(action: string, opts: { email?: string | null; target?: string | null; ok?: boolean; detail?: unknown } = {}) {
@@ -24,7 +28,8 @@ export async function audit(action: string, opts: { email?: string | null; targe
 
 export async function login(email: string, password: string, code: string): Promise<{ ok: true; token: string } | { ok: false; error: string }> {
   const ip = await clientIp()
-  const [{ n }] = await q<{ n: string }>(`select count(*) n from audit where action='login' and ok=false and ip=$1 and at > now() - interval '15 minutes'`, [ip])
+  // القفل لكل عنوان ولكل حساب معاً (تغيير العنوان لا يعطي محاولات جديدة)
+  const [{ n }] = await q<{ n: string }>(`select count(*) n from audit where action='login' and ok=false and at > now() - interval '15 minutes' and (ip=$1 or lower(admin_email)=lower($2))`, [ip, String(email).trim()])
   if (Number(n) >= MAX_FAILS) return { ok: false, error: "محاولات كثيرة — حاول بعد 15 دقيقة" }
   const [a] = await q(`select * from admins where lower(email)=lower($1)`, [String(email).trim()])
   const fail = async (why: string) => { await audit("login", { email, ok: false, detail: { why } }); return { ok: false as const, error: "بيانات الدخول أو الرمز غير صحيحة" } }
