@@ -144,6 +144,8 @@ module.exports = defineConfig({
     ...redisModules,
     // أدوات التتبع (المعرّفات والرموز في الخادم) + تحويلات 301 للسيو
     { resolve: './src/modules/tracking' },
+    // إعدادات المتجر من لوحة العميل (تستبدل store.json) + سجل التغييرات
+    { resolve: './src/modules/store-settings' },
     // الملفات (صور المنتجات): محلياً في static/ ويُقدَّم من الخادم. للإنتاج: MEDUSA_BACKEND_URL بالنطاق العام
     {
       resolve: '@medusajs/medusa/file',

@@ -82,9 +82,34 @@ export function clientDir(): string {
 }
 
 let cache: ClientStore | null = null
-export function client(): ClientStore {
+/** إعدادات المتجر من القاعدة (وحدة store-settings) — تستبدل قيم store.json الافتراضية */
+let overrides: Record<string, unknown> = {}
+let merged: ClientStore | null = null
+
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v)
+/** دمج عميق: الكائنات تُدمج، والمصفوفات والقيم البسيطة تُستبدل */
+export function deepMerge<T>(base: T, over: Record<string, unknown>): T {
+  if (!isObj(base)) return base
+  const out: Record<string, unknown> = { ...(base as any) }
+  for (const [k, v] of Object.entries(over ?? {})) out[k] = isObj(v) && isObj(out[k]) ? deepMerge(out[k], v) : v
+  return out as T
+}
+
+/** القيم الافتراضية كما في store.json (بلا تعديلات اللوحة) */
+export function clientDefaults(): ClientStore {
   if (!cache) cache = JSON.parse(readFileSync(join(clientDir(), "store.json"), "utf-8")) as ClientStore
   return cache
+}
+
+/** القيمة الفعلية = store.json تستبدلها إعدادات اللوحة */
+export function client(): ClientStore {
+  if (!merged) merged = deepMerge(clientDefaults(), overrides)
+  return merged
+}
+
+export function setClientOverrides(o: Record<string, unknown> | null | undefined) {
+  overrides = o ?? {}
+  merged = null
 }
 
 /** مفتاح تشغيل ميزة: غير المذكور = مُطفأ */
