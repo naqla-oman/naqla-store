@@ -18,7 +18,7 @@ import "styles/checkout.css"
 import "styles/account.css"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
-import { dirOf } from "@/i18n/config"
+import { CLIENT_NAMESPACES, dirOf } from "@/i18n/config"
 
 // إعدادات اللوحة تُطبَّق قبل البيانات الوصفية (الاسم، الوصف…)
 export async function generateMetadata(): Promise<Metadata> {
@@ -61,7 +61,9 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
   const settings = await ensureStoreSettings()
   // اللغة من الوسيط (x-naqla-lang): العربية الأصل، والإنجليزية طبقة فوقها
   const locale = await getLocale()
-  const messages = await getMessages()
+  const all = await getMessages()
+  // المتصفح يستلم مساحات مكوّنات العميل فقط (لا القاموس كاملاً)
+  const messages = Object.fromEntries(CLIENT_NAMESPACES.filter((k) => k in all).map((k) => [k, (all as any)[k]]))
   const boot = `window.__NAQLA_SETTINGS__=${JSON.stringify(settings).replace(/</g, "\\u003c")}`
   // الهوية: لوحة وخط من «إعدادات المتجر» (فوق theme.css وخطوط البناء)
   const identityCss = [paletteCss(storeConfig.theme.palette), fontCss(storeConfig.theme.font)].filter(Boolean).join("\n")

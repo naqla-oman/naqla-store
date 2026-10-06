@@ -9,6 +9,7 @@ import { LogoMark } from "@modules/common/components/brand"
 import { storeConfig } from "../../../../store.config"
 import { langPrefix } from "@/i18n/config"
 import { useT } from "@/i18n/t"
+import ThemeToggle from "@modules/layout/components/theme-toggle"
 
 type T = (k: string, v?: Record<string, string | number>) => string
 const extraOf = (t: T) => [
@@ -83,7 +84,9 @@ const SideMenu = () => {
                   </li>
                 ))}
               </ul>
-              <div className="mt-auto p-4 border-t border-line">
+              <div className="mt-auto p-4 border-t border-line grid gap-3">
+                {/* الجوال: الوضع الليلي هنا (أُخفي من الرأس ليتّسع للمبدّل) */}
+                <div className="flex items-center justify-between"><span className="text-sm text-muted">{t("theme")}</span><ThemeToggle /></div>
                 <a href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noreferrer" className="btn wa block">
                   <Icon name="whatsapp" size={18} /> {t("waUs")}
                 </a>

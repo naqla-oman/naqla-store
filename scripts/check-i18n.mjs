@@ -29,10 +29,21 @@ for (const f of files) {
 const flat = (o, p = "") => Object.entries(o).flatMap(([k, v]) => (typeof v === "object" && v ? flat(v, p ? `${p}.${k}` : k) : [p ? `${p}.${k}` : k]))
 const ar = flat(JSON.parse(readFileSync(join(SF, "messages/ar.json"), "utf8"))), en = new Set(flat(JSON.parse(readFileSync(join(SF, "messages/en.json"), "utf8"))))
 const missing = ar.filter((k) => !en.has(k))
+// مكوّنات العميل: كل مساحة useT("…") يجب أن تكون في CLIENT_NAMESPACES (وإلا لا تصل إلى المتصفح)
+const cfg = readFileSync(join(SF, "src/i18n/config.ts"), "utf8")
+const clientNs = new Set(JSON.parse((cfg.match(/CLIENT_NAMESPACES = (\[[^\]]*\])/) ?? [, "[]"])[1]))
+const nsHits = []
+for (const f of files) {
+  const text = readFileSync(f, "utf8")
+  if (!/^\s*["']use client["']/m.test(text.slice(0, 300))) continue
+  for (const m of text.matchAll(/useT\("([^"]+)"\)/g)) if (!clientNs.has(m[1])) nsHits.push(`${f.replace(SF, "")}: ${m[1]}`)
+  if (/\bt\("common\./.test(text) && !clientNs.has("common")) nsHits.push(`${f.replace(SF, "")}: common`)
+}
+if (nsHits.length) console.log(`مساحات أسماء خارج CLIENT_NAMESPACES في مكوّنات عميل: ${nsHits.length}\n  ${nsHits.join("\n  ")}`)
 const byFile = {}
 for (const h of hits) { const f = h.split(":")[0]; byFile[f] = (byFile[f] ?? 0) + 1 }
 if (process.argv.includes("--list")) console.log(hits.join("\n"))
 console.log(`نصوص عربية مباشرة: ${hits.length} في ${Object.keys(byFile).length} ملفاً`)
 if (process.argv.includes("--files")) Object.entries(byFile).sort((a, b) => b[1] - a[1]).forEach(([f, n]) => console.log(`  ${n}\t${f}`))
 console.log(`مفاتيح ar.json: ${ar.length} — ناقصة في en.json: ${missing.length}${missing.length ? "\n  " + missing.slice(0, 20).join("\n  ") : ""}`)
-process.exit(hits.length || missing.length ? 1 : 0)
+process.exit(hits.length || missing.length || nsHits.length ? 1 : 0)

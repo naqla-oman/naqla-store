@@ -7,3 +7,9 @@ export const isLocale = (v: unknown): v is Locale => (LOCALES as readonly string
 /** بادئة اللغة في الرابط: لا شيء للعربية، /en للإنجليزية */
 export const langPrefix = (lang?: unknown) => (isLocale(lang) && lang !== DEFAULT_LOCALE ? `/${lang}` : "")
 export const dirOf = (lang: string) => (lang === "ar" ? "rtl" : "ltr")
+
+/**
+ * مساحات الأسماء التي تستخدمها مكوّنات العميل وحدها تُرسل إلى المتصفح (NextIntlClientProvider)؛
+ * الباقي يبقى في الخادم. check:i18n يفشل إن استخدم ملف "use client" مساحة خارج القائمة.
+ */
+export const CLIENT_NAMESPACES = ["account", "cart", "checkout", "common", "layout", "order", "product", "store", "tracking"] as const

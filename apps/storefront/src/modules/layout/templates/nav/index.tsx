@@ -45,7 +45,7 @@ export default async function Nav() {
           <HeaderSearch className="!hidden small:!flex ms-auto" />
           <div className="flex items-center gap-2 ms-auto small:ms-0">
             <LocalizedClientLink href="/store?focus=search" className="iconbtn small:!hidden" aria-label={t("sab79fc")}><Icon name="search" /></LocalizedClientLink>
-            <ThemeToggle />
+            <ThemeToggle className="!hidden small:!grid" />
             <LangSwitch languages={storeConfig.languages} className="iconbtn langbtn" compact />
             <LocalizedClientLink href="/account/wishlist" className="iconbtn !hidden small:!grid" aria-label={t("s501839")}><Icon name="heart" /></LocalizedClientLink>
             <LocalizedClientLink href="/account" className="iconbtn !hidden small:!grid" aria-label={t("sc0f526")} data-testid="nav-account-link"><Icon name="user" /></LocalizedClientLink>

@@ -8,7 +8,8 @@
     "start": "next start -p 7000",
     "lint": "next lint",
     "worker": "tsx worker/index.ts",
-    "setup": "tsx scripts/setup.ts"
+    "setup": "tsx scripts/setup.ts",
+    "unlock": "tsx scripts/unlock.ts"
   },
   "dependencies": {
     "next": "15.5.27",

@@ -23,7 +23,8 @@
     "console:worker": "pnpm --filter @naqla/console run worker",
     "test:console": "node scripts/test-console.mjs",
     "test:i18n": "node scripts/test-i18n.mjs",
-    "check:i18n": "node scripts/check-i18n.mjs"
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "console:unlock": "pnpm --filter @naqla/console run unlock"
   },
   "pnpm": {
     "overrides": {

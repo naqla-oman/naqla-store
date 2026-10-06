@@ -242,3 +242,6 @@ footer.site .social a { min-width: 44px; min-height: 44px; justify-content: cent
 html[dir="ltr"] .icon-dir { transform: scaleX(-1); }
 .langbtn { font-size: 12px; font-weight: 700; width: auto; padding: 0 10px; }
 footer.site .langswitch { font-weight: 600; }
+
+/* الجوال: الرأس يتّسع للمبدّل — الزر المختصر 36px والهوامش 4px */
+@media (max-width: 519px) { .hdr .langbtn { width: 36px; min-width: 36px; padding: 0; } .hdr nav { gap: 6px; padding-inline: 10px; } }

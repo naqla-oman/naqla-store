@@ -451,7 +451,8 @@
     "rights": "All rights reserved.",
     "freeOver": "Free delivery on orders over {amount}",
     "exchangeDays": "Free exchange within {count, plural, one {# day} other {# days}}",
-    "withCode": "with code {code}"
+    "withCode": "with code {code}",
+    "theme": "Appearance"
   },
   "store": {
     "s115428": "Sort",
