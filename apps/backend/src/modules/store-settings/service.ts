@@ -33,11 +33,20 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
     }
     if (!changes.length) return { changes }
     crossCheck(deepMerge(defaults, overrides))
-    await this.updateStoreSettings({ id: row.id, overrides })
+    await this.replaceJson(row.id, "overrides", overrides)
     await this.createStoreSettingsChanges({ actor_id: actor.id ?? null, actor_email: actor.email ?? null, changes: { items: changes } as any })
     setClientOverrides(overrides)
     queueRevalidate(["store-settings"])
     return { changes }
+  }
+
+  /**
+   * تحديث حقل JSON بالاستبدال لا الدمج: Medusa/MikroORM يدمج كائنات JSON عند التحديث،
+   * فحذف مفتاح (العودة للافتراضي) لا يُحفظ. null أولاً ثم القيمة الجديدة.
+   */
+  async replaceJson(id: string, field: "overrides" | "secrets", value: Record<string, unknown>) {
+    await this.updateStoreSettings({ id, [field]: null } as any)
+    await this.updateStoreSettings({ id, [field]: value } as any)
   }
 
   async history(limit = 20) {
