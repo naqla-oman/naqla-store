@@ -11,6 +11,13 @@ type Body = { seo_title?: string; seo_description?: string; handle?: string }
 export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaResponse) => {
   const { kind, id } = req.params
   if (kind !== "product" && kind !== "category") throw new MedusaError(MedusaError.Types.INVALID_DATA, "kind غير معروف")
+  // منخفضة: قيمة غير نصية كانت تُسقط الخادم (500) — 400 برسالة واضحة
+  for (const k of ["seo_title", "seo_description", "handle"] as const) {
+    const v = (req.body as any)?.[k]
+    if (k in (req.body ?? {}) && v !== null && v !== undefined && typeof v !== "string") {
+      throw new MedusaError(MedusaError.Types.INVALID_DATA, `${k}: قيمة نصية مطلوبة`)
+    }
+  }
   const handle = req.body.handle?.trim().toLowerCase()
   if (handle !== undefined && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(handle)) {
     throw new MedusaError(MedusaError.Types.INVALID_DATA, "الرابط: حروف لاتينية صغيرة وأرقام وشرطات فقط")
