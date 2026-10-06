@@ -9,15 +9,16 @@ import { FormEvent, useEffect, useRef, useState } from "react"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
 import { useLocale } from "next-intl"
-import { useT } from "@/i18n/t"
+import { useCurrencyLabel, useT } from "@/i18n/t"
 
-const { checkout, currencyLabel: CUR } = storeConfig
+const { checkout } = storeConfig
 const fmtTime = (locale: string, iso?: string | null) =>
   iso ? new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en-GB", { timeZone: storeConfig.product.delivery.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso)) : ""
 
 /** تتبّع الطلب بلا تسجيل دخول: رقم الطلب + الهاتف */
 export default function TrackOrder({ initialNo, initialPhone, signedIn = false }: { initialNo: string; initialPhone: string; signedIn?: boolean }) {
   const t = useT("tracking")
+  const CUR = useCurrencyLabel()
   const locale = useLocale()
   const [no, setNo] = useState(initialNo)
   const [phone, setPhone] = useState(initialPhone)

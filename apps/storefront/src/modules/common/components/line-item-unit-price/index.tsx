@@ -1,6 +1,7 @@
 import { convertToLocale } from "@lib/util/money"
 import { HttpTypes } from "@medusajs/types"
 import { clx } from "@medusajs/ui"
+import { useLocale } from "next-intl"
 
 type LineItemUnitPriceProps = {
   item: HttpTypes.StoreCartLineItem | HttpTypes.StoreOrderLineItem
@@ -13,6 +14,7 @@ const LineItemUnitPrice = ({
   style = "default",
   currencyCode,
 }: LineItemUnitPriceProps) => {
+  const locale = useLocale()
   // قد تغيب المجاميع إن لم تُطلب حقولها من الـAPI
   const total = item.total ?? 0
   const original_total = item.original_total ?? total
@@ -35,6 +37,7 @@ const LineItemUnitPrice = ({
               data-testid="product-unit-original-price"
             >
               {convertToLocale({
+                locale,
                 amount: original_total / item.quantity,
                 currency_code: currencyCode,
               })}
@@ -52,6 +55,7 @@ const LineItemUnitPrice = ({
         data-testid="product-unit-price"
       >
         {convertToLocale({
+          locale,
           amount: total / item.quantity,
           currency_code: currencyCode,
         })}

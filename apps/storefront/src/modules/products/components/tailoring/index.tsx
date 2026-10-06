@@ -9,7 +9,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { useParams } from "next/navigation"
 import { FormEvent, useState } from "react"
 import { storeConfig } from "../../../../store.config"
-import { useT } from "@/i18n/t"
+import { useCurrencyLabel, useT } from "@/i18n/t"
 
 type Props = {
   /** القطعة التي يُطلب تفصيلها */
@@ -19,7 +19,6 @@ type Props = {
 }
 
 const T = storeConfig.tailoring!
-const CUR = storeConfig.currencyLabel
 
 /**
  * «تفصيل على مقاسك»: اختيار الخدمة المناسبة لقسم القطعة + المقاسات (أو طلب التواصل لأخذها)،
@@ -27,6 +26,7 @@ const CUR = storeConfig.currencyLabel
  */
 export default function Tailoring({ product, service }: Props) {
   const t = useT("product")
+  const CUR = useCurrencyLabel()
   const { countryCode } = useParams() as { countryCode: string }
   const category = product.categories?.[0]?.handle ?? ""
   const offered = T.services.filter((s) => s.categories.includes(category))

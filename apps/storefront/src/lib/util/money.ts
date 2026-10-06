@@ -23,7 +23,7 @@ export const convertToLocale = ({
       minimumFractionDigits: minimumFractionDigits ?? 3,
       maximumFractionDigits: maximumFractionDigits ?? 3,
     }).format(amount)
-    return `${n} ${storeConfig.currencyLabel}`
+    return `${n} ${String(locale).startsWith("ar") ? storeConfig.currencyLabel : storeConfig.currency.toUpperCase()}`
   }
   return new Intl.NumberFormat(locale, {
     style: "currency",

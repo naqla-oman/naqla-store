@@ -284,7 +284,7 @@ export default function ProductActions({ product, disabled }: Props) {
           ) : (
             <button type="button" className="btn block" onClick={handleAdd} disabled={!canBuy || adding} data-testid="add-product-button">
               <Icon name="bag" size={17} /> {adding ? t("s6bfc32") : t("s8ed342")}
-              {!adding && price > 0 && <span className="bp num"> · {formatAmount(price * qty)} {storeConfig.currencyLabel}</span>}
+              {!adding && price > 0 && <span className="bp num"> · {formatAmount(price * qty)} {CUR}</span>}
             </button>
           )}
         </div>

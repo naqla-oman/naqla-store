@@ -9,11 +9,12 @@ import CartLines from "./lines"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 import { discountLines } from "@lib/util/discounts"
-import { useT } from "@/i18n/t"
+import { useCurrencyLabel, useT } from "@/i18n/t"
 
 /** صفحة السلة — الخطوة الأولى (مطابقة لسلة الديمو) */
 export default function CartTemplate({ cart, freeOver: threshold }: { cart: HttpTypes.StoreCart | null; freeOver?: number | null }) {
   const t = useT("cart")
+  const CUR = useCurrencyLabel()
   const items = cart?.items ?? []
   const count = items.reduce((s, i) => s + i.quantity, 0)
 
@@ -44,7 +45,7 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
         <div className="panelbox">
           <div className="shipbar">
             {left > 0 ? (
-              <>{t("s4fdfdb")} <b>{formatAmount(left)} {storeConfig.currencyLabel}</b> {t("s7ba5ef")}</>
+              <>{t("s4fdfdb")} <b>{formatAmount(left)} {CUR}</b> {t("s7ba5ef")}</>
             ) : (
               <><Icon name="check" size={14} /> {t("s2fc9ba")}</>
             )}
@@ -57,12 +58,12 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
           <div className="panelbox">
             <h3>{t("seeea12")}</h3>
             <div style={{ marginTop: 12 }}>
-              <div className="trow"><span>{t("s7512af")}</span><span>{formatAmount(subtotal)} {storeConfig.currencyLabel}</span></div>
+              <div className="trow"><span>{t("s7512af")}</span><span>{formatAmount(subtotal)} {CUR}</span></div>
               {/* منخفضة: سطر لكل عرض بمبلغه (الكود منفصل عن امتياز المستوى) */}
               {discount > 0 && discountLines(t, cart.items, cart.promotions as any).map((d) => (
                 <div key={d.code} className="trow" data-testid="discount-line">
                   <span>{d.label}</span>
-                  <span className="off"><Signed sign="−" value={formatAmount(d.amount)} /> {storeConfig.currencyLabel}</span>
+                  <span className="off"><Signed sign="−" value={formatAmount(d.amount)} /> {CUR}</span>
                 </div>
               ))}
               <div className="trow"><span>{t("s30ecbc")}</span><span>{left > 0 ? t("byAddress") : t("s5abc46")}</span></div>
@@ -81,7 +82,7 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
       </div>
 
       <div className="costicky">
-        <div className="tot"><small>{t("sc58c52")}</small><b>{formatAmount(subtotal - discount)} {storeConfig.currencyLabel}</b></div>
+        <div className="tot"><small>{t("sc58c52")}</small><b>{formatAmount(subtotal - discount)} {CUR}</b></div>
         <LocalizedClientLink href="/checkout" className="btn">{t("se4d013")} <Icon name="arrowL" size={15} /></LocalizedClientLink>
       </div>
     </div>

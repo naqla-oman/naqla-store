@@ -11,7 +11,7 @@ import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
 import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
 import { useLocale } from "next-intl"
-import { useT } from "@/i18n/t"
+import { useCurrencyLabel, useT } from "@/i18n/t"
 
 type Props = {
   customer: HttpTypes.StoreCustomer
@@ -19,7 +19,7 @@ type Props = {
   orders: HttpTypes.StoreOrder[]
 }
 
-const { loyalty: L, checkout, currencyLabel: CUR } = storeConfig
+const { loyalty: L, checkout } = storeConfig
 // الميزات تُقرأ عند الرسم (تتغير من «إعدادات المتجر»)
 const F = new Proxy({} as typeof storeConfig.features, { get: (_t, k) => (storeConfig.features as any)[k] })
 type T = (k: string, v?: Record<string, string | number>) => string
@@ -36,6 +36,7 @@ function orderStage(o: HttpTypes.StoreOrder, t: T) {
 /** لوحة الحساب — مطابقة لصفحة «حسابي» في الديمو */
 export default function AccountDashboard({ customer, loyalty, orders }: Props) {
   const t = useT("account")
+  const CUR = useCurrencyLabel()
   const locale = useLocale()
   const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en-GB", { day: "numeric", month: "long", timeZone: storeConfig.product.delivery.timezone })
   const STATUS: Record<string, string> = { pending: t("s5098dd"), available: t("s2cd29c"), canceled: t("se92ebe") }

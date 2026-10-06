@@ -12,11 +12,12 @@ import { useEffect, useState } from "react"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
 import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
-import { useT } from "@/i18n/t"
+import { useCurrencyLabel, useT } from "@/i18n/t"
 
 /** صفحة المفضلة — تعمل للضيفات (من المتصفح) وللمسجّلات (من الحساب) */
 export default function WishlistView() {
   const t = useT("account")
+  const CUR = useCurrencyLabel()
   const { ids, loggedIn } = useWishlist()
   const { countryCode } = useParams() as { countryCode: string }
   const [items, setItems] = useState<WishProduct[] | null>(null)
@@ -58,7 +59,7 @@ export default function WishlistView() {
                 {p.category && <div className="cat">{p.category}</div>}
                 <div className="nm">{p.title}</div>
                 <div className="pr">
-                  <span className="price">{formatAmount(p.price)} {storeConfig.currencyLabel}</span>
+                  <span className="price">{formatAmount(p.price)} {CUR}</span>
                   {p.old && <span className="old">{formatAmount(p.old)}</span>}
                 </div>
               </div>
