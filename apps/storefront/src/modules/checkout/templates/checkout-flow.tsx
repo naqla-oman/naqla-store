@@ -16,11 +16,11 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import { useParams, useRouter } from "next/navigation"
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
 import { storeConfig } from "../../../store.config"
-import { g } from "@lib/voice"
 import { tailoringNote } from "@lib/util/tailoring"
-import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
+import { pieces as nPieces } from "@lib/util/plural"
 import { discountLines } from "@lib/util/discounts"
 import { langPrefix } from "@/i18n/config"
+import { useCurrencyLabel, useT } from "@/i18n/t"
 
 type Props = {
   cart: HttpTypes.StoreCart
@@ -34,36 +34,35 @@ type Props = {
   enabledGovernorates?: string[] | null
 }
 
-const { checkout, currencyLabel: CUR } = storeConfig
+const { checkout } = storeConfig
 const phoneRe = new RegExp(checkout.phone.pattern)
-const URL_ERRORS: Record<string, string> = {
-  thawani_cancelled: "أُلغي الدفع عبر ثواني ولم يُخصم أي مبلغ — يمكنك المحاولة مجدداً أو اختيار طريقة أخرى",
-  thawani_unpaid: g("لم يكتمل الدفع عبر ثواني — لم يُسجَّل الطلب. حاولي مجدداً أو اختاري طريقة أخرى", "لم يكتمل الدفع عبر ثواني — لم يُسجَّل الطلب. حاول مجدداً أو اختر طريقة أخرى"),
-  thawani_session: g("انتهت جلسة الدفع، أعيدي المحاولة", "انتهت جلسة الدفع، أعد المحاولة"),
-}
+type T = (key: string, vals?: Record<string, string | number>) => string
+const urlError = (t: T, code: string) => ({ thawani_cancelled: t("sca3c24"), thawani_unpaid: t("sc6e7f1"), thawani_session: t("s5096b5") } as Record<string, string>)[code]
 
 type Errors = Partial<Record<"name" | "phone" | "province" | "city" | "email", string>>
 const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
-function validate(f: DeliveryInput): Errors {
+function validate(f: DeliveryInput, t: T): Errors {
   const e: Errors = {}
-  if (f.name.trim().split(/\s+/).filter(Boolean).length < 2) e.name = g("أدخلي اسمك الكامل (الاسم والعائلة)", "أدخل اسمك الكامل (الاسم والعائلة)")
-  if (!phoneRe.test(f.phone)) e.phone = "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7"
+  if (f.name.trim().split(/\s+/).filter(Boolean).length < 2) e.name = t("sfcf29c")
+  if (!phoneRe.test(f.phone)) e.phone = t("se31171")
   // منخفضة: الاستلام من المحل لا يطلب محافظة ولا ولاية
-  if (!f.pickup && !f.province) e.province = g("اختاري المحافظة", "اختر المحافظة")
+  if (!f.pickup && !f.province) e.province = t("se494ea")
   if (f.pickup) { /* عنوان المحل يُملأ عند الحفظ */ }
-  else if (!f.city.trim()) e.city = g("اختاري الولاية", "اختر الولاية")
+  else if (!f.city.trim()) e.city = t("s2aac38")
   else {
     const list = checkout.governorates.find((x) => x.code === f.province)?.wilayats ?? []
-    if (list.length && !list.includes(f.city)) e.city = "الولاية لا تتبع المحافظة المختارة"
+    if (list.length && !list.includes(f.city)) e.city = t("sac09bf")
   }
-  if (f.email.trim() && !emailRe.test(f.email.trim())) e.email = g("تحققي من البريد، مثال: name@example.com", "تحقق من البريد، مثال: name@example.com")
+  if (f.email.trim() && !emailRe.test(f.email.trim())) e.email = t("s1371d9")
   return e
 }
 
-const fmt = (n: number) => `${formatAmount(n)} ${CUR}`
 
 export default function CheckoutFlow({ cart, shippingOptions, providers, countryCode, step, error, customer, enabledGovernorates }: Props) {
+  const t = useT("checkout")
+  const CUR = useCurrencyLabel()
+  const fmt = (n: number) => `${formatAmount(n)} ${CUR}`
   const govOptions = checkout.governorates.filter((x) => !enabledGovernorates || enabledGovernorates.includes(x.code))
   const router = useRouter()
   const { lang } = useParams<{ lang: string }>()
@@ -88,12 +87,12 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   const [code, setCode] = useState("")
   const [codeMsg, setCodeMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [sumOpen, setSumOpen] = useState(false)
-  const [placeError, setPlaceError] = useState<string | null>(error ? URL_ERRORS[error] ?? null : null)
+  const [placeError, setPlaceError] = useState<string | null>(error ? urlError(t, error) ?? null : null)
   const payments = checkout.payments.filter((p) => providers.includes(p.id))
   const [payId, setPayId] = useState(payments[0]?.id ?? "")
   const autoPicked = useRef(false)
 
-  const errors = validate(form)
+  const errors = validate(form, t)
   const showErr = (k: keyof Errors) => (submitted ? errors[k] : undefined)
   const set = <K extends keyof DeliveryInput>(k: K, v: DeliveryInput[K]) => setForm((f) => ({ ...f, [k]: v }))
 
@@ -186,7 +185,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
     setBusy("code")
     const r = await applyCode(code)
     setBusy(null)
-    setCodeMsg(r.ok ? { ok: true, text: "تم تطبيق الخصم" } : { ok: false, text: r.error })
+    setCodeMsg(r.ok ? { ok: true, text: t("sf67794") } : { ok: false, text: r.error })
     if (r.ok) setCode("")
     router.refresh()
   }
@@ -201,8 +200,8 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
 
   const onPlace = async () => {
     if (pay) track("add_payment_info", { value: total, payment_type: pay.key, items: trackItems })
-    if (!pay) { setPlaceError(g("اختاري طريقة الدفع", "اختر طريقة الدفع")); return }
-    if (!methodValid) { setPlaceError(g("اختاري طريقة التوصيل", "اختر طريقة التوصيل")); return }
+    if (!pay) { setPlaceError(t("sf18fa8")); return }
+    if (!methodValid) { setPlaceError(t("se87ef1")); return }
     setPlaceError(null)
     // نافذة واتساب تُفتح الآن (ضمن ضغطة الزبونة) حتى لا يحجبها المتصفح، ثم نوجّهها بعد تسجيل الطلب
     const waWin = pay.key === "whatsapp" ? window.open("about:blank", "_blank") : null
@@ -228,13 +227,13 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   }
 
   const placing = busy === "place"
-  const ctaLabel = pay?.cta ?? "تأكيد الطلب"
+  const ctaLabel = pay?.cta ?? t("s438227")
 
   // ---- الملخص ----
   const summary = (
     <aside className="sumcol" hidden={step === "address" && !sumOpen ? true : undefined} id="sumBox">
       <div className="panelbox">
-        <div className="sumhead"><h3>ملخص الطلب</h3><LocalizedClientLink href="/cart">تعديل السلة</LocalizedClientLink></div>
+        <div className="sumhead"><h3>{t("seeea12")}</h3><LocalizedClientLink href="/cart">{t("sb4d933")}</LocalizedClientLink></div>
         {items.map((i) => {
           const len = (i.metadata as any)?.length_cm
           return (
@@ -242,7 +241,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               <div className="mini">{i.thumbnail && <Image src={i.thumbnail} alt="" fill sizes="44px" />}</div>
               <div className="n">
                 <div>{i.product_title}</div>
-                <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? ` · طول ${len} سم` : ""}</div>
+                <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? t("lengthNote", { len }) : ""}</div>
                 {tailoringNote(i.metadata) && <div className="q tnote">{tailoringNote(i.metadata)}</div>}
               </div>
               <span className="price num" style={{ fontSize: 13.5 }}>{formatAmount(i.unit_price * i.quantity)}</span>
@@ -252,10 +251,10 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
 
         {!codes.length && (
           <div className="field" style={{ marginTop: 6 }}>
-            <label htmlFor="coupon">كود الخصم</label>
+            <label htmlFor="coupon">{t("sc38a00")}</label>
             <div className="coupon">
-              <input id="coupon" value={code} onChange={(e) => setCode(e.target.value)} placeholder={storeConfig.welcomeCode ? `مثال: ${storeConfig.welcomeCode.code}` : g("أدخلي الكود", "أدخل الكود")} autoComplete="off" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onApply() } }} />
-              <button type="button" className="btn ghost" onClick={onApply} disabled={!code.trim() || busy === "code"}>{busy === "code" ? "…" : "تطبيق"}</button>
+              <input id="coupon" value={code} onChange={(e) => setCode(e.target.value)} placeholder={storeConfig.welcomeCode ? t("example", { code: storeConfig.welcomeCode.code }) : t("s95b4c5")} autoComplete="off" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onApply() } }} />
+              <button type="button" className="btn ghost" onClick={onApply} disabled={!code.trim() || busy === "code"}>{busy === "code" ? "…" : t("sabe315")}</button>
             </div>
             {codeMsg && !codeMsg.ok && <div className="ferr-inline" role="alert">{codeMsg.text}</div>}
           </div>
@@ -263,23 +262,23 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
         {codeMsg?.ok && <div className="okmsg"><Icon name="check" size={12} /> {codeMsg.text}</div>}
 
         <div style={{ marginTop: 14 }}>
-          <div className="trow"><span>المجموع</span><span>{fmt(subtotal)}</span></div>
+          <div className="trow"><span>{t("s7512af")}</span><span>{fmt(subtotal)}</span></div>
           {/* منخفضة: سطر لكل عرض بمبلغه الفعلي — الكود (قابل للإزالة) منفصل عن امتياز المستوى */}
           {discount > 0 && discountLines(cart.items, cart.promotions as any).map((d) => (
             <div key={d.code} className="trow" data-testid={d.auto ? "auto-discount" : "discount-line"}>
               <span>
                 {d.label}
-                {!d.auto && <button type="button" className="rmcp" onClick={() => onRemoveCode(d.code)} disabled={busy === "code"}>إزالة</button>}
+                {!d.auto && <button type="button" className="rmcp" onClick={() => onRemoveCode(d.code)} disabled={busy === "code"}>{t("seed790")}</button>}
               </span>
               <span className="off"><Signed sign="−" value={formatAmount(d.amount)} /> {CUR}</span>
             </div>
           ))}
-          <div className="trow"><span>التوصيل</span><span data-testid="sum-shipping">{shipping === null ? "في الخطوة التالية" : shipping === 0 && shipDiscount > 0 ? <>مجاني <span className="perktag">امتياز عضويتك</span></> : shipping === 0 ? "مجاني" : fmt(shipping)}</span></div>
-          <div className="trow final"><span>الإجمالي</span><span>{fmt(total)}</span></div>
+          <div className="trow"><span>{t("s30ecbc")}</span><span data-testid="sum-shipping">{shipping === null ? t("nextStep") : shipping === 0 && shipDiscount > 0 ? <>{t("s5abc46")} <span className="perktag">{t("sd15fc0")}</span></> : shipping === 0 ? t("free") : fmt(shipping)}</span></div>
+          <div className="trow final"><span>{t("s88fc73")}</span><span>{fmt(total)}</span></div>
               {/* M15: الضريبة المضمَّنة في الإجمالي */}
               {(() => {
-                const t = includedTax(total, shipping === null ? null : (cart as any).tax_total)
-                return t.rate > 0 ? <div className="trow taxnote" data-testid="tax-line"><span>منها ضريبة القيمة المضافة {t.rate}٪</span><span>{fmt(t.amount)}</span></div> : null
+                const tax = includedTax(total, shipping === null ? null : (cart as any).tax_total)
+                return tax.rate > 0 ? <div className="trow taxnote" data-testid="tax-line"><span>{t("taxIncluded", { rate: tax.rate })}</span><span>{fmt(tax.amount)}</span></div> : null
               })()}
         </div>
 
@@ -287,7 +286,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
           <div className="etasum"><Icon name="truck" size={15} /> {deliveryEta(shipCode, form.province)}</div>
         )}
         {form.gift && (
-          <div className="guest copper"><Icon name="gift" size={15} /> طلب هدية — تغليف فاخر وبطاقة برسالتك</div>
+          <div className="guest copper"><Icon name="gift" size={15} /> {t("sf84e5a")}</div>
         )}
 
         {step === "payment" && (
@@ -295,12 +294,12 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
             {placeError && <div className="alert" role="alert"><Icon name="x" size={15} /> {placeError}</div>}
             <button type="button" className="btn block lg" style={{ marginTop: 14 }} onClick={onPlace} disabled={placing || busy === "ship" || !methodValid} data-testid="place-order">
               <Icon name={pay?.key === "whatsapp" ? "whatsapp" : pay?.key === "thawani" ? "lock" : "check"} size={16} />
-              {placing ? "جارٍ تأكيد الطلب…" : pay?.key === "thawani" ? "الدفع الآمن عبر ثواني" : pay?.key === "whatsapp" ? "إرسال الطلب عبر واتساب" : "تأكيد الطلب"}
+              {placing ? t("placing") : pay?.key === "thawani" ? t("payThawani") : pay?.key === "whatsapp" ? t("sendWhatsapp") : t("s438227")}
             </button>
             <div className="trustrow">
-              <span><Icon name="lock" size={12} /> دفع مشفّر</span>
-              <span><Icon name="refresh" size={12} /> استبدال 14 يوماً</span>
-              <span><Icon name="whatsapp" size={12} /> تأكيد عبر واتساب</span>
+              <span><Icon name="lock" size={12} /> {t("sa97f7e")}</span>
+              <span><Icon name="refresh" size={12} /> {t("sab4bcb")}</span>
+              <span><Icon name="whatsapp" size={12} /> {t("s80bb43")}</span>
             </div>
           </>
         )}
@@ -313,31 +312,31 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
       <Steps current={step === "address" ? 1 : 2} />
       {customer ? (
         <div className="guest" data-testid="signed-in-note">
-          <Icon name="user" size={15} /> {g("أنتِ داخلة بحسابك", "أنت داخل بحسابك", "تم الدخول بحسابك")}{customer.first_name ? ` يا ${customer.first_name}` : ""}{storeConfig.features.loyalty ? " — ستُضاف نقاط هذا الطلب لرصيدك" : ""}
+          <Icon name="user" size={15} /> {t("s8660e0")}{customer.first_name ? t("hiName", { name: customer.first_name }) : ""}{storeConfig.features.loyalty ? t("pointsNote") : ""}
         </div>
       ) : (
         <div className="guest" data-testid="guest-note">
-          <Icon name="user" size={15} /> {g("لا حاجة لإنشاء حساب — أكملي كضيفة، أو", "لا حاجة لإنشاء حساب — أكمل كضيف، أو", "لا حاجة لإنشاء حساب — أكمل الطلب مباشرة، أو")}{" "}
-          <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{g("ادخلي برقمك", "ادخل برقمك")}</LocalizedClientLink>{storeConfig.features.loyalty ? g(" لتكسبي نقاط الولاء", " لتكسب نقاط الولاء") : " لحفظ طلباتك"}
+          <Icon name="user" size={15} /> {t("s099ef5")}{" "}
+          <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{t("s33c19c")}</LocalizedClientLink>{storeConfig.features.loyalty ? t("sa9d64f") : t("sbe32b2")}
         </div>
       )}
       <button type="button" className="sumtoggle" aria-expanded={step === "payment" || sumOpen} aria-controls="sumBox" onClick={() => setSumOpen((v) => !v)}>
-        <Icon name="bag" size={16} /> {nProducts(items.reduce((s, i) => s + i.quantity, 0))} في طلبك <b className="num">{fmt(total)}</b> <Icon name="chevD" size={14} />
+        <Icon name="bag" size={16} /> {t("itemsInOrder", { count: items.reduce((s, i) => s + i.quantity, 0) })} <b className="num">{fmt(total)}</b> <Icon name="chevD" size={14} />
       </button>
 
       <div className="checkout">
         <div>
           {step === "address" ? (
             <form className="panelbox" onSubmit={onSaveAddress} noValidate>
-              <h3>بيانات التوصيل</h3>
+              <h3>{t("s85aedb")}</h3>
               <div className="f2">
                 <div className={`field ${showErr("name") ? "err" : ""}`}>
-                  <label htmlFor="fName">الاسم الكامل</label>
-                  <input id="fName" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder="مثال: مريم الهنائية" autoComplete="name" aria-invalid={!!showErr("name")} aria-describedby="eName" />
+                  <label htmlFor="fName">{t("s90f911")}</label>
+                  <input id="fName" value={form.name} onChange={(e) => set("name", e.target.value)} placeholder={t("s356d24")} autoComplete="name" aria-invalid={!!showErr("name")} aria-describedby="eName" />
                   <span className="ferr" id="eName">{showErr("name")}</span>
                 </div>
                 <div className={`field ${showErr("phone") ? "err" : ""}`}>
-                  <label htmlFor="fPhone">رقم الهاتف</label>
+                  <label htmlFor="fPhone">{t("s0947ad")}</label>
                   <div className="phone">
                     <input id="fPhone" type="tel" inputMode="numeric" maxLength={8} value={form.phone} onChange={(e) => set("phone", e.target.value.replace(/\D/g, "").slice(0, 8))} placeholder={checkout.phone.placeholder} autoComplete="tel-national" dir="ltr" aria-invalid={!!showErr("phone")} aria-describedby="ePhone" />
                     <span className="pre">{checkout.phone.prefix}</span>
@@ -347,15 +346,15 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               </div>
               {/* منخفضة: استلام من المحل بلا عنوان */}
               {storeConfig.seo.shipping.some((s) => s.code === "pickup") && (
-                <div className="seg2" role="radiogroup" aria-label="طريقة الاستلام" data-testid="pickup-toggle">
-                  <button type="button" role="radio" aria-checked={!form.pickup} className={!form.pickup ? "on" : ""} onClick={() => set("pickup", false)}>توصيل إلى عنواني</button>
-                  <button type="button" role="radio" aria-checked={!!form.pickup} className={form.pickup ? "on" : ""} onClick={() => set("pickup", true)}>استلام من {storeConfig.seo.location.name}</button>
+                <div className="seg2" role="radiogroup" aria-label={t("sdf3035")} data-testid="pickup-toggle">
+                  <button type="button" role="radio" aria-checked={!form.pickup} className={!form.pickup ? "on" : ""} onClick={() => set("pickup", false)}>{t("s3a3dce")}</button>
+                  <button type="button" role="radio" aria-checked={!!form.pickup} className={form.pickup ? "on" : ""} onClick={() => set("pickup", true)}>{t("pickupFrom", { place: storeConfig.seo.location.name })}</button>
                 </div>
               )}
               {!form.pickup && (
               <div className="f2">
                 <div className={`field ${showErr("province") ? "err" : ""}`}>
-                  <label htmlFor="fGov">المحافظة</label>
+                  <label htmlFor="fGov">{t("sd51135")}</label>
                   <select
                     id="fGov"
                     value={form.province}
@@ -369,24 +368,24 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                     aria-invalid={!!showErr("province")}
                     aria-describedby="eGov"
                   >
-                    <option value="">{g("اختاري المحافظة", "اختر المحافظة")}</option>
+                    <option value="">{t("se494ea")}</option>
                     {govOptions.map((g) => <option key={g.code} value={g.code}>{g.name}</option>)}
                   </select>
                   <span className="ferr" id="eGov">{showErr("province")}</span>
                 </div>
                 <div className={`field ${showErr("city") ? "err" : ""}`}>
-                  <label htmlFor="fCity">الولاية</label>
+                  <label htmlFor="fCity">{t("s03b4c3")}</label>
                   {/* M18: قائمة ولايات المحافظة المختارة (61 ولاية) بدل نص حر */}
                   {(() => {
                     const list = checkout.governorates.find((x) => x.code === form.province)?.wilayats ?? []
                     return list.length ? (
                       <select id="fCity" value={form.city} onChange={(e) => set("city", e.target.value)} autoComplete="address-level2" aria-invalid={!!showErr("city")} aria-describedby="eCity">
-                        <option value="">{g("اختاري الولاية", "اختر الولاية")}</option>
+                        <option value="">{t("s2aac38")}</option>
                         {list.map((w) => <option key={w} value={w}>{w}</option>)}
                       </select>
                     ) : (
                       <select id="fCity" value="" disabled aria-describedby="eCity">
-                        <option value="">{g("اختاري المحافظة أولاً", "اختر المحافظة أولاً")}</option>
+                        <option value="">{t("s379cc7")}</option>
                       </select>
                     )
                   })()}
@@ -396,72 +395,68 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               )}
               {!form.pickup && (
               <div className={`field ${showErr("email") ? "err" : ""}`}>
-                <label htmlFor="fEmail">البريد الإلكتروني <span style={{ fontWeight: 400 }}>(اختياري)</span></label>
+                <label htmlFor="fEmail">{t("s2436aa")} <span style={{ fontWeight: 400 }}>{t("s836573")}</span></label>
                 <input id="fEmail" type="email" inputMode="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="name@example.com" autoComplete="email" dir="ltr" style={{ textAlign: "start" }} aria-invalid={!!showErr("email")} aria-describedby="eEmail" />
                 <span className="ferr" id="eEmail">{showErr("email")}</span>
               </div>
               )}
               <div className="field">
-                <label htmlFor="fAddr">العنوان التفصيلي</label>
-                <input id="fAddr" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="الحي، رقم المنزل، معلم قريب" autoComplete="street-address" />
+                <label htmlFor="fAddr">{t("sa5814c")}</label>
+                <input id="fAddr" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder={t("scaf32b")} autoComplete="street-address" />
               </div>
               <div className="field">
-                <label htmlFor="fNote">ملاحظات للمندوب (اختياري)</label>
-                <input id="fNote" value={form.note} onChange={(e) => set("note", e.target.value)} placeholder="مثال: الاتصال قبل الوصول" />
+                <label htmlFor="fNote">{t("s4e1676")}</label>
+                <input id="fNote" value={form.note} onChange={(e) => set("note", e.target.value)} placeholder={t("s218308")} />
               </div>
               {storeConfig.features.gift && (<>
               <button type="button" className={`giftrow ${form.gift ? "on" : ""}`} role="switch" aria-checked={form.gift} onClick={() => set("gift", !form.gift)}>
                 <Icon name="gift" size={22} />
-                <span><b>هذه هدية</b><span className="d">{checkout.giftNote}</span></span>
+                <span><b>{t("sdb8be7")}</b><span className="d">{checkout.giftNote}</span></span>
                 <span className="sw" aria-hidden="true" />
               </button>
               {form.gift && (
                 <div className="field">
-                  <label htmlFor="fGift">رسالة البطاقة</label>
-                  <textarea id="fGift" value={form.giftMessage} maxLength={200} onChange={(e) => set("giftMessage", e.target.value)} placeholder={g("مثال: كل عام وأنتِ بخير يا أمي", "مثال: كل عام وأنت بخير", "مثال: كل عام وأنتم بخير")} />
+                  <label htmlFor="fGift">{t("s070822")}</label>
+                  <textarea id="fGift" value={form.giftMessage} maxLength={200} onChange={(e) => set("giftMessage", e.target.value)} placeholder={t("s41dd18")} />
                 </div>
               )}
               </>)}
               {formError && <div className="alert" role="alert"><Icon name="x" size={15} /> {formError}</div>}
               <div style={{ marginTop: 18 }}>
                 <button type="submit" className="btn block lg" disabled={busy === "address"} data-testid="to-payment">
-                  {busy === "address" ? "جارٍ الحفظ…" : "متابعة إلى الدفع"} <Icon name="arrowL" size={18} />
+                  {busy === "address" ? t("saving") : t("s42f5cd")} <Icon name="arrowL" size={18} />
                 </button>
               </div>
             </form>
           ) : (
             <>
               <div className="panelbox">
-                <h3>العنوان</h3>
+                <h3>{t("s6dc658")}</h3>
                 <div className="addrcard">
                   <Icon name="pin" size={16} />
                   <div>
                     <b>{form.name}</b> · <bdi dir="ltr">{checkout.phone.prefix} {form.phone}</bdi><br />
-                    <span className="muted">{governorateName(form.province)} — {form.city}{form.address ? `، ${form.address}` : ""}</span>
+                    <span className="muted">{governorateName(form.province)} — {form.city}{form.address ? `${t("sep")}${form.address}` : ""}</span>
                   </div>
-                  <button type="button" onClick={() => go("address")}>تعديل</button>
+                  <button type="button" onClick={() => go("address")}>{t("s759fdc")}</button>
                 </div>
               </div>
 
-              <div className="panelbox" role="radiogroup" aria-label="طريقة التوصيل">
-                <h3>طريقة التوصيل</h3>
+              <div className="panelbox" role="radiogroup" aria-label={t("sb02f7e")}>
+                <h3>{t("sb02f7e")}</h3>
                 {!customer && storeConfig.loyalty.freeShippingTier && (
                   <div className="guest copper" data-testid="gold-hint">
                     <Icon name="sparkle" size={15} />
                     <span>
-                      {g(
-                        `عضوة ${storeConfig.loyalty.freeShippingTier.name}؟`,
-                        `عضو ${storeConfig.loyalty.freeShippingTier.name.replace(/ة$/, "")}؟`,
-                        `عضوية ${storeConfig.loyalty.freeShippingTier.name}؟`
-                      )}{" "}
+                      {t("tierMember", { tier: storeConfig.loyalty.freeShippingTier.name, tierM: storeConfig.loyalty.freeShippingTier.name.replace(/ة$/, "") })}{" "}
                       <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>
-                        {g("سجّلي الدخول برقمك", "سجّل الدخول برقمك")}
+                        {t("s60746c")}
                       </LocalizedClientLink>{" "}
-                      ليصبح التوصيل مجانياً
+                      {t("forFreeShipping")}
                     </span>
                   </div>
                 )}
-                {!sortedOptions.length && <div className="alert">لا توجد طريقة توصيل متاحة لهذا العنوان — {g("تواصلي معنا على واتساب", "تواصل معنا على واتساب")}</div>}
+                {!sortedOptions.length && <div className="alert">{t("noShipping")} — {t("sa83f06")}</div>}
                 {sortedOptions.map((o) => {
                   const c = (o.type as any)?.code as string
                   const on = o.id === currentOptionId && methodValid
@@ -470,7 +465,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                       <span className="ic"><Icon name={checkout.shipping[c]?.icon ?? "truck"} /></span>
                       <span className="t"><b>{o.name}</b><span>{c === "standard" ? deliveryEta(c, form.province) : (o.type as any)?.description}</span></span>
                       <span className={`pr ${o.amount === 0 || perkPromo ? "free" : ""}`}>
-                        {o.amount === 0 ? "مجاني" : perkPromo ? <><s className="old">{formatAmount(o.amount ?? 0)}</s> مجاني</> : fmt(o.amount ?? 0)}
+                        {o.amount === 0 ? t("free") : perkPromo ? <><s className="old">{formatAmount(o.amount ?? 0)}</s> {t("s5abc46")}</> : fmt(o.amount ?? 0)}
                       </span>
                       <span className="mark" aria-hidden="true" />
                     </button>
@@ -478,8 +473,8 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                 })}
               </div>
 
-              <div className="panelbox" role="radiogroup" aria-label="طريقة الدفع">
-                <h3>طريقة الدفع</h3>
+              <div className="panelbox" role="radiogroup" aria-label={t("s8f31e7")}>
+                <h3>{t("s8f31e7")}</h3>
                 {payments.map((p) => (
                   <button key={p.id} type="button" role="radio" aria-checked={p.id === payId} className={`payopt ${p.id === payId ? "on" : ""}`} onClick={() => setPayId(p.id)} data-testid={`pay-${p.key}`}>
                     <span className={`ic ${p.key === "whatsapp" ? "wa" : ""}`}><Icon name={p.icon} /></span>
@@ -499,11 +494,11 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                     <span className="mark" aria-hidden="true" />
                   </button>
                 ))}
-                <div className="secure"><Icon name="lock" size={14} /> بياناتك مشفّرة ولا نحفظ تفاصيل بطاقتك</div>
+                <div className="secure"><Icon name="lock" size={14} /> {t("s449d2f")}</div>
                 <div className="after">
-                  <div><Icon name="whatsapp" size={16} />تأكيد الطلب على واتساب</div>
-                  <div><Icon name="scissors" size={16} />تجهيز وكيّ في المشغل</div>
-                  <div><Icon name="truck" size={16} />توصيل حتى بابك</div>
+                  <div><Icon name="whatsapp" size={16} />{t("saefc28")}</div>
+                  <div><Icon name="scissors" size={16} />{t("sd6d665")}</div>
+                  <div><Icon name="truck" size={16} />{t("s050314")}</div>
                 </div>
               </div>
             </>
@@ -513,11 +508,11 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
       </div>
 
       <div className="costicky">
-        <div className="tot"><small>{shipping === null ? "الإجمالي قبل التوصيل" : "الإجمالي شامل التوصيل"}</small><b>{fmt(total)}</b></div>
+        <div className="tot"><small>{shipping === null ? t("totalBeforeShipping") : t("sf4b22c")}</small><b>{fmt(total)}</b></div>
         {step === "address" ? (
-          <button type="button" className="btn" onClick={() => onSaveAddress()} disabled={busy === "address"}>متابعة إلى الدفع <Icon name="arrowL" size={15} /></button>
+          <button type="button" className="btn" onClick={() => onSaveAddress()} disabled={busy === "address"}>{t("s42f5cd")} <Icon name="arrowL" size={15} /></button>
         ) : (
-          <button type="button" className="btn" onClick={onPlace} disabled={placing || busy === "ship" || !methodValid}>{placing ? "جارٍ التأكيد…" : ctaLabel}</button>
+          <button type="button" className="btn" onClick={onPlace} disabled={placing || busy === "ship" || !methodValid}>{placing ? t("confirming") : ctaLabel}</button>
         )}
       </div>
     </div>
