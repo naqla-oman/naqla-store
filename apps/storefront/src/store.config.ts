@@ -131,6 +131,8 @@ function build(c: ClientStore) {
   )
 
   return {
+    /** السجل التجاري والرقم الضريبي (إعدادات المتجر ← بيانات المتجر) */
+    legal: ((c as any).legal ?? {}) as { cr?: string | null; vat?: string | null },
     slug: c.slug,
     voice: (c.voice ?? "neutral") as "f" | "m" | "neutral",
     name: c.name,

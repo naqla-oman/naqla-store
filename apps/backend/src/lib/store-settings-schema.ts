@@ -1,5 +1,6 @@
 import { client } from "./client"
 import { g } from "./voice"
+import { thawaniConfigured } from "./thawani-env"
 
 /**
  * القائمة البيضاء لمفاتيح «إعدادات المتجر» القابلة للتعديل من لوحة العميل، مع التحقق من كل حقل على الخادم.
@@ -80,4 +81,5 @@ export function crossCheck(eff: any) {
   const f = eff.features ?? {}
   if (f.loyaltyTiers && !f.loyalty) fail(g("المستويات تتطلب تفعيل الولاء أولاً", "المستويات تتطلب تفعيل الولاء أولاً"))
   if (!f.cod && !f.thawani && !f.whatsappOrder) fail(g("فعّلي طريقة دفع واحدة على الأقل", "فعّل طريقة دفع واحدة على الأقل"))
+  if (f.thawani && !thawaniConfigured()) fail(g("ثواني يتطلب مفاتيحه أولاً — أدخليها في تبويب «الدفع والتواصل»", "ثواني يتطلب مفاتيحه أولاً — أدخلها في تبويب «الدفع والتواصل»"))
 }

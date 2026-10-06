@@ -76,6 +76,13 @@ export default function Footer() {
           </div>
           <div className="fbottom">
             <span>© {new Date().getFullYear()} {c.name} — جميع الحقوق محفوظة.</span>
+            {(c.legal.cr || c.legal.vat) && (
+              <span data-testid="footer-legal">
+                {c.legal.cr && <>السجل التجاري: <bdi>{c.legal.cr}</bdi></>}
+                {c.legal.cr && c.legal.vat && " · "}
+                {c.legal.vat && <>الرقم الضريبي: <bdi>{c.legal.vat}</bdi></>}
+              </span>
+            )}
             <PrivacyLink />
             <span className="flex gap-4"><LocalizedClientLink href="/pages/terms">الشروط والأحكام</LocalizedClientLink><LocalizedClientLink href="/pages/privacy">سياسة الخصوصية</LocalizedClientLink></span>
             <span>صُنع بشغف بواسطة <a href={c.builtBy.url} target="_blank" rel="noreferrer"><b>{c.builtBy.name}</b></a></span>

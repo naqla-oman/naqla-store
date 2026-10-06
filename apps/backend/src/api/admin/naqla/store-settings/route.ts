@@ -4,6 +4,7 @@ import { client, clientDefaults } from "../../../../lib/client"
 import { SCHEMA, SettingsError, getPath } from "../../../../lib/store-settings-schema"
 import { STORE_SETTINGS_MODULE } from "../../../../modules/store-settings"
 import type StoreSettingsModuleService from "../../../../modules/store-settings/service"
+import { syncPaymentProviders } from "../../../../lib/payment-providers"
 
 /** GET /admin/naqla/store-settings — القيم الفعلية والافتراضية للمفاتيح القابلة للتعديل + سجل التغييرات */
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
@@ -31,6 +32,8 @@ export const POST = async (req: AuthenticatedMedusaRequest<{ values?: Record<str
   } catch { /* السجل يكتفي بالمعرّف */ }
   try {
     const { changes } = await svc.saveOverrides(values, { id: req.auth_context?.actor_id, email }, req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION))
+    // الميزات: تغيّر طرق الدفع ← مزامنة مزوّدي الدفع للمنطقة فوراً (M12)
+    if (changes.some((c) => /^features\.(cod|thawani|whatsappOrder)$/.test(c.key))) await syncPaymentProviders(req.scope)
     res.json({ ok: true, changes })
   } catch (e) {
     if (e instanceof SettingsError) throw new MedusaError(MedusaError.Types.INVALID_DATA, e.message)
