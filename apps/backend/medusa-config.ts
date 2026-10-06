@@ -4,6 +4,10 @@ import { BACKEND_DIR, PRIVATE_FILES_DIR, UPLOADS_DIR } from './src/lib/paths'
 import { thawaniConfigured } from './src/lib/thawani-env'
 import { join } from 'node:path'
 import { naqlaAdminBrand } from './admin-brand/vite-plugin'
+import { installSecurityHeaders } from './src/api/security-headers'
+
+// منخفضة: ترويسات الأمان على كل رد بما فيها ردود Medusa المبكرة (401/400)
+installSecurityHeaders()
 
 // C8: .env من مجلد الخادم الثابت (بعد البناء يعمل من .medusa/server)
 loadEnv(process.env.NODE_ENV || 'development', BACKEND_DIR)
