@@ -16,9 +16,11 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 async function stage0() {
   const t = tok()
   console.log("\n— متجر بلغة واحدة —")
-  settings({ languages: ["ar"], defaultLanguage: "ar" }, t); await sleep(4000)
+  settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
   curl("/om") // كوكي المنطقة
-  const ar = curl("/om"); const a = attrs(ar.html)
+  let ar = curl("/om")
+  for (let i = 0; i < 14 && attrs(ar.html).switch; i++) { await sleep(5000); ar = curl("/om") } // إبطال الذاكرة بعد الحفظ
+  const a = attrs(ar.html)
   ok(ar.code === 200 && a.lang === "ar" && a.dir === "rtl", "/om عربي rtl", `${a.lang}/${a.dir}`)
   ok(!a.switch, "لا مبدّل لغة في متجر بلغة واحدة")
   // الوسيط يخزّن اللغات دقيقة — ننتظر انتهاء الذاكرة بعد التغيير عند الحاجة
@@ -42,6 +44,33 @@ async function stage0() {
   ok(enp.code === 200 && attrs(enp.html).lang === "en", "صفحة منتج إنجليزية 200")
   ok(/\tlang\ten$/m.test(readFileSync(jar, "utf8")), "كوكي lang=en بعد زيارة صفحة إنجليزية (وar بعد صفحة عربية)")
   ok(enp.html.includes("icon-dir"), "الأيقونات الاتجاهية تحمل صنف القلب")
+  // (ج) التكرار يُزال قبل الحفظ
+  settings({ languages: ["ar", "ar", "en"] }, t)
+  const langsJson = JSON.parse(execFileSync("curl", ["-s", "-m", "20", "-H", `x-publishable-api-key: ${env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY}`, `${B}/store/naqla/languages`]).toString())
+  ok(JSON.stringify(langsJson.languages) === JSON.stringify(["ar", "en"]), "languages: [ar, ar, en] يُحفظ بلا تكرار", JSON.stringify(langsJson.languages))
+  // (أ) اللغة الافتراضية: وجهة الجذر فقط — الروابط العربية بلا بادئة
+  settings({ defaultLanguage: "en" }, t)
+  let root = ""
+  for (let i = 0; i < 14; i++) { root = execFileSync("curl", ["-s", "-o", "/dev/null", "-m", "60", "-w", "%{redirect_url}", `${S}/?utm_source=t`]).toString(); if (/\/om\/en\/?\?utm_source=t$/.test(root)) break; await sleep(5000) }
+  ok(/\/om\/en\/?\?utm_source=t$/.test(root), "defaultLanguage=en: الجذر / يحوّل إلى /om/en مع المعاملات", root)
+  ok(attrs(curl("/om/products/printed-silk-scarf").html).lang === "ar", "الرابط العربي يبقى عربياً مع defaultLanguage=en")
+  settings({ defaultLanguage: "ar" }, t)
+  // (ب) المبدّل داخل الشاشة على 390px (رأس الصفحة) في اللغتين
+  const py = `
+import asyncio, json
+from playwright.async_api import async_playwright
+async def main():
+    out = {}
+    async with async_playwright() as p:
+        b = await p.chromium.launch(); c = await b.new_context(viewport={"width": 390, "height": 844}); m = await c.new_page(); m.set_default_timeout(120000)
+        for path in ("/om", "/om/en"):
+            await m.goto("${S}" + path, wait_until="domcontentloaded"); await m.wait_for_selector("[data-testid=lang-switch]")
+            bb = await m.locator("[data-testid=lang-switch]").first.bounding_box(); out[path] = bb
+        await b.close()
+    print(json.dumps(out))
+asyncio.run(main())`
+  const boxes = JSON.parse(execFileSync("python3", ["-c", py], { timeout: 280000 }).toString().trim().split("\n").pop())
+  for (const [path, bb] of Object.entries(boxes)) ok(bb && bb.x >= 0 && bb.x + bb.width <= 390 && bb.width > 0, `المبدّل داخل الشاشة على 390px في ${path}`, bb ? `x=${Math.round(bb.x)} w=${Math.round(bb.width)}` : "غير موجود")
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 const sections = { stage0 }

@@ -101,20 +101,20 @@ async function getCountryCode(
 }
 
 /* ===== اللغات: العربية الأصل (/om/…)، الإنجليزية /om/en/… — تُعاد كتابتها داخلياً إلى app/[countryCode]/[lang] ===== */
-let langCache: { at: number; languages: string[] } = { at: 0, languages: ["ar"] }
-async function getLanguages(): Promise<string[]> {
-  if (Date.now() - langCache.at < 60_000) return langCache.languages
+let langCache: { at: number; languages: string[]; defaultLanguage: string } = { at: 0, languages: ["ar"], defaultLanguage: "ar" }
+async function getLanguages(): Promise<{ languages: string[]; defaultLanguage: string }> {
+  if (Date.now() - langCache.at < 60_000) return langCache
   try {
     const r = await fetch(`${BACKEND_URL}/store/naqla/languages`, { headers: { "x-publishable-api-key": PUBLISHABLE_API_KEY! } })
-    if (r.ok) langCache = { at: Date.now(), languages: (await r.json()).languages ?? ["ar"] }
+    if (r.ok) { const j = await r.json(); langCache = { at: Date.now(), languages: j.languages ?? ["ar"], defaultLanguage: j.defaultLanguage ?? "ar" } }
   } catch { /* تبقى القيمة السابقة */ }
-  return langCache.languages
+  return langCache
 }
 /** يحوّل طلب /<cc>/… إلى المسار الداخلي بلغته ويضع ترويسة اللغة والكوكي */
 async function withLang(request: NextRequest, countryCode: string): Promise<NextResponse> {
   const url = request.nextUrl.clone()
   const segs = url.pathname.split("/") // ["", cc, lang?, …]
-  const langs = await getLanguages()
+  const { languages: langs } = await getLanguages()
   let lang = "ar"
   if (segs[2] === "ar") { // الصيغة القانونية للعربية بلا بادئة
     url.pathname = `/${countryCode}${segs.slice(3).join("/") ? "/" + segs.slice(3).join("/") : ""}`
@@ -177,7 +177,10 @@ async function baseMiddleware(request: NextRequest) {
 
   // If no country code is set, we redirect to the relevant region.
   if (!urlHasCountryCode && countryCode) {
-    redirectUrl = `${request.nextUrl.origin}/${countryCode}${redirectPath}${queryString}`
+    // اللغة الافتراضية للمتجر: الجذر / (وأي مسار بلا دولة) يذهب إلى /om أو /om/en — الروابط العربية نفسها لا تتغير
+    const { languages: ls, defaultLanguage } = await getLanguages()
+    const prefix = defaultLanguage === "en" && ls.includes("en") && !/^\/(ar|en)(\/|$)/.test(redirectPath) ? "/en" : ""
+    redirectUrl = `${request.nextUrl.origin}/${countryCode}${prefix}${redirectPath}${queryString}`
     response = NextResponse.redirect(`${redirectUrl}`, 307)
   } else if (!urlHasCountryCode && !countryCode) {
     // Handle case where no valid country code exists (empty regions)

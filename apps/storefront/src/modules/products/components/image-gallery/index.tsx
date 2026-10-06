@@ -74,7 +74,7 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
           <div className="gthumb">
             {list.map((img, i) => (
               <Image
-                key={img.id}
+                key={`${img.id ?? img.url}-${i}`}
                 src={img.url}
                 alt={i === 0 ? base : `${base} — صورة ${i + 1}`}
                 fill
@@ -86,14 +86,14 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
             ))}
           </div>
           {badge}
-          {n > 1 && <div className="dots" aria-hidden="true">{list.map((img, i) => <i key={img.id} className={i === shot ? "on" : ""} />)}</div>}
+          {n > 1 && <div className="dots" aria-hidden="true">{list.map((img, i) => <i key={`${img.id ?? img.url}-${i}`} className={i === shot ? "on" : ""} />)}</div>}
           <span className="zoomhint"><Icon name="zoom" size={13} /> {g("اضغطي للتكبير", "اضغط للتكبير")}</span>
         </div>
         {n > 1 && (
           <div className="thumbs" role="tablist" aria-label="صور المنتج">
             {list.map((img, i) => (
               <button
-                key={img.id}
+                key={`${img.id ?? img.url}-${i}`}
                 type="button"
                 role="tab"
                 aria-selected={i === shot}
@@ -134,7 +134,7 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
           {n > 1 && (
             <div className="strip">
               {list.map((img, i) => (
-                <button key={img.id} type="button" className={i === shot ? "on" : ""} aria-label={`الصورة ${i + 1}`} onClick={() => { setShot(i); setZoom(false) }}>
+                <button key={`${img.id ?? img.url}-${i}`} type="button" className={i === shot ? "on" : ""} aria-label={`الصورة ${i + 1}`} onClick={() => { setShot(i); setZoom(false) }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img {...thumb(img.url!)} alt="" />
                 </button>

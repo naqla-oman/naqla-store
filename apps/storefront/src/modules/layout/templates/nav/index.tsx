@@ -43,7 +43,7 @@ export default async function Nav() {
           <div className="flex items-center gap-2 ms-auto small:ms-0">
             <LocalizedClientLink href="/store?focus=search" className="iconbtn small:!hidden" aria-label="بحث"><Icon name="search" /></LocalizedClientLink>
             <ThemeToggle />
-            <LangSwitch languages={storeConfig.languages} className="iconbtn langbtn" />
+            <LangSwitch languages={storeConfig.languages} className="iconbtn langbtn" compact />
             <LocalizedClientLink href="/account/wishlist" className="iconbtn !hidden small:!grid" aria-label="المفضلة"><Icon name="heart" /></LocalizedClientLink>
             <LocalizedClientLink href="/account" className="iconbtn !hidden small:!grid" aria-label="حسابي" data-testid="nav-account-link"><Icon name="user" /></LocalizedClientLink>
             <Suspense fallback={<LocalizedClientLink className="iconbtn" href="/cart" aria-label="السلة"><Icon name="bag" /></LocalizedClientLink>}>

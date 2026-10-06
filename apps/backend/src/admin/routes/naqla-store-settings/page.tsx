@@ -30,7 +30,7 @@ type Data = {
 
 const FEATURES: Field[] = [
   { key: "languages", label: "الإنجليزية إلى جانب العربية", type: "langs", hint: "يظهر مبدّل اللغة وروابط /en في المتجر" },
-  { key: "defaultLanguage", label: "اللغة الافتراضية", type: "select", options: [{ value: "ar", label: "العربية" }, { value: "en", label: "English" }] },
+  { key: "defaultLanguage", label: "اللغة الافتراضية", type: "select", options: [{ value: "ar", label: "العربية" }, { value: "en", label: "English" }], hint: "وجهة رابط المتجر الجذر، وx-default في hreflang، ولغة الإشعارات عند غياب لغة الطلب — الروابط العربية تبقى بلا بادئة" },
   { key: "features.cod", label: "الدفع عند الاستلام", type: "switch" },
   { key: "features.thawani", label: "الدفع الإلكتروني (ثواني)", type: "switch", hint: "يتطلب مفاتيح ثواني في تبويب الدفع والتواصل" },
   { key: "features.whatsappOrder", label: "إرسال الطلب عبر واتساب", type: "switch" },
