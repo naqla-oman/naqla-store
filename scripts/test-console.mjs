@@ -125,7 +125,10 @@ function crucialFor(slug, template, name, palette) {
     ok(row.status === "running" && row.health === "ok", "الحالة «يعمل» والصحة /ready")
     const e = storeEnv(slug), sj = JSON.parse(readFileSync(`${ROOT}clients/${slug}/store.json`, "utf8"))
     ok(sj.name === name && sj.theme?.palette === palette && sj.brand?.logo === "logo.png" && sj.features.thawani === false, "الهوية من المعالج في store.json", `${sj.theme?.palette} / ${sj.brand?.logo}`)
-    const home = await fetch(`${e.STOREFRONT_URL}/om`, { redirect: "follow" }).then((r) => r.text()).catch(() => "")
+    // الواجهة تضبط كوكي المنطقة ثم تحوّل — curl بجرّة كوكي (fetch بلا كوكي يدور في التحويل)
+    const { execFileSync } = await import("node:child_process")
+    const jar = `/tmp/jar-${slug}`
+    const home = (() => { try { execFileSync("curl", ["-s", "-L", "-c", jar, "-b", jar, "-o", "/dev/null", "-m", "200", `${e.STOREFRONT_URL}/om`]); return execFileSync("curl", ["-s", "-L", "-b", jar, "-m", "200", `${e.STOREFRONT_URL}/om`]).toString() } catch { return "" } })()
     ok(home.includes(name) && home.includes("naqla-identity"), "المتجر يعمل بالاسم واللوحة المختارة")
     const o1 = await purchase(slug)
     ok(!!o1?.display_id, "طلب شراء كامل", `#${o1?.display_id} بقيمة ${o1?.total}`)
