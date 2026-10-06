@@ -149,7 +149,7 @@
     "loyalty": true,
     "loyaltyTiers": true,
     "cod": true,
-    "thawani": true,
+    "thawani": false,
     "whatsappOrder": true,
     "bnpl": false,
     "reviews": true

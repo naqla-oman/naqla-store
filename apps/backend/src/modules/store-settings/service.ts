@@ -39,7 +39,7 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
       changes.push({ key, from: prev ?? null, to: value })
     }
     if (!changes.length) return { changes }
-    crossCheck(deepMerge(defaults, overrides))
+    crossCheck(deepMerge(defaults, overrides), before)
     await this.replaceJson(pg, row.id, "overrides", overrides)
     await this.createStoreSettingsChanges({ actor_id: actor.id ?? null, actor_email: actor.email ?? null, changes: { items: changes } as any })
     setClientOverrides(overrides)

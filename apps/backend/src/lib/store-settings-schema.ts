@@ -53,7 +53,9 @@ const brandAsset = (key: string): Check => (v) => {
 
 /** لوحة/خط: من اللوحات الجاهزة، أو «custom» فقط إن كانت هوية العميل الافتراضية مخصصة من نقلة */
 const preset = (kind: "palettes" | "fonts", label: string): Check => (v) => {
-  const s = String(v ?? "")
+  // null = العودة للافتراضي (لوحة/خط العميل المكتشفان)
+  if (v === null || v === "") return (clientDefaults() as any).theme?.[kind === "palettes" ? "palette" : "font"] ?? null
+  const s = String(v)
   if (themePresets()[kind].some((p) => p.slug === s)) return s
   const def = (clientDefaults() as any).theme?.[kind === "palettes" ? "palette" : "font"]
   return s === "custom" && def === "custom" ? s : fail(`${label}: اختيار غير متاح`)
@@ -137,10 +139,18 @@ export function checkSecret(key: string, v: string) {
   if (r && !r[0].test(v)) fail(r[1])
 }
 
-/** قيود بين الحقول على القيمة الفعلية بعد الدمج */
-export function crossCheck(eff: any) {
+/** قيود بين الحقول على القيمة الفعلية بعد الدمج — قائمة المخالفات (رمز ← رسالة) */
+export function crossIssues(eff: any): Record<string, string> {
   const f = eff.features ?? {}
-  if (f.loyaltyTiers && !f.loyalty) fail(g("المستويات تتطلب تفعيل الولاء أولاً", "المستويات تتطلب تفعيل الولاء أولاً"))
-  if (!f.cod && !f.thawani && !f.whatsappOrder) fail(g("فعّلي طريقة دفع واحدة على الأقل", "فعّل طريقة دفع واحدة على الأقل"))
-  if (f.thawani && !thawaniConfigured()) fail(g("ثواني يتطلب مفاتيحه أولاً — أدخليها في تبويب «الدفع والتواصل»", "ثواني يتطلب مفاتيحه أولاً — أدخلها في تبويب «الدفع والتواصل»"))
+  const out: Record<string, string> = {}
+  if (f.loyaltyTiers && !f.loyalty) out.tiers = g("المستويات تتطلب تفعيل الولاء أولاً", "المستويات تتطلب تفعيل الولاء أولاً")
+  if (!f.cod && !f.thawani && !f.whatsappOrder) out.payment = g("فعّلي طريقة دفع واحدة على الأقل", "فعّل طريقة دفع واحدة على الأقل")
+  if (f.thawani && !thawaniConfigured()) out.thawani = g("ثواني يتطلب مفاتيحه أولاً — أدخليها في تبويب «الدفع والتواصل»", "ثواني يتطلب مفاتيحه أولاً — أدخلها في تبويب «الدفع والتواصل»")
+  return out
+}
+/** يرفض فقط المخالفات التي يُدخلها التغيير (حالة قائمة لا تمنع حفظ إعداد لا يخصها) */
+export function crossCheck(after: any, before?: any) {
+  const prev = before ? crossIssues(before) : {}
+  const fresh = Object.entries(crossIssues(after)).filter(([k]) => !(k in prev))
+  if (fresh.length) fail(fresh[0][1])
 }

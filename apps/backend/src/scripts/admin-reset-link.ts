@@ -1,5 +1,5 @@
 import type { ExecArgs } from "@medusajs/framework/types"
-import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { generateResetPasswordTokenWorkflow } from "@medusajs/medusa/core-flows"
 
 /**
@@ -8,7 +8,7 @@ import { generateResetPasswordTokenWorkflow } from "@medusajs/medusa/core-flows"
  */
 export default async function run({ container }: ExecArgs) {
   const email = process.env.ADMIN_EMAIL
-  if (!email) throw new Error("ADMIN_EMAIL مطلوب")
+  if (!email) throw new MedusaError(MedusaError.Types.INVALID_DATA, "ADMIN_EMAIL مطلوب")
   const cfg = container.resolve(ContainerRegistrationKeys.CONFIG_MODULE) as any
   const { result } = await generateResetPasswordTokenWorkflow(container).run({
     input: { entityId: email, actorType: "user", provider: "emailpass", secret: cfg.projectConfig.http.jwtSecret },
