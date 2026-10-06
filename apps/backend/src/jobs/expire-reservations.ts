@@ -2,6 +2,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { cancelOrderWorkflow } from "@medusajs/medusa/core-flows"
 import { client } from "../lib/client"
+import { notifyOrder } from "../lib/order-notifications"
 
 /**
  * منخفضة: حجز مخزون طلبات واتساب (بانتظار التأكيد) والاستلام من المحل كان بلا انتهاء.
@@ -28,6 +29,8 @@ export async function expireReservations(container: MedusaContainer, now = new D
   for (const o of expired) {
     try {
       await cancelOrderWorkflow(container).run({ input: { order_id: o.id } as any })
+      // إشعار الإلغاء مباشرة (نفس مفتاح عدم التكرار في مشترك order.canceled ← يُرسل مرة واحدة أياً سبق)
+      await notifyOrder(container, o.id, "order_canceled", o.id)
       logger.info(`[reservations] أُلغي الطلب ${o.display_id} (${o.pay === "whatsapp" ? "واتساب بلا تأكيد" : "استلام لم يتم"}) وفُك حجز مخزونه`)
     } catch (e) {
       logger.warn(`[reservations] ${o.display_id}: ${(e as Error).message}`)
