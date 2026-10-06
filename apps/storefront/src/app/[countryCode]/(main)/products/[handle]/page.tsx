@@ -128,11 +128,12 @@ export default async function ProductPage(props: Props) {
   }).then(({ response }) => response.products[0])
 
   if (!pricedProduct) {
-    const to = await findRedirect(`/products/${params.handle}
-  if ((pricedProduct.metadata as any)?.service) notFound()`)
+    const to = await findRedirect(`/products/${params.handle}`)
     if (to) permanentRedirect(`/${params.countryCode}${to}`)
     notFound()
   }
+  // منخفضة: منتج الخدمة لا صفحة مستقلة له (يُطلب من صفحة القطعة) — 404 حقيقي من دالة الصفحة
+  if ((pricedProduct.metadata as any)?.service) notFound()
 
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
   const { price, currency } = variantPricing(pricedProduct)
