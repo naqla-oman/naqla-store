@@ -108,6 +108,18 @@ module.exports = defineConfig({
     vite: () => ({ plugins: [naqlaAdminBrand()] }),
   },
   projectConfig: {
+    // منخفضة: جلسة الأدمن — SameSite=Strict، Secure في الإنتاج، 8 ساعات تتجدد مع النشاط، واسم لا يكشف Express
+    cookieOptions: {
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 8 * 3600_000,
+    },
+    sessionOptions: {
+      name: 'naqla_admin_sid',
+      ttl: 8 * 3600_000,
+      rolling: true,
+    },
     databaseUrl: process.env.DATABASE_URL,
     // H6: الجلسات في Redis (تبقى بعد إعادة التشغيل وتعمل مع أكثر من عملية)
     ...(REDIS_URL ? { redisUrl: REDIS_URL, redisPrefix: `${REDIS_PREFIX}sess:` } : {}),
