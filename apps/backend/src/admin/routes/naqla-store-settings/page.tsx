@@ -183,7 +183,7 @@ const StoreSettingsPage = () => {
         <Heading level="h2">سجل التغييرات</Heading>
         <div className="mt-3 grid gap-2" data-testid="settings-history">
           {data.history.length ? data.history.map((h, i) => (
-            <Text key={i} size="small"><b>{new Date(h.at).toLocaleString("ar-OM")}</b> — {h.by ?? "—"}: {h.changes.map((c) => `${c.key}: ${JSON.stringify(c.from)} ← ${JSON.stringify(c.to)}`).join("، ")}</Text>
+            <Text key={i} size="small"><b>{new Date(h.at).toLocaleString("ar-OM-u-nu-latn")}</b> — {h.by ?? "—"}: {h.changes.map((c) => `${c.key}: ${JSON.stringify(c.from)} ← ${JSON.stringify(c.to)}`).join("، ")}</Text>
           )) : <Text size="small" className="text-ui-fg-subtle">لا تغييرات بعد</Text>}
         </div>
       </Container>
