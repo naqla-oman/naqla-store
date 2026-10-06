@@ -21,7 +21,8 @@
     "console:setup": "pnpm --filter @naqla/console run setup",
     "console:dev": "pnpm --filter @naqla/console run dev",
     "console:worker": "pnpm --filter @naqla/console run worker",
-    "test:console": "node scripts/test-console.mjs"
+    "test:console": "node scripts/test-console.mjs",
+    "test:i18n": "node scripts/test-i18n.mjs"
   },
   "pnpm": {
     "overrides": {
