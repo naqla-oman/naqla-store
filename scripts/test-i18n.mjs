@@ -109,8 +109,13 @@ async function stage1() {
   const jarText = readFileSync(jar, "utf8")
   require_fs: { const { writeFileSync } = await import("node:fs"); writeFileSync(jar, jarText + `localhost\tFALSE\t/\tFALSE\t0\t_medusa_cart_id\t${cartId}\n`) }
   for (const [path, unit, bad] of [["/om", "ر.ع", "OMR"], ["/om/store", "ر.ع", "OMR"], ["/om/en", "OMR", "ر.ع"], ["/om/en/store", "OMR", "ر.ع"]]) {
-    const h = curl(path).html, c = cards(h), dd = (strip(h).match(/data-testid="cart-subtotal"[^>]*>[^<]*/) ?? [""])[0]
-    ok(c.includes(unit) && !c.includes(bad) && dd.includes(unit) && !dd.includes(bad), `وحدة العملة في بطاقات ${path} والسلة المنسدلة`, `${(c.match(new RegExp(unit, "g")) ?? []).length} بطاقة بـ${unit}، ${(c.match(new RegExp(bad, "g")) ?? []).length} بـ${bad} | منسدلة: ${dd.replace(/.*>/, "").trim()}`)
+    const c = cards(curl(path).html)
+    ok(c.includes(unit) && !c.includes(bad), `وحدة العملة في بطاقات ${path}`, `${(c.match(new RegExp(unit, "g")) ?? []).length} بطاقة بـ${unit}، ${(c.match(new RegExp(bad, "g")) ?? []).length} بـ${bad}`)
+  }
+  // السلة بمنتج فيها (الصفحة؛ المنسدلة Popover لا تُرسم في HTML وتستخدم الدالة نفسها المُلزمة باللغة)
+  for (const [path, unit, bad] of [["/om/cart", "ر.ع", "OMR"], ["/om/en/cart", "OMR", "ر.ع"]]) {
+    const tot = (strip(curl(path).html).match(/class="tot"[\s\S]*?<\/div>/) ?? [""])[0]
+    ok(tot.includes(unit) && !tot.includes(bad), `وحدة العملة في مجموع السلة ${path}`, tot.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 60))
   }
   sapi("DELETE", `/store/carts/${cartId}/line-items/${(sapi("GET", `/store/carts/${cartId}`).cart.items[0] ?? {}).id}`)
   const en404 = curl("/om/en/products/no-such-product-xyz")
