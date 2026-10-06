@@ -6,7 +6,8 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
  * وإلا مشتق من JWT_SECRET (48 بايت فريدة لكل متجر منذ C3). الصيغة: v1:<iv>:<tag>:<ciphertext> (base64url).
  */
 const key = () => {
-  const base = process.env.SETTINGS_ENCRYPTION_KEY || process.env.JWT_SECRET
+  // الإنتاج: المفتاح المستقل إلزامي (medusa-config يرفض الإقلاع بدونه)؛ التطوير: JWT_SECRET احتياطاً
+  const base = process.env.SETTINGS_ENCRYPTION_KEY || (process.env.NODE_ENV === "production" ? "" : process.env.JWT_SECRET)
   if (!base || base.length < 32) throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, "مفتاح التشفير غير مضبوط (SETTINGS_ENCRYPTION_KEY أو JWT_SECRET)")
   return createHash("sha256").update(`${base}:naqla-store-settings`).digest()
 }

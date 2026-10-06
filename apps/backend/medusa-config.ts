@@ -93,6 +93,10 @@ function secret(name: "JWT_SECRET" | "COOKIE_SECRET") {
  * سر فارغ أو قصير كان يُفشل الإبطال بصمت (401 في السجل فقط) فتبقى الأسعار والمنتجات قديمة في المتجر.
  * في الإنتاج: رفض الإقلاع برسالة واضحة. في التطوير: تحذير.
  */
+// تشفير أسرار إعدادات المتجر: مفتاح مستقل ≥32 إلزامي في الإنتاج
+if (process.env.NODE_ENV === "production" && (process.env.SETTINGS_ENCRYPTION_KEY ?? "").length < 32) {
+  throw new MedusaError(MedusaError.Types.INVALID_DATA, "SETTINGS_ENCRYPTION_KEY مفقود أو قصير (32 حرفاً على الأقل) — شغّل pnpm store:setup <slug> --force")
+}
 const revalidateSecret = process.env.REVALIDATE_SECRET ?? ""
 if (revalidateSecret.length < 32) {
   const msg = `REVALIDATE_SECRET ${revalidateSecret ? `قصير (${revalidateSecret.length} حرفاً، المطلوب 32 على الأقل)` : "فارغ"} — إبطال ذاكرة المتجر سيفشل بصمت (401). شغّلي pnpm store:setup ${store.slug} --force لتوليده`

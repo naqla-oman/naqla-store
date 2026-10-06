@@ -42,6 +42,8 @@ const env = {
   COOKIE_SECRET: strong(prev.COOKIE_SECRET) ? prev.COOKIE_SECRET : randomBytes(48).toString("base64url"),
   // H1: سر مشترك بين الخلفية والواجهة لإبطال ذاكرة الواجهة
   REVALIDATE_SECRET: strong(prev.REVALIDATE_SECRET) ? prev.REVALIDATE_SECRET : randomBytes(32).toString("base64url"),
+  // تشفير أسرار «إعدادات المتجر» (ثواني، واتساب) — مستقل عن JWT_SECRET فلا يبطلها تغييره؛ لا يُغيَّر بعد الإطلاق
+  SETTINGS_ENCRYPTION_KEY: strong(prev.SETTINGS_ENCRYPTION_KEY) ? prev.SETTINGS_ENCRYPTION_KEY : randomBytes(32).toString("base64url"),
   DATABASE_URL: dbUrl,
   MEDUSA_BACKEND_URL: backendUrl,
   STOREFRONT_URL: storefrontUrl,
