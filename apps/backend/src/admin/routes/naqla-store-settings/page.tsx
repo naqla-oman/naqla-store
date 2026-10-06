@@ -11,7 +11,7 @@ type Val = string | number | boolean | null
 type Field = {
   key: string
   label: string
-  type: "switch" | "text" | "number" | "select" | "voice" | "palette" | "font"
+  type: "switch" | "text" | "number" | "select" | "voice" | "palette" | "font" | "image"
   hint?: string
   options?: { value: string; label: string }[]
   requires?: string
@@ -69,6 +69,9 @@ const IDENTITY: Field[] = [
   { key: "shortName", label: "الاسم المختصر", type: "text", hint: "يظهر على الجوال وأيقونة التطبيق" },
   { key: "tagline", label: "الشعار النصي", type: "text" },
   { key: "description", label: "وصف المتجر", type: "text", hint: "لمحركات البحث ومشاركة الروابط" },
+  { key: "brand.logo", label: "الشعار", type: "image", hint: "PNG أو JPEG أو WebP حتى 5MB — يُصغَّر تلقائياً" },
+  { key: "brand.wordmark", label: "الشعار يحوي اسم المتجر كاملاً", type: "switch", hint: "مطفأ: علامة مربعة يجاورها الاسم المختصر" },
+  { key: "icons.icon512", label: "أيقونة المتجر", type: "image", hint: "مربعة 192×192 على الأقل — تُولَّد منها أيقونات الجوال والمتصفح" },
   { key: "theme.palette", label: "لوحة الألوان", type: "palette" },
   { key: "theme.font", label: "الخطوط", type: "font" },
 ]
@@ -104,7 +107,7 @@ const StoreSettingsPage = () => {
 
   const save = async (tab: string, fields: Field[]) => {
     if (!data) return
-    const values = Object.fromEntries(fields.map((f) => f.key).filter((k) => JSON.stringify(draft[k]) !== JSON.stringify(data.values[k])).map((k) => [k, draft[k]]))
+    const values = Object.fromEntries(fields.filter((f) => f.type !== "image").map((f) => f.key).filter((k) => JSON.stringify(draft[k]) !== JSON.stringify(data.values[k])).map((k) => [k, draft[k]]))
     if (!Object.keys(values).length) return setMsg({ tab, ok: true, text: "لا تغييرات للحفظ" })
     setSaving(tab)
     try {
@@ -148,6 +151,50 @@ const StoreSettingsPage = () => {
           ))}
         </div>
       )
+    if (f.type === "image") {
+      const kind = f.key === "brand.logo" ? "logo" : "icon"
+      const url = typeof v === "string" && /^https?:/.test(v) ? v : null
+      const upload = (file?: File) => {
+        if (!file) return
+        const r = new FileReader()
+        r.onload = async () => {
+          setSaving("identity")
+          try {
+            const bg = data?.presets.palettes.find((p) => p.slug === draft["theme.palette"])?.light.bg ?? "#ffffff"
+            const out = await api("/admin/naqla/store-settings/brand", { method: "POST", body: JSON.stringify({ kind, data: r.result, background: bg }) })
+            setMsg({ tab: "identity", ok: true, text: `تم رفع ${kind === "logo" ? "الشعار" : "الأيقونة"} (${out.changes.length}) — يظهر في المتجر خلال ثوانٍ` })
+            await load()
+          } catch (e) {
+            setMsg({ tab: "identity", ok: false, text: (e as Error).message })
+          } finally {
+            setSaving(null)
+          }
+        }
+        r.readAsDataURL(file)
+      }
+      const reset = async () => {
+        const keys = kind === "logo" ? ["brand.logo"] : ["icons.icon192", "icons.icon512", "icons.maskable", "icons.apple", "icons.svg"]
+        try {
+          await api("/admin/naqla/store-settings", { method: "POST", body: JSON.stringify({ values: Object.fromEntries(keys.map((k) => [k, data!.defaults[k]])) }) })
+          setMsg({ tab: "identity", ok: true, text: "أُعيدت الصورة الافتراضية" }); await load()
+        } catch (e) { setMsg({ tab: "identity", ok: false, text: (e as Error).message }) }
+      }
+      return (
+        <div key={f.key} className="flex items-center gap-4 py-3">
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg border bg-ui-bg-subtle">
+            {url ? <img src={url} alt="" className="max-h-full max-w-full" data-testid={`img-${kind}`} /> : <Text size="xsmall" className="text-ui-fg-subtle">افتراضي</Text>}
+          </div>
+          <div className="grid gap-1">
+            {label}
+            <div className="flex items-center gap-2">
+              <input type="file" accept="image/png,image/jpeg,image/webp" data-testid={`upload-${kind}`} onChange={(e) => upload(e.target.files?.[0])} />
+              {url && <Button size="small" variant="secondary" onClick={reset} data-testid={`reset-${kind}`}>الافتراضي</Button>}
+            </div>
+            {f.hint && <Text size="xsmall" className="text-ui-fg-subtle">{f.hint}</Text>}
+          </div>
+        </div>
+      )
+    }
     if (f.type === "palette") {
       const custom = data?.defaults["theme.palette"] === "custom"
       const opts = [...(custom ? [{ slug: "custom", name: "هوية مخصصة", use: "هوية المتجر من نقلة", light: {} as Record<string, string> }] : []), ...(data?.presets.palettes ?? [])]

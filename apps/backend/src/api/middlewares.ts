@@ -20,6 +20,8 @@ export default defineMiddlewares({
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/line-items/:line_id', middlewares: [blockLockedCart] },
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/promotions', middlewares: [blockLockedCart] },
     { method: ['POST'], matcher: '/store/carts/:id/shipping-methods', middlewares: [blockLockedCart] },
+    // الهوية: رفع الشعار/الأيقونة (base64 حتى 5MB)
+    { method: ['POST'], matcher: '/admin/naqla/store-settings/brand', bodyParser: { sizeLimit: '8mb' } },
     // منخفضة: دقة أسعار المنتجات وقوائم الأسعار حسب العملة
     { method: ['POST'], matcher: '/admin/products*', middlewares: [validatePricePrecision] },
     { method: ['POST'], matcher: '/admin/price-lists*', middlewares: [validatePricePrecision] },

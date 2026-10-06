@@ -40,6 +40,16 @@ const oneOf = (vals: string[], label: string): Check => (v) => (vals.includes(St
 
 const FEATURES = ["tailoring", "sizeGuide", "lengthField", "gift", "expressDelivery", "pickup", "loyalty", "loyaltyTiers", "cod", "thawani", "whatsappOrder", "bnpl", "reviews"]
 
+/** رابط صورة هوية: من مجلد هوية المتجر المرفوع، أو قيمة store.json الافتراضية (أو null للأيقونة svg) */
+const brandAsset = (key: string): Check => (v) => {
+  if (v === null && key === "icons.svg") return null
+  const s = String(v ?? "")
+  const prefix = `${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}/static/${client().slug}/brand/`
+  if (s.startsWith(prefix) && /^[a-z0-9-]+\.png$/.test(s.slice(prefix.length))) return s
+  if (s && s === getPath(clientDefaults(), key)) return s
+  return fail("الصورة تُرفع من زر الرفع في تبويب الهوية")
+}
+
 /** لوحة/خط: من اللوحات الجاهزة، أو «custom» فقط إن كانت هوية العميل الافتراضية مخصصة من نقلة */
 const preset = (kind: "palettes" | "fonts", label: string): Check => (v) => {
   const s = String(v ?? "")
@@ -56,6 +66,9 @@ export const SCHEMA: Record<string, { tab: string; check: Check }> = {
   description: { tab: "identity", check: text(300, 0, "وصف المتجر") },
   "theme.palette": { tab: "identity", check: preset("palettes", "لوحة الألوان") },
   "theme.font": { tab: "identity", check: preset("fonts", "زوج الخطوط") },
+  "brand.wordmark": { tab: "identity", check: bool },
+  // الصور تُعيَّن فقط عبر مسار الرفع (روابط مجلد هوية المتجر) أو تعود لافتراضي store.json
+  ...Object.fromEntries(["brand.logo", "icons.icon192", "icons.icon512", "icons.maskable", "icons.apple", "icons.svg"].map((k) => [k, { tab: "identity", check: brandAsset(k) }])),
   // 2) الميزات
   ...Object.fromEntries(FEATURES.map((f) => [`features.${f}`, { tab: "features", check: bool }])),
   // 3) المخاطبة

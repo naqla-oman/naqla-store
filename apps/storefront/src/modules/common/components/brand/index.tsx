@@ -2,11 +2,12 @@
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { clientAsset, storeConfig } from "../../../../store.config"
 
-const B = storeConfig.brand
+// الشعار يُقرأ عند الرسم (يتغير من «إعدادات المتجر» ← الهوية)
+const brand = () => storeConfig.brand
 
 /** علامة الهوية المربعة (للأيقونات والشعار غير الكلمة) */
 export function LogoMark({ className = "" }: { className?: string }) {
-  return <img src={clientAsset(B.logo)} alt="" aria-hidden="true" className={`block rounded-[11px] ${className}`} />
+  return <img src={clientAsset(brand().logo)} alt="" aria-hidden="true" className={`block rounded-[11px] ${className}`} />
 }
 
 /**
@@ -15,15 +16,15 @@ export function LogoMark({ className = "" }: { className?: string }) {
  * - غير ذلك: العلامة المربعة + الاسم القصير + الاسم اللاتيني نصاً
  */
 export default function Brand({ dark = false }: { dark?: boolean }) {
-  if (B.wordmark) {
+  if (brand().wordmark) {
     return (
       <LocalizedClientLink href="/" className="brand-word shrink-0" aria-label={storeConfig.name}>
         {dark ? (
-          <img src={clientAsset(B.logoOnDark)} alt={storeConfig.name} className="h-[44px] w-auto" />
+          <img src={clientAsset(brand().logoOnDark)} alt={storeConfig.name} className="h-[44px] w-auto" />
         ) : (
           <>
-            <img src={clientAsset(B.logo)} alt={storeConfig.name} className="logo-light h-[44px] w-auto" />
-            <img src={clientAsset(B.logoDark)} alt="" aria-hidden="true" className="logo-dark h-[44px] w-auto" />
+            <img src={clientAsset(brand().logo)} alt={storeConfig.name} className="logo-light h-[44px] w-auto" />
+            <img src={clientAsset(brand().logoDark)} alt="" aria-hidden="true" className="logo-dark h-[44px] w-auto" />
           </>
         )}
       </LocalizedClientLink>
