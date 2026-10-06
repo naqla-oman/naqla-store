@@ -14,10 +14,13 @@ const TAG: Record<string, string> = { new: "جديد", bestsellers: "الأكث�
 export default async function ProductPreview({
   product,
   region,
+  priority = false,
 }: {
   product: HttpTypes.StoreProduct
   isFeatured?: boolean
   region: HttpTypes.StoreRegion
+  /** منخفضة (LCP): أول بطاقتين في القائمة تُحمَّلان بأولوية — أولاهما أكبر عنصر على الجوال */
+  priority?: boolean
 }) {
   const { cheapestPrice } = getProductPrice({ product })
   const meta = (product.metadata || {}) as Record<string, any>
@@ -34,7 +37,7 @@ export default async function ProductPreview({
     <LocalizedClientLink href={`/products/${product.handle}`} className="pcard" data-testid="product-wrapper">
       <div className="ph">
         {product.thumbnail && (
-          <Image src={product.thumbnail} alt={productAlt(product)} fill sizes="(max-width: 700px) 50vw, (max-width: 1024px) 33vw, 25vw" />
+          <Image src={product.thumbnail} alt={productAlt(product)} fill priority={priority} sizes="(max-width: 700px) 50vw, (max-width: 1024px) 33vw, 25vw" />
         )}
         {pct > 0 ? <span className="tag red"><bdi dir="ltr">-{pct}%</bdi></span> : tag ? <span className="tag">{tag}</span> : null}
         <WishButton productId={product.id} />
