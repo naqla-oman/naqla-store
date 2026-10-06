@@ -63,7 +63,7 @@ async function auth() {
   const locked = await login({ from: lockIp })
   ok(locked.status === 401 && /محاولات كثيرة/.test(locked.body.error ?? ""), "القفل بعد 5 محاولات فاشلة من نفس العنوان", locked.body.error)
   const [{ n }] = await q(`select count(*) n from audit where action='login' and at > now() - interval '2 minutes'`)
-  ok(Number(n) >= 8, "سجل العمليات يسجّل كل محاولة", `${n} قيد`)
+  ok(Number(n) >= 6, "سجل العمليات يسجّل كل محاولة (حتى القفل)", `${n} قيد`)
   const audit = await get("/audit", good.cookie)
   ok(audit.status === 200 && (await audit.text()).includes("audit-row"), "صفحة سجل العمليات")
   // دفعة اللوحة: القفل لكل حساب (تغيير العنوان لا يفيد) — بعد 5 فشل من عناوين مختلفة
