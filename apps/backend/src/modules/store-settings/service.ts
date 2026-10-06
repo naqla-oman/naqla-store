@@ -28,7 +28,9 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
       if (!spec) throw new SettingsError(`المفتاح «${key}» غير قابل للتعديل من اللوحة`)
       const value = spec.check(raw)
       // «غير موجود» و null سواء (حقل فارغ لمفتاح غير موجود في store.json لا يُحفظ)
-      const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+      // القائمة الفارغة كالغياب أيضاً (merchantPhones: [] لمفتاح غير موجود في store.json)
+      const norm = (x: unknown) => (Array.isArray(x) && !x.length ? null : x ?? null)
+      const same = (a: unknown, b: unknown) => JSON.stringify(norm(a)) === JSON.stringify(norm(b))
       const prev = getPath(before, key)
       if (same(prev, value)) continue
       // القيمة المساوية للافتراضي تُحذف من overrides (يبقى store.json هو المصدر)
