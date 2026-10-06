@@ -237,3 +237,8 @@ footer.site .social a { min-width: 44px; min-height: 44px; justify-content: cent
 .crumbs a { padding-block: 12px; margin-block: -12px; display: inline-block; }
 .linkbtn { min-width: 44px; justify-content: center; }
 .sechead a { padding-block: 11px; margin-block: -11px; }
+
+/* تعدد اللغات: الأسهم تنقلب مع الاتجاه، ومبدّل اللغة */
+html[dir="ltr"] .icon-dir { transform: scaleX(-1); }
+.langbtn { font-size: 12px; font-weight: 700; width: auto; padding: 0 10px; }
+footer.site .langswitch { font-weight: 600; }

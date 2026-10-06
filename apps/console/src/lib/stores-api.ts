@@ -60,7 +60,8 @@ export async function createStore(body: any) {
   const features = Object.fromEntries(Object.entries(body.features ?? {}).filter(([k, v]) => /^[a-zA-Z]+$/.test(k) && typeof v === "boolean"))
   const domain = body.domainType === "custom" ? String(body.domain ?? "").trim().toLowerCase() : `${slug}.${process.env.PLATFORM_DOMAIN || "naqla.local"}`
   if (body.domainType === "custom" && !/^([a-z0-9-]+\.)+[a-z]{2,}$/.test(domain)) throw new ApiError("الدومين غير صحيح")
-  const spec = { slug, name, phone, email, template: body.template, palette: body.palette || undefined, font: body.font || undefined, voice: body.voice || undefined, features, domain }
+  const languages = body.english === true ? ["ar", "en"] : ["ar"]
+  const spec = { slug, name, phone, email, template: body.template, languages, palette: body.palette || undefined, font: body.font || undefined, voice: body.voice || undefined, features, domain }
   await q(`insert into stores (slug, name, template, status, domain, phone, email, meta) values ($1,$2,$3,'provisioning',$4,$5,$6,$7)
     on conflict (slug) do update set name=$2, template=$3, status='provisioning', domain=$4, phone=$5, email=$6, meta=$7, created_at=now()`,
     [slug, name, body.template, domain, phone, email, JSON.stringify(spec)])

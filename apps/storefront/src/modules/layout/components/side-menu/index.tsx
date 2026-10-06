@@ -7,6 +7,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Icon from "@modules/common/components/icon"
 import { LogoMark } from "@modules/common/components/brand"
 import { storeConfig } from "../../../../store.config"
+import { langPrefix } from "@/i18n/config"
 
 const EXTRA = [
   { label: "تتبّع طلبك", href: "/account/orders", icon: "truck" },
@@ -16,7 +17,7 @@ const EXTRA = [
 
 const SideMenu = () => {
   const router = useRouter()
-  const { countryCode } = useParams() as { countryCode: string }
+  const { countryCode, lang } = useParams() as { countryCode: string; lang: string }
   return (
     <Popover className="h-full flex">
       {({ open, close }) => (
@@ -49,7 +50,7 @@ const SideMenu = () => {
                   e.preventDefault()
                   const q = String(new FormData(e.currentTarget).get("q") ?? "").trim()
                   close()
-                  router.push(`/${countryCode}/store${q ? `?q=${encodeURIComponent(q)}` : ""}`)
+                  router.push(`/${countryCode}${langPrefix(lang)}/store${q ? `?q=${encodeURIComponent(q)}` : ""}`)
                 }}
               >
                 <Icon name="search" size={18} />

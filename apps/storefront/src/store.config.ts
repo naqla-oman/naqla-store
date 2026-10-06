@@ -131,6 +131,9 @@ function build(c: ClientStore) {
   )
 
   return {
+    /** اللغات: العربية الأصل؛ الإنجليزية طبقة فوقها إن فُعّلت (المبدّل وروابط /en تظهر فقط عندها) */
+    languages: ((c as any).languages?.length ? (c as any).languages : ["ar"]) as string[],
+    defaultLanguage: ((c as any).defaultLanguage ?? "ar") as string,
     /** الهوية من «إعدادات المتجر»: لوحة/خط مختاران (يوجدان فقط إن خالفا الافتراضي) */
     theme: ((c as any).theme ?? {}) as { palette?: string; font?: string },
     /** السجل التجاري والرقم الضريبي (إعدادات المتجر ← بيانات المتجر) */

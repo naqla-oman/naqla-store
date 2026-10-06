@@ -6,6 +6,7 @@ import BottomTabs from "@modules/layout/components/bottom-tabs"
 import Decor from "@modules/common/components/decor"
 import { storeConfig as c } from "../../../../store.config"
 import { g } from "@lib/voice"
+import LangSwitch from "@modules/layout/components/lang-switch"
 
 const COLS = [
   { title: g("تسوّقي", "تسوّق"), links: c.nav.map((n) => ({ label: n.label, href: n.href })) },
@@ -75,6 +76,7 @@ export default function Footer() {
             <span><Icon name="truck" size={14} className="me-1" /> توصيل لكل محافظات السلطنة خلال 24–48 ساعة</span>
           </div>
           <div className="fbottom">
+            <LangSwitch languages={c.languages} />
             <span>© {new Date().getFullYear()} {c.name} — جميع الحقوق محفوظة.</span>
             {(c.legal.cr || c.legal.vat) && (
               <span data-testid="footer-legal">

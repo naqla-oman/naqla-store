@@ -74,6 +74,9 @@ export const SCHEMA: Record<string, { tab: string; check: Check }> = {
   ...Object.fromEntries(["brand.logo", "icons.icon192", "icons.icon512", "icons.maskable", "icons.apple", "icons.svg"].map((k) => [k, { tab: "identity", check: brandAsset(k) }])),
   // 2) الميزات
   ...Object.fromEntries(FEATURES.map((f) => [`features.${f}`, { tab: "features", check: bool }])),
+  // 2) اللغات (تبويب الميزات): العربية دائماً؛ الإنجليزية اختيارية
+  languages: { tab: "features", check: (v) => { const a = Array.isArray(v) ? [...new Set(v.map(String))] : null; return a && a.includes("ar") && a.every((x) => ["ar", "en"].includes(x)) ? a : fail("اللغات: العربية إلزامية، والإنجليزية اختيارية") } },
+  defaultLanguage: { tab: "features", check: oneOf(["ar", "en"], "اللغة الافتراضية") },
   // 3) المخاطبة
   voice: { tab: "voice", check: oneOf(["f", "m", "neutral"], "المخاطبة") },
   // 4) التوصيل (الأسعار والمحافظات في Medusa — هنا ما ليس من بيانات Medusa)
@@ -145,6 +148,7 @@ export function crossIssues(eff: any): Record<string, string> {
   const out: Record<string, string> = {}
   if (f.loyaltyTiers && !f.loyalty) out.tiers = g("المستويات تتطلب تفعيل الولاء أولاً", "المستويات تتطلب تفعيل الولاء أولاً")
   if (!f.cod && !f.thawani && !f.whatsappOrder) out.payment = g("فعّلي طريقة دفع واحدة على الأقل", "فعّل طريقة دفع واحدة على الأقل")
+  if (eff.defaultLanguage && !(eff.languages ?? ["ar"]).includes(eff.defaultLanguage)) out.language = "اللغة الافتراضية يجب أن تكون من اللغات المفعّلة"
   if (f.thawani && !thawaniConfigured()) out.thawani = g("ثواني يتطلب مفاتيحه أولاً — أدخليها في تبويب «الدفع والتواصل»", "ثواني يتطلب مفاتيحه أولاً — أدخلها في تبويب «الدفع والتواصل»")
   return out
 }

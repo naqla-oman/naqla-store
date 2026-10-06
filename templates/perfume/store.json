@@ -707,5 +707,9 @@
   "reservationHours": {
     "whatsapp": 48,
     "pickup": 72
-  }
+  },
+  "languages": [
+    "ar"
+  ],
+  "defaultLanguage": "ar"
 }

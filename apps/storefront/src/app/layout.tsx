@@ -4,7 +4,7 @@ import { Metadata, Viewport } from "next"
 import display from "@client-font-display"
 import body from "@client-font-body"
 import latin from "@client-font-latin"
-import { clientAsset, storeConfig } from "../store.config"
+import { clientAsset, storeConfig } from "@/store.config"
 import { ensureStoreSettings } from "@lib/data/store-settings"
 import StoreSettingsBoot from "@modules/common/components/store-settings-boot"
 import { FONT_CATALOG_CLASSES } from "../fonts/catalog"
@@ -16,6 +16,9 @@ import "styles/theme.css"
 import "styles/product.css"
 import "styles/checkout.css"
 import "styles/account.css"
+import { NextIntlClientProvider } from "next-intl"
+import { getLocale, getMessages } from "next-intl/server"
+import { dirOf } from "@/i18n/config"
 
 // إعدادات اللوحة تُطبَّق قبل البيانات الوصفية (الاسم، الوصف…)
 export async function generateMetadata(): Promise<Metadata> {
@@ -56,17 +59,20 @@ export async function generateViewport(): Promise<Viewport> {
 export default async function RootLayout(props: { children: React.ReactNode }) {
   // إعدادات اللوحة: تُطبَّق قبل رسم الصفحات، وتُمرَّر للمتصفح قبل الحِزم
   const settings = await ensureStoreSettings()
+  // اللغة من الوسيط (x-naqla-lang): العربية الأصل، والإنجليزية طبقة فوقها
+  const locale = await getLocale()
+  const messages = await getMessages()
   const boot = `window.__NAQLA_SETTINGS__=${JSON.stringify(settings).replace(/</g, "\\u003c")}`
   // الهوية: لوحة وخط من «إعدادات المتجر» (فوق theme.css وخطوط البناء)
   const identityCss = [paletteCss(storeConfig.theme.palette), fontCss(storeConfig.theme.font)].filter(Boolean).join("\n")
   return (
-    <html lang={storeConfig.locale.split("-")[0]} dir={storeConfig.dir} data-theme={storeConfig.defaultTheme} className={`${display.variable} ${body.variable} ${latin.variable} ${FONT_CATALOG_CLASSES}`}>
+    <html lang={locale} dir={dirOf(locale)} data-theme={storeConfig.defaultTheme} className={`${display.variable} ${body.variable} ${latin.variable} ${FONT_CATALOG_CLASSES}`}>
       <head>
         <script dangerouslySetInnerHTML={{ __html: boot }} />
         {identityCss && <style id="naqla-identity" dangerouslySetInnerHTML={{ __html: identityCss }} />}
       </head>
       <body>
-        <main className="relative"><StoreSettingsBoot settings={settings}>{props.children}</StoreSettingsBoot></main>
+        <NextIntlClientProvider locale={locale} messages={messages}><main className="relative"><StoreSettingsBoot settings={settings}>{props.children}</StoreSettingsBoot></main></NextIntlClientProvider>
       </body>
     </html>
   )

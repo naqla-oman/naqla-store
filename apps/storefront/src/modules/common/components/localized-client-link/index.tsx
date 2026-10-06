@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import React from "react"
+import { langPrefix } from "@/i18n/config"
 
 /**
  * Use this component to create a Next.js `<Link />` that persists the current country code in the url,
@@ -20,10 +21,11 @@ const LocalizedClientLink = ({
   passHref?: true
   [x: string]: any
 }) => {
-  const { countryCode } = useParams()
+  const { countryCode, lang } = useParams()
 
+  // العربية بلا بادئة (/om/…)، الإنجليزية /om/en/…
   return (
-    <Link href={`/${countryCode}${href}`} {...props}>
+    <Link href={`/${countryCode}${langPrefix(lang)}${href}`} {...props}>
       {children}
     </Link>
   )

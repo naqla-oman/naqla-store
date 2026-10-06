@@ -13,13 +13,14 @@ import Steps from "@modules/checkout/components/steps"
 import Signed from "@modules/common/components/signed"
 import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
-import { useRouter } from "next/navigation"
+import { useParams, useRouter } from "next/navigation"
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 import { tailoringNote } from "@lib/util/tailoring"
 import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
 import { discountLines } from "@lib/util/discounts"
+import { langPrefix } from "@/i18n/config"
 
 type Props = {
   cart: HttpTypes.StoreCart
@@ -65,6 +66,7 @@ const fmt = (n: number) => `${formatAmount(n)} ${CUR}`
 export default function CheckoutFlow({ cart, shippingOptions, providers, countryCode, step, error, customer, enabledGovernorates }: Props) {
   const govOptions = checkout.governorates.filter((x) => !enabledGovernorates || enabledGovernorates.includes(x.code))
   const router = useRouter()
+  const { lang } = useParams<{ lang: string }>()
   const addr = cart.shipping_address
   const meta = (cart.metadata ?? {}) as Record<string, any>
 
@@ -148,7 +150,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const go = (s: "address" | "payment") => {
-    router.push(`/${countryCode}/checkout?step=${s}`, { scroll: false })
+    router.push(`/${countryCode}${langPrefix(lang)}/checkout?step=${s}`, { scroll: false })
     window.scrollTo({ top: 0, behavior: "smooth" })
   }
 
@@ -222,7 +224,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
         })
       )
     }
-    router.push(`/${countryCode}/order/${r.data!.orderId}/confirmed${pay.key === "whatsapp" ? "?via=whatsapp" : ""}`)
+    router.push(`/${countryCode}${langPrefix(lang)}/order/${r.data!.orderId}/confirmed${pay.key === "whatsapp" ? "?via=whatsapp" : ""}`)
   }
 
   const placing = busy === "place"

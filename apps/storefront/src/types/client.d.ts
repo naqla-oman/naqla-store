@@ -21,7 +21,12 @@ declare module "@naqla-themes/presets.json" {
   const v: {
     version: number
     palettes: { slug: string; name: string; use?: string; radius: Record<string, number>; light: Record<string, string>; dark: Record<string, string> }[]
-    fonts: { slug: string; name: string; display: string; body: string; latin?: string }[]
+    fonts: { slug: string; name: string; display: string; body: string; latin?: string; bodyLatin?: string }[]
   }
+  export default v
+}
+
+declare module "@client/locales/en.json" {
+  const v: Record<string, unknown>
   export default v
 }

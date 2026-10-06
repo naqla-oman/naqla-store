@@ -2,7 +2,7 @@
 export type Log = (line: string) => void
 export type StoreSpec = {
   slug: string; name: string; template: string; phone: string; email: string
-  palette?: string; font?: string; voice?: "f" | "m" | "neutral"; features?: Record<string, boolean>
+  palette?: string; font?: string; voice?: "f" | "m" | "neutral"; features?: Record<string, boolean>; languages?: string[]
   logoPng?: string; domain?: string
 }
 export interface Driver {

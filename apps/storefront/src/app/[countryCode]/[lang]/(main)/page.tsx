@@ -5,7 +5,7 @@ import Hero from "@modules/home/components/hero"
 import Decor from "@modules/common/components/decor"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
-import { storeConfig } from "../../../store.config"
+import { storeConfig } from "@/store.config"
 
 export const metadata: Metadata = {
   title: `${storeConfig.name} — ${storeConfig.tagline}`,

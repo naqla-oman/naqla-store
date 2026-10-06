@@ -2,7 +2,7 @@ import { readPage } from "@lib/pages/content"
 import { renderMarkdown } from "@lib/pages/markdown"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
-import { storeConfig } from "../../../../../store.config"
+import { storeConfig } from "@/store.config"
 
 type Props = { params: Promise<{ countryCode: string; slug: string }> }
 

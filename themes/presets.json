@@ -444,7 +444,8 @@
       "name": "رسمي متوازن",
       "display": "noto-kufi-arabic",
       "body": "noto-sans-arabic",
-      "latin": "none"
+      "latin": "none",
+      "bodyLatin": "noto-sans"
     },
     {
       "slug": "wadud",

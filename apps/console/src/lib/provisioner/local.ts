@@ -84,6 +84,7 @@ export const local: Driver = {
     const d = JSON.parse(readFileSync(f, "utf8"))
     if (spec.palette || spec.font) d.theme = { ...(d.theme ?? {}), ...(spec.palette ? { palette: spec.palette } : {}), ...(spec.font ? { font: spec.font } : {}) }
     if (spec.voice) d.voice = spec.voice
+    if (spec.languages?.length) { d.languages = spec.languages; d.defaultLanguage = "ar" }
     if (spec.features) d.features = { ...d.features, ...spec.features }
     if (spec.logoPng) {
       writeFileSync(join(ROOT, "clients", spec.slug, "logo.png"), Buffer.from(spec.logoPng, "base64"))

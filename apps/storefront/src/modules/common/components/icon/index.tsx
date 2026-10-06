@@ -48,6 +48,8 @@ const PATHS: Record<string, string> = {
   zoom: '<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2M11 8v6M8 11h6"/>',
 }
 
+/** أيقونات اتجاهية (تنقلب في LTR عبر CSS: html[dir=ltr] .icon-dir) */
+const DIRECTIONAL = new Set(["arrowL", "arrowR", "chevL", "chevR"])
 export default function Icon({ name, size = 20, className = "" }: { name: keyof typeof PATHS | string; size?: number; className?: string }) {
   const d = PATHS[name] || ""
   return (
@@ -61,7 +63,7 @@ export default function Icon({ name, size = 20, className = "" }: { name: keyof 
       strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
-      className={`inline-block shrink-0 ${className}`}
+      className={`inline-block shrink-0 ${className} ${DIRECTIONAL.has(String(name)) ? "icon-dir" : ""}`}
       dangerouslySetInnerHTML={{ __html: d }}
     />
   )

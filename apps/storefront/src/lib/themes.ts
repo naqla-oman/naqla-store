@@ -25,6 +25,8 @@ export function fontCss(slug?: string | null): string | null {
   const f = presets.fonts.find((x) => x.slug === slug)
   if (!f) return null
   const v = (name?: string) => (name && name !== "none" && FONT_CATALOG[name] ? `var(--ff-${name})` : null)
-  const parts = [`--font-display:${v(f.display) ?? "inherit"}`, `--font-body:${v(f.body) ?? "inherit"}`, `--font-latin:${v(f.latin) ?? "inherit"}`]
+  // الخط اللاتيني المرافق (bodyLatin) يأتي بعد خط المتن: المتصفح يسقط إليه لكل حرف لا يغطيه الخط العربي
+  const bodyLatin = v((f as any).bodyLatin)
+  const parts = [`--font-display:${v(f.display) ?? "inherit"}`, `--font-body:${v(f.body) ?? "inherit"}${bodyLatin ? `, ${bodyLatin}` : ""}`, `--font-latin:${v(f.latin) ?? "inherit"}`]
   return `html:root{${parts.join(";")}}`
 }

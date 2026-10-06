@@ -100,6 +100,39 @@ async function getCountryCode(
   }
 }
 
+/* ===== اللغات: العربية الأصل (/om/…)، الإنجليزية /om/en/… — تُعاد كتابتها داخلياً إلى app/[countryCode]/[lang] ===== */
+let langCache: { at: number; languages: string[] } = { at: 0, languages: ["ar"] }
+async function getLanguages(): Promise<string[]> {
+  if (Date.now() - langCache.at < 60_000) return langCache.languages
+  try {
+    const r = await fetch(`${BACKEND_URL}/store/naqla/languages`, { headers: { "x-publishable-api-key": PUBLISHABLE_API_KEY! } })
+    if (r.ok) langCache = { at: Date.now(), languages: (await r.json()).languages ?? ["ar"] }
+  } catch { /* تبقى القيمة السابقة */ }
+  return langCache.languages
+}
+/** يحوّل طلب /<cc>/… إلى المسار الداخلي بلغته ويضع ترويسة اللغة والكوكي */
+async function withLang(request: NextRequest, countryCode: string): Promise<NextResponse> {
+  const url = request.nextUrl.clone()
+  const segs = url.pathname.split("/") // ["", cc, lang?, …]
+  const langs = await getLanguages()
+  let lang = "ar"
+  if (segs[2] === "ar") { // الصيغة القانونية للعربية بلا بادئة
+    url.pathname = `/${countryCode}${segs.slice(3).join("/") ? "/" + segs.slice(3).join("/") : ""}`
+    return NextResponse.redirect(url, 308)
+  }
+  if (segs[2] === "en") {
+    if (!langs.includes("en")) url.pathname = `/${countryCode}/ar/__404__` // متجر بلغة واحدة: لا /en
+    lang = langs.includes("en") ? "en" : "ar"
+  } else {
+    url.pathname = `/${countryCode}/ar${segs.slice(2).join("/") ? "/" + segs.slice(2).join("/") : ""}`
+  }
+  const headers = new Headers(request.headers)
+  headers.set("x-naqla-lang", lang)
+  const res = url.pathname === request.nextUrl.pathname ? NextResponse.next({ request: { headers } }) : NextResponse.rewrite(url, { request: { headers } })
+  if (request.cookies.get("lang")?.value !== lang) res.cookies.set("lang", lang, { path: "/", maxAge: 365 * 86400, sameSite: "lax" })
+  return res
+}
+
 /**
  * Middleware to handle region selection and onboarding status.
  */
@@ -121,16 +154,15 @@ async function baseMiddleware(request: NextRequest) {
 
   // if one of the country codes is in the url and the cache id is set, return next
   if (urlHasCountryCode && cacheIdCookie) {
-    return NextResponse.next()
+    return withLang(request, countryCode)
   }
 
   // if one of the country codes is in the url and the cache id is not set, set the cache id and redirect
   if (urlHasCountryCode && !cacheIdCookie) {
-    response.cookies.set("_medusa_cache_id", cacheId, {
-      maxAge: 60 * 60 * 24,
-    })
-
-    return response
+    // أول زيارة: كوكي الذاكرة مع الرد نفسه (بلا تحويل إضافي)
+    const r = await withLang(request, countryCode)
+    r.cookies.set("_medusa_cache_id", cacheId, { maxAge: 60 * 60 * 24 })
+    return r
   }
 
   // check if the url is a static asset

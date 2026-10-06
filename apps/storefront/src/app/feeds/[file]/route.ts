@@ -1,6 +1,6 @@
 import { feedItems, FeedItem } from "@lib/feeds/items"
 import { getBaseURL } from "@lib/util/env"
-import { storeConfig } from "../../../store.config"
+import { storeConfig } from "@/store.config"
 
 /**
  * الكتالوجات: /feeds/google.xml (Merchant Center)، /feeds/meta.csv (Meta + كتالوج واتساب)،

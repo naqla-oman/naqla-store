@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next"
-import { clientAsset, storeConfig } from "../store.config"
+import { clientAsset, storeConfig } from "@/store.config"
 import { ensureStoreSettings } from "@lib/data/store-settings"
 
 // إعدادات المتجر (الاسم والأيقونات) تُطبَّق قبل البناء — مسار مستقل لا يمر بالتخطيط الجذري

@@ -7,6 +7,7 @@ import CheckoutFlow from "@modules/checkout/templates/checkout-flow"
 import { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getShippingConfig } from "@lib/data/shipping-threshold"
+import { langPrefix } from "@/i18n/config"
 
 export const metadata: Metadata = {
   title: "إتمام الطلب",
@@ -14,18 +15,18 @@ export const metadata: Metadata = {
 }
 
 type Props = {
-  params: Promise<{ countryCode: string }>
+  params: Promise<{ countryCode: string; lang: string }>
   searchParams: Promise<{ step?: string; error?: string }>
 }
 
 export default async function Checkout(props: Props) {
-  const { countryCode } = await props.params
+  const { countryCode, lang } = await props.params
   const { step, error } = await props.searchParams
   // H2: عادت من ثواني بالإلغاء → فكّ قفل السلة لتتمكن من تعديلها أو اختيار طريقة أخرى
   if (error === "thawani_cancelled") await releasePaymentLock()
   const cart = await retrieveCart(undefined, CART_FIELDS)
 
-  if (!cart?.items?.length) redirect(`/${countryCode}/cart`)
+  if (!cart?.items?.length) redirect(`/${countryCode}${langPrefix(lang)}/cart`)
 
   const hasAddress = !!cart.shipping_address?.province && !!cart.shipping_address?.phone
   const current = step === "payment" && hasAddress ? "payment" : "address"

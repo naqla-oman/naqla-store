@@ -2,16 +2,17 @@ import { Metadata } from "next"
 import { notFound, permanentRedirect } from "next/navigation"
 import { findRedirect } from "@lib/data/seo"
 import { breadcrumbs, jsonLdScript } from "@lib/seo/jsonld"
-import { storeConfig } from "../../../../../store.config"
+import { storeConfig } from "@/store.config"
 
 import { getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"
 import { StoreRegion } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { langPrefix } from "@/i18n/config"
 
 type Props = {
-  params: Promise<{ category: string[]; countryCode: string }>
+  params: Promise<{ category: string[]; countryCode: string; lang: string }>
   searchParams: Promise<{
     sortBy?: SortOptions
     page?: string
@@ -50,7 +51,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   const category = await getCategoryByHandle(params.category).catch(() => null)
   if (!category) {
     const to = await findRedirect(`/categories/${params.category.join("/")}`)
-    if (to) permanentRedirect(`/${params.countryCode}${to}`)
+    if (to) permanentRedirect(`/${params.countryCode}${langPrefix(params.lang)}${to}`)
     notFound()
   }
   const meta = (category.metadata ?? {}) as Record<string, any>
@@ -59,7 +60,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     // اسم المتجر يُضاف من قالب العنوان في التخطيط الجذري
     title: meta.seo_title || category.name,
     description,
-    alternates: { canonical: `/${params.countryCode}/categories/${params.category.join("/")}` },
+    alternates: { canonical: `/${params.countryCode}${langPrefix(params.lang)}/categories/${params.category.join("/")}` },
     openGraph: { title: `${meta.seo_title || category.name} | ${storeConfig.name}`, description },
   }
 }
@@ -73,7 +74,7 @@ export default async function CategoryPage(props: Props) {
 
   if (!productCategory) {
     const to = await findRedirect(`/categories/${params.category.join("/")}`)
-    if (to) permanentRedirect(`/${params.countryCode}${to}`)
+    if (to) permanentRedirect(`/${params.countryCode}${langPrefix(params.lang)}${to}`)
     notFound()
   }
 
@@ -83,8 +84,8 @@ export default async function CategoryPage(props: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={jsonLdScript(
           breadcrumbs([
-            { name: "الرئيسية", path: `/${params.countryCode}` },
-            { name: productCategory.name, path: `/${params.countryCode}/categories/${productCategory.handle}` },
+            { name: "الرئيسية", path: `/${params.countryCode}${langPrefix(params.lang)}` },
+            { name: productCategory.name, path: `/${params.countryCode}${langPrefix(params.lang)}/categories/${productCategory.handle}` },
           ])
         )}
       />

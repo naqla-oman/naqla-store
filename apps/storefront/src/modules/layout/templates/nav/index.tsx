@@ -8,6 +8,7 @@ import ThemeToggle from "@modules/layout/components/theme-toggle"
 import HeaderSearch from "@modules/layout/components/header-search"
 import { storeConfig } from "../../../../store.config"
 import { getFreeShippingOver } from "@lib/data/shipping-threshold"
+import LangSwitch from "@modules/layout/components/lang-switch"
 
 export default async function Nav() {
   // M19: الحد من قاعدة Medusa الفعلية (null = لا توصيل مجاني ← لا يظهر الشريط)
@@ -42,6 +43,7 @@ export default async function Nav() {
           <div className="flex items-center gap-2 ms-auto small:ms-0">
             <LocalizedClientLink href="/store?focus=search" className="iconbtn small:!hidden" aria-label="بحث"><Icon name="search" /></LocalizedClientLink>
             <ThemeToggle />
+            <LangSwitch languages={storeConfig.languages} className="iconbtn langbtn" />
             <LocalizedClientLink href="/account/wishlist" className="iconbtn !hidden small:!grid" aria-label="المفضلة"><Icon name="heart" /></LocalizedClientLink>
             <LocalizedClientLink href="/account" className="iconbtn !hidden small:!grid" aria-label="حسابي" data-testid="nav-account-link"><Icon name="user" /></LocalizedClientLink>
             <Suspense fallback={<LocalizedClientLink className="iconbtn" href="/cart" aria-label="السلة"><Icon name="bag" /></LocalizedClientLink>}>

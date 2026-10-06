@@ -5,6 +5,8 @@ import ListingControls from "@modules/store/components/listing-controls"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { Suspense } from "react"
 import PaginatedProducts from "./paginated-products"
+import { langPrefix } from "@/i18n/config"
+import { getLocale } from "next-intl/server"
 
 /**
  * H11: قالب القوائم الموحّد (المتجر + الأقسام) بتصميم المتجر بدل قالب Medusa الإنجليزي:
@@ -23,6 +25,7 @@ type Props = {
 }
 
 export default async function ListingTemplate({ countryCode, sortBy, page, q, title, subtitle, categoryId, activeHandle, crumbs = [] }: Props) {
+  const lang = await getLocale()
   const sort = sortBy || "created_at"
   const categories = (await listCategories().catch(() => [])).filter((c: any) => !c.parent_category_id)
   const heading = q ? `نتائج البحث عن «${q}»` : title
@@ -42,7 +45,7 @@ export default async function ListingTemplate({ countryCode, sortBy, page, q, ti
           {subtitle && !q && <p>{subtitle}</p>}
         </div>
       </div>
-      <ListingControls searchAction={`/${countryCode}/store`} />
+      <ListingControls searchAction={`/${countryCode}${langPrefix(lang)}/store`} />
       <div className="catchips" role="navigation" aria-label="الأقسام">
         <LocalizedClientLink href="/store" className={`catchip${!activeHandle && !q ? " on" : ""}`}>الكل</LocalizedClientLink>
         {categories.map((c: any) => (

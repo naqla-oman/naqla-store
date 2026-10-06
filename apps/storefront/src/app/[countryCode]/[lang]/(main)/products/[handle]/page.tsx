@@ -9,11 +9,12 @@ import { HttpTypes } from "@medusajs/types"
 import { PRODUCT_FIELDS } from "@modules/products/lib/fields"
 import { variantPricing, availableQty } from "@modules/products/lib/variants"
 import { getBaseURL } from "@lib/util/env"
-import { storeConfig } from "../../../../../store.config"
+import { storeConfig } from "@/store.config"
 import { getFreeShippingOver } from "@lib/data/shipping-threshold"
+import { langPrefix } from "@/i18n/config"
 
 type Props = {
-  params: Promise<{ countryCode: string; handle: string }>
+  params: Promise<{ countryCode: string; handle: string; lang: string }>
   searchParams: Promise<{ v_id?: string }>
 }
 
@@ -90,7 +91,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   if (!product) {
     // رابط قديم بعد تغيير الرابط ← 301 للجديد
     const to = await findRedirect(`/products/${handle}`)
-    if (to) permanentRedirect(`/${params.countryCode}${to}`)
+    if (to) permanentRedirect(`/${params.countryCode}${langPrefix(params.lang)}${to}`)
     notFound()
   }
   // منخفضة: منتج الخدمة («تفصيل خاص») يُطلب من صفحة العباءة فقط — لا صفحة مستقلة ولا فهرسة
@@ -101,7 +102,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   return {
     title: meta.seo_title || product.title,
     description,
-    alternates: { canonical: `/${params.countryCode}/products/${handle}` },
+    alternates: { canonical: `/${params.countryCode}${langPrefix(params.lang)}/products/${handle}` },
     openGraph: {
       title: `${product.title} | ${storeConfig.name}`,
       description,
@@ -129,7 +130,7 @@ export default async function ProductPage(props: Props) {
 
   if (!pricedProduct) {
     const to = await findRedirect(`/products/${params.handle}`)
-    if (to) permanentRedirect(`/${params.countryCode}${to}`)
+    if (to) permanentRedirect(`/${params.countryCode}${langPrefix(params.lang)}${to}`)
     notFound()
   }
   // منخفضة: منتج الخدمة لا صفحة مستقلة له (يُطلب من صفحة القطعة) — 404 حقيقي من دالة الصفحة
@@ -168,11 +169,11 @@ export default async function ProductPage(props: Props) {
       type="application/ld+json"
       dangerouslySetInnerHTML={jsonLdScript(
         breadcrumbs([
-          { name: "الرئيسية", path: `/${params.countryCode}` },
+          { name: "الرئيسية", path: `/${params.countryCode}${langPrefix(params.lang)}` },
           ...(pricedProduct.categories?.[0]
-            ? [{ name: pricedProduct.categories[0].name, path: `/${params.countryCode}/categories/${pricedProduct.categories[0].handle}` }]
+            ? [{ name: pricedProduct.categories[0].name, path: `/${params.countryCode}${langPrefix(params.lang)}/categories/${pricedProduct.categories[0].handle}` }]
             : []),
-          { name: pricedProduct.title, path: `/${params.countryCode}/products/${pricedProduct.handle}` },
+          { name: pricedProduct.title, path: `/${params.countryCode}${langPrefix(params.lang)}/products/${pricedProduct.handle}` },
         ])
       )}
     />

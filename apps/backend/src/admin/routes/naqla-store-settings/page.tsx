@@ -7,11 +7,11 @@ import { useEffect, useMemo, useState } from "react"
  * «إعدادات المتجر»: العميل يعدّل متجره بنفسه. كل تبويب يحفظ مفاتيحه المتغيّرة فقط إلى
  * /admin/naqla/store-settings (قائمة بيضاء + تحقق على الخادم)، والتغيير يظهر في المتجر خلال ثوانٍ.
  */
-type Val = string | number | boolean | null
+type Val = string | number | boolean | null | string[]
 type Field = {
   key: string
   label: string
-  type: "switch" | "text" | "number" | "select" | "voice" | "palette" | "font" | "image"
+  type: "switch" | "text" | "number" | "select" | "voice" | "palette" | "font" | "image" | "langs"
   hint?: string
   options?: { value: string; label: string }[]
   requires?: string
@@ -29,6 +29,8 @@ type Data = {
 }
 
 const FEATURES: Field[] = [
+  { key: "languages", label: "الإنجليزية إلى جانب العربية", type: "langs", hint: "يظهر مبدّل اللغة وروابط /en في المتجر" },
+  { key: "defaultLanguage", label: "اللغة الافتراضية", type: "select", options: [{ value: "ar", label: "العربية" }, { value: "en", label: "English" }] },
   { key: "features.cod", label: "الدفع عند الاستلام", type: "switch" },
   { key: "features.thawani", label: "الدفع الإلكتروني (ثواني)", type: "switch", hint: "يتطلب مفاتيح ثواني في تبويب الدفع والتواصل" },
   { key: "features.whatsappOrder", label: "إرسال الطلب عبر واتساب", type: "switch" },
@@ -316,6 +318,15 @@ const StoreSettingsPage = () => {
           ))}
         </div>
       )
+    if (f.type === "langs") {
+      const on = Array.isArray(v) && (v as string[]).includes("en")
+      return (
+        <div key={f.key} className="flex items-center justify-between gap-4 py-2">
+          <div>{label}<Text size="xsmall" className="text-ui-fg-subtle">{f.hint}</Text></div>
+          <Switch id={f.key} data-testid="set-languages-en" checked={on} onCheckedChange={(c) => set(f.key, (c ? ["ar", "en"] : ["ar"]) as unknown as Val)} />
+        </div>
+      )
+    }
     if (f.type === "image") {
       const kind = f.key === "brand.logo" ? "logo" : "icon"
       const url = typeof v === "string" && /^https?:/.test(v) ? v : null
@@ -400,7 +411,7 @@ const StoreSettingsPage = () => {
       )
     }
     if (f.type === "select") {
-      const opts = f.key === "location.province" ? (data?.governorates ?? []).map((g) => ({ value: g.code, label: g.name })) : wilayats.map((w) => ({ value: w, label: w }))
+      const opts = f.options ?? (f.key === "location.province" ? (data?.governorates ?? []).map((g) => ({ value: g.code, label: g.name })) : wilayats.map((w) => ({ value: w, label: w })))
       return (
         <div key={f.key} className="grid gap-1 py-2">
           {label}

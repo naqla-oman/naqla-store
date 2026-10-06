@@ -2,16 +2,17 @@ import { Metadata } from "next"
 
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreTemplate from "@modules/store/templates"
-import { storeConfig } from "../../../../store.config"
+import { storeConfig } from "@/store.config"
+import { langPrefix } from "@/i18n/config"
 
 /** منخفضة: عنوان ووصف عربيان؛ نتائج البحث (?q=) لا تُفهرس ورابطها القانوني /store */
 export async function generateMetadata(props: Params): Promise<Metadata> {
-  const { countryCode } = await props.params
+  const { countryCode, lang } = await props.params
   const { q, page } = await props.searchParams
   return {
     title: q ? `نتائج البحث عن «${q.slice(0, 60)}»` : "كل المنتجات",
     description: storeConfig.description,
-    alternates: { canonical: `/${countryCode}/store${!q && page && page !== "1" ? `?page=${page}` : ""}` },
+    alternates: { canonical: `/${countryCode}${langPrefix(lang)}/store${!q && page && page !== "1" ? `?page=${page}` : ""}` },
     ...(q ? { robots: { index: false, follow: true } } : {}),
   }
 }
@@ -24,6 +25,7 @@ type Params = {
   }>
   params: Promise<{
     countryCode: string
+    lang: string
   }>
 }
 

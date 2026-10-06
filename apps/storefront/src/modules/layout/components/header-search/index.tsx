@@ -3,16 +3,17 @@ import { useRouter, useParams } from "next/navigation"
 import { useState } from "react"
 import Icon from "@modules/common/components/icon"
 import { storeConfig } from "../../../../store.config"
+import { langPrefix } from "@/i18n/config"
 
 export default function HeaderSearch({ className = "" }: { className?: string }) {
   const [q, setQ] = useState("")
   const router = useRouter()
-  const { countryCode } = useParams<{ countryCode: string }>()
+  const { countryCode, lang } = useParams<{ countryCode: string; lang: string }>()
   return (
     <form
       className={`hsearch ${className}`}
       role="search"
-      onSubmit={(e) => { e.preventDefault(); router.push(`/${countryCode}/store?q=${encodeURIComponent(q.trim())}`) }}
+      onSubmit={(e) => { e.preventDefault(); router.push(`/${countryCode}${langPrefix(lang)}/store?q=${encodeURIComponent(q.trim())}`) }}
     >
       <input
         type="search"

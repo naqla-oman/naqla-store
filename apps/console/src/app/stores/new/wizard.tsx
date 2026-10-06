@@ -75,6 +75,7 @@ export default function Wizard({ templates, palettes, fonts, platformDomain }: {
         {step === 3 && <>
           <div className="grid g3">{FEATURES.map(([k, label]) => (
             <label key={k} className="check"><input type="checkbox" data-testid={`w-f-${k}`} checked={!!f.features[k]} onChange={(e) => set("features", { ...f.features, [k]: e.target.checked })} />{label}</label>))}</div>
+          <label className="check"><input type="checkbox" data-testid="w-lang-en" checked={!!f.english} onChange={(e) => set("english", e.target.checked)} />الإنجليزية إلى جانب العربية (مبدّل لغة وروابط /en)</label>
           <div><b>المخاطبة</b></div>
           <div className="grid g3">{[["f", "للنساء"], ["m", "للرجال"], ["neutral", "محايدة"]].map(([v, t]) => (
             <label key={v} className="check"><input type="radio" name="voice" data-testid={`w-voice-${v}`} checked={f.voice === v} onChange={() => set("voice", v)} />{t}</label>))}</div>
@@ -92,7 +93,7 @@ export default function Wizard({ templates, palettes, fonts, platformDomain }: {
         {step === 5 && <table data-testid="w-review"><tbody>
           {[["الاسم", f.name], ["الرمز", f.slug], ["الجوال", f.phone], ["البريد", f.email], ["القالب", templates.find((t) => t.id === f.template)?.name],
             ["اللوحة", palettes.find((p) => p.slug === f.palette)?.name ?? "هوية القالب"], ["الخطوط", fonts.find((x) => x.slug === f.font)?.name ?? "خطوط القالب"],
-            ["الشعار", f.logo ? "مرفوع" : "شعار القالب"], ["المخاطبة", { f: "للنساء", m: "للرجال", neutral: "محايدة" }[f.voice as string]],
+            ["الشعار", f.logo ? "مرفوع" : "شعار القالب"], ["المخاطبة", { f: "للنساء", m: "للرجال", neutral: "محايدة" }[f.voice as string]], ["اللغات", f.english ? "العربية والإنجليزية" : "العربية"],
             ["الميزات", FEATURES.filter(([k]) => f.features[k]).map(([, l]) => l).join("، ")], ["الدومين", domain]].map(([k, v]) => <tr key={k}><th>{k}</th><td><bdi>{v}</bdi></td></tr>)}
         </tbody></table>}
         {err && <div className="err" role="alert" data-testid="w-err">{err}</div>}

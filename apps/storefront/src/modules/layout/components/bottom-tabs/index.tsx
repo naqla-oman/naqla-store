@@ -2,6 +2,7 @@
 import { usePathname, useParams } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Icon from "@modules/common/components/icon"
+import { langPrefix } from "@/i18n/config"
 
 const TABS = [
   { href: "/", icon: "home", label: "الرئيسية", match: (p: string) => p === "" || p === "/" },
@@ -13,8 +14,8 @@ const TABS = [
 
 export default function BottomTabs({ cartCount = 0 }: { cartCount?: number }) {
   const pathname = usePathname()
-  const { countryCode } = useParams<{ countryCode: string }>()
-  const p = pathname.replace(`/${countryCode}`, "") || "/"
+  const { countryCode, lang } = useParams<{ countryCode: string; lang: string }>()
+  const p = pathname.replace(`/${countryCode}${langPrefix(lang)}`, "") || "/"
   if (p.startsWith("/checkout")) return null
   return (
     <nav className="tabs small:hidden" aria-label="التنقل الرئيسي">

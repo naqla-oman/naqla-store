@@ -14,6 +14,7 @@ import { StateType } from "@lib/hooks/use-toggle-state"
 import { useParams, usePathname } from "next/navigation"
 import { updateRegion } from "@lib/data/cart"
 import { HttpTypes } from "@medusajs/types"
+import { langPrefix } from "@/i18n/config"
 
 type CountryOption = {
   country: string
@@ -32,8 +33,8 @@ const CountrySelect = ({ toggleState, regions }: CountrySelectProps) => {
     | undefined
   >(undefined)
 
-  const { countryCode } = useParams()
-  const currentPath = usePathname().split(`/${countryCode}`)[1]
+  const { countryCode, lang } = useParams()
+  const currentPath = usePathname().split(`/${countryCode}${langPrefix(lang)}`)[1]
 
   const { state, close } = toggleState
 

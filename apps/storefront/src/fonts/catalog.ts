@@ -1,4 +1,4 @@
-import { Alexandria, Almarai, Cairo, Changa, El_Messiri, IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic, Noto_Sans_Arabic, Readex_Pro, Reem_Kufi, Tajawal, Tenor_Sans } from "next/font/google"
+import { Alexandria, Almarai, Cairo, Changa, El_Messiri, IBM_Plex_Sans_Arabic, Noto_Kufi_Arabic, Noto_Sans, Noto_Sans_Arabic, Readex_Pro, Reem_Kufi, Tajawal, Tenor_Sans } from "next/font/google"
 
 /**
  * كتالوج الخطوط لتبويب «الهوية»: كل عائلة بمتغير --ff-<slug> وpreload:false — المتصفح لا يحمّل
@@ -12,6 +12,7 @@ const changa = Changa({ subsets: ["arabic", "latin"], weight: ["500", "600", "70
 const el_messiri = El_Messiri({ subsets: ["arabic", "latin"], weight: ["500", "600", "700"], variable: "--ff-el-messiri", display: "swap", preload: false })
 const ibm_plex_sans_arabic = IBM_Plex_Sans_Arabic({ subsets: ["arabic", "latin"], weight: ["300", "400", "500", "600", "700"], variable: "--ff-ibm-plex-sans-arabic", display: "swap", preload: false })
 const noto_kufi_arabic = Noto_Kufi_Arabic({ subsets: ["arabic", "latin"], weight: ["500", "600", "700", "800"], variable: "--ff-noto-kufi-arabic", display: "swap", preload: false })
+const noto_sans = Noto_Sans({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--ff-noto-sans", display: "swap", preload: false })
 const noto_sans_arabic = Noto_Sans_Arabic({ subsets: ["arabic"], weight: ["300", "400", "500", "600", "700"], variable: "--ff-noto-sans-arabic", display: "swap", preload: false })
 const readex_pro = Readex_Pro({ subsets: ["arabic", "latin"], weight: ["300", "400", "500", "600", "700"], variable: "--ff-readex-pro", display: "swap", preload: false })
 const reem_kufi = Reem_Kufi({ subsets: ["arabic", "latin"], weight: ["500", "600", "700"], variable: "--ff-reem-kufi", display: "swap", preload: false })
@@ -26,6 +27,7 @@ export const FONT_CATALOG: Record<string, { variable: string }> = {
   "el-messiri": el_messiri,
   "ibm-plex-sans-arabic": ibm_plex_sans_arabic,
   "noto-kufi-arabic": noto_kufi_arabic,
+  "noto-sans": noto_sans,
   "noto-sans-arabic": noto_sans_arabic,
   "readex-pro": readex_pro,
   "reem-kufi": reem_kufi,
