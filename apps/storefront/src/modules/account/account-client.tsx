@@ -8,11 +8,14 @@ import { useParams, useRouter } from "next/navigation"
 import { FormEvent, useState } from "react"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
+import { useCurrencyLabel, useT } from "@/i18n/t"
 
 const { redeemPoints: NEED, redeemValue } = storeConfig.loyalty
 
 /** استبدال النقاط بكود خصم */
 export function RedeemBox({ available }: { available: number }) {
+  const t = useT("account")
+  const CUR = useCurrencyLabel()
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [code, setCode] = useState<string | null>(null)
@@ -33,11 +36,11 @@ export function RedeemBox({ available }: { available: number }) {
       <div className="redeem">
         <Icon name="sparkle" size={22} />
         <div>
-          <b>{g("استبدلي", "استبدل")} {NEED} نقطة بكود خصم {redeemValue} {storeConfig.currencyLabel}</b>
-          <span>{can ? "متاح الآن — يُستخدم مرة واحدة على أي طلب" : `تبقّى ${NEED - available} نقطة متاحة`}</span>
+          <b>{t("redeemRule", { need: NEED, value: `${redeemValue} ${CUR}` })}</b>
+          <span>{can ? t("s1a600a") : t("pointsLeft", { n: NEED - available })}</span>
         </div>
         <button type="button" className={`btn sm ${can ? "" : "ghost"}`} onClick={go} disabled={!can || busy} data-testid="redeem">
-          {busy ? "…" : "استبدال"}
+          {busy ? "…" : t("s2fa61a")}
         </button>
       </div>
       {code && (
@@ -53,6 +56,7 @@ export function RedeemBox({ available }: { available: number }) {
 
 /** الاسم والبريد — البريد المحجوز (phone.invalid) لا يُعرض */
 export function ProfileForm({ first, last, email }: { first: string; last: string; email: string }) {
+  const t = useT("account")
   const router = useRouter()
   const [f, setF] = useState(first)
   const [l, setL] = useState(last)
@@ -68,33 +72,34 @@ export function ProfileForm({ first, last, email }: { first: string; last: strin
     setBusy(false)
     if (!r1.ok) return setMsg({ ok: false, t: r1.error })
     if (!r2.ok) return setMsg({ ok: false, t: (r2 as any).error })
-    setMsg({ ok: true, t: "تم الحفظ" })
+    setMsg({ ok: true, t: t("s7b9c60") })
     router.refresh()
   }
 
   return (
     <form className="panelbox" onSubmit={save} noValidate>
-      <h3>بياناتي</h3>
+      <h3>{t("sa49fc1")}</h3>
       <div className="profilerow">
-        <div className="field"><label htmlFor="aFirst">الاسم</label><input id="aFirst" value={f} onChange={(x) => setF(x.target.value)} autoComplete="given-name" /></div>
-        <div className="field"><label htmlFor="aLast">العائلة</label><input id="aLast" value={l} onChange={(x) => setL(x.target.value)} autoComplete="family-name" /></div>
+        <div className="field"><label htmlFor="aFirst">{t("s2e8b17")}</label><input id="aFirst" value={f} onChange={(x) => setF(x.target.value)} autoComplete="given-name" /></div>
+        <div className="field"><label htmlFor="aLast">{t("s6183fe")}</label><input id="aLast" value={l} onChange={(x) => setL(x.target.value)} autoComplete="family-name" /></div>
       </div>
       <div className="field">
-        <label htmlFor="aEmail">البريد الإلكتروني <span style={{ fontWeight: 400 }}>(اختياري)</span></label>
+        <label htmlFor="aEmail">{t("s2436aa")} <span style={{ fontWeight: 400 }}>{t("s836573")}</span></label>
         <input id="aEmail" type="email" value={e} onChange={(x) => setE(x.target.value)} dir="ltr" style={{ textAlign: "start" }} placeholder="name@example.com" autoComplete="email" />
       </div>
       {msg && <div className={msg.ok ? "saved" : "ferr-inline"} role="status">{msg.t}</div>}
-      <button type="submit" className="btn ghost block" style={{ marginTop: 14 }} disabled={busy}>{busy ? "جارٍ الحفظ…" : "حفظ"}</button>
+      <button type="submit" className="btn ghost block" style={{ marginTop: 14 }} disabled={busy}>{busy ? t("s0da9f8") : t("s871a08")}</button>
     </form>
   )
 }
 
 export function SignOutButton() {
+  const t = useT("account")
   const { countryCode } = useParams() as { countryCode: string }
   return (
     <button type="button" className="rowlink" onClick={() => signout(countryCode)} data-testid="signout">
       <span className="ic"><Icon name="x" /></span>
-      <div>تسجيل الخروج</div>
+      <div>{t("s5c4e47")}</div>
     </button>
   )
 }

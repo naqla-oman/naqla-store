@@ -6,6 +6,7 @@ import { getAuthHeaders, getCacheTag, setAuthToken } from "./cookies"
 import { transferCart } from "./customer"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
+import { getT } from "@/i18n/t"
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
 
@@ -40,17 +41,19 @@ async function afterLogin(localWishlist: string[]) {
 
 /** الخطوة 1: إرسال رمز واتساب */
 export async function requestOtp(phone: string): Promise<Result> {
-  if (!phoneRe.test(phone)) return { ok: false, error: "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7" }
+  const t = await getT("account")
+  if (!phoneRe.test(phone)) return { ok: false, error: t("se31171") }
   try {
     await sdk.client.fetch("/auth/customer/phone-auth", { method: "POST", body: { phone: full(phone) } })
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: msg(e, g("تعذّر إرسال الرمز، حاولي بعد قليل", "تعذّر إرسال الرمز، حاول بعد قليل")) }
+    return { ok: false, error: msg(e, t("s382a9e")) }
   }
 }
 
 /** الخطوة 2: التحقق من الرمز. needsProfile=true يعني زبونة جديدة تحتاج اسمها */
 export async function verifyOtp(phone: string, otp: string, localWishlist: string[] = []): Promise<Result<{ needsProfile: boolean }>> {
+  const t = await getT("account")
   try {
     // M2: الرمز في جسم الطلب لا في الرابط (الروابط تُسجَّل في سجلات الخوادم والوكلاء)
     const { token } = await sdk.client.fetch<{ token: string }>("/auth/customer/phone-auth/callback", {
@@ -62,13 +65,14 @@ export async function verifyOtp(phone: string, otp: string, localWishlist: strin
     await afterLogin(localWishlist)
     return { ok: true, data: { needsProfile: false } }
   } catch (e) {
-    return { ok: false, error: msg(e, "الرمز غير صحيح") }
+    return { ok: false, error: msg(e, t("s524dd7")) }
   }
 }
 
 /** الخطوة 3 (أول مرة فقط): إنشاء الحساب بالاسم والبريد الاختياري */
 export async function completeProfile(input: { firstName: string; lastName: string; email: string }, localWishlist: string[] = []): Promise<Result> {
-  if (!input.firstName.trim()) return { ok: false, error: g("أدخلي اسمك", "أدخل اسمك") }
+  const t = await getT("account")
+  if (!input.firstName.trim()) return { ok: false, error: t("sd961f7") }
   try {
     await sdk.client.fetch("/store/phone-account", {
       method: "POST",
@@ -84,7 +88,7 @@ export async function completeProfile(input: { firstName: string; lastName: stri
     await afterLogin(localWishlist)
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: msg(e, "تعذّر إنشاء الحساب") }
+    return { ok: false, error: msg(e, t("s1f8a64")) }
   }
 }
 
@@ -121,6 +125,7 @@ export async function getLoyalty(): Promise<LoyaltyData | null> {
 }
 
 export async function redeemPoints(): Promise<Result<{ code: string }>> {
+  const t = await getT("account")
   try {
     const r = await sdk.client.fetch<{ code: string }>("/store/customers/me/loyalty/redeem", {
       method: "POST",
@@ -129,7 +134,7 @@ export async function redeemPoints(): Promise<Result<{ code: string }>> {
     revalidateTag(await getCacheTag("customers"))
     return { ok: true, data: r }
   } catch (e) {
-    return { ok: false, error: msg(e, "تعذّر الاستبدال") }
+    return { ok: false, error: msg(e, t("s9e0c3f")) }
   }
 }
 
@@ -138,6 +143,7 @@ export async function redeemPoints(): Promise<Result<{ code: string }>> {
 export const isPlaceholderEmail = async (email?: string | null) => !!email?.endsWith(PLACEHOLDER)
 
 export async function updateEmail(email: string, onlyIfPlaceholder = false): Promise<Result> {
+  const t = await getT("account")
   try {
     await sdk.client.fetch("/store/customers/me/email", {
       method: "POST",
@@ -147,18 +153,19 @@ export async function updateEmail(email: string, onlyIfPlaceholder = false): Pro
     await refreshCustomer()
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: msg(e, "تعذّر حفظ البريد") }
+    return { ok: false, error: msg(e, t("s1dec61")) }
   }
 }
 
 export async function updateName(firstName: string, lastName: string): Promise<Result> {
-  if (!firstName.trim()) return { ok: false, error: g("أدخلي اسمك", "أدخل اسمك") }
+  const t = await getT("account")
+  if (!firstName.trim()) return { ok: false, error: t("sd961f7") }
   try {
     await sdk.store.customer.update({ first_name: firstName.trim(), last_name: lastName.trim() }, {}, await getAuthHeaders())
     await refreshCustomer()
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: msg(e, "تعذّر الحفظ") }
+    return { ok: false, error: msg(e, t("sde0332")) }
   }
 }
 
@@ -189,13 +196,14 @@ export async function mergeWishlist(local: string[]) {
 }
 
 export async function toggleWishlist(productId: string): Promise<Result<{ ids: string[] }>> {
+  const t = await getT("account")
   try {
     const mine = await currentWishlist()
     const ids = mine.includes(productId) ? mine.filter((x) => x !== productId) : [productId, ...mine]
     await saveWishlist(ids)
     return { ok: true, data: { ids } }
   } catch (e) {
-    return { ok: false, error: msg(e, "تعذّر تحديث المفضلة") }
+    return { ok: false, error: msg(e, t("sc98c4d")) }
   }
 }
 
@@ -218,11 +226,12 @@ export type TrackedOrder = {
 }
 
 export async function trackOrder(number: string, phone: string): Promise<Result<TrackedOrder>> {
-  if (!number.trim()) return { ok: false, error: g("أدخلي رقم الطلب", "أدخل رقم الطلب") }
+  const t = await getT("account")
+  if (!number.trim()) return { ok: false, error: t("sea90c2") }
   // H5: المسجّلة تتتبّع طلباتها بحسابها (لا هاتف في الرابط)؛ الضيفة تحتاج رقم الطلب + الهاتف
   const auth = await getAuthHeaders()
   const signedIn = "authorization" in auth
-  if (!signedIn && !phoneRe.test(phone)) return { ok: false, error: "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7" }
+  if (!signedIn && !phoneRe.test(phone)) return { ok: false, error: t("se31171") }
   try {
     const { order } = await sdk.client.fetch<{ order: TrackedOrder }>("/store/track", {
       method: "POST",
@@ -232,7 +241,7 @@ export async function trackOrder(number: string, phone: string): Promise<Result<
     })
     return { ok: true, data: order }
   } catch (e) {
-    return { ok: false, error: msg(e, "لم نجد طلباً بهذا الرقم وهذا الهاتف") }
+    return { ok: false, error: msg(e, t("s6c7fa0")) }
   }
 }
 

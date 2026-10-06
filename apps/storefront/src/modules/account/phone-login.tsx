@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation"
 import { FormEvent, useEffect, useRef, useState } from "react"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
+import { useT } from "@/i18n/t"
 
 const { phone: P } = storeConfig.checkout
 const phoneRe = new RegExp(P.pattern)
@@ -15,6 +16,7 @@ const RESEND = 60
 
 /** الدخول برمز واتساب: الرقم ← الرمز (6 أرقام) ← الاسم (أول مرة فقط) */
 export default function PhoneLogin() {
+  const t = useT("account")
   const router = useRouter()
   const [step, setStep] = useState<"phone" | "otp" | "profile">("phone")
   const [phone, setPhone] = useState("")
@@ -36,7 +38,7 @@ export default function PhoneLogin() {
   const send = async (e?: FormEvent) => {
     e?.preventDefault()
     setError(null)
-    if (!phoneRe.test(phone)) { setError("رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7"); return }
+    if (!phoneRe.test(phone)) { setError(t("se31171")); return }
     setBusy(true)
     const r = await requestOtp(phone)
     setBusy(false)
@@ -99,10 +101,10 @@ export default function PhoneLogin() {
 
           {step === "phone" && (
             <form onSubmit={send} noValidate>
-              <h1>أهلاً بك في {storeConfig.shortName}</h1>
-              <p className="lead">{g("ادخلي برقم هاتفك", "ادخل برقم هاتفك")} — نرسل لك رمزاً على واتساب، بلا كلمة مرور.</p>
+              <h1>{t("welcomeTo", { store: storeConfig.shortName })}</h1>
+              <p className="lead">{t("sd39726")} — {t("otpNote")}</p>
               <div className={`field ${error ? "err" : ""}`}>
-                <label htmlFor="lPhone">رقم الهاتف</label>
+                <label htmlFor="lPhone">{t("s0947ad")}</label>
                 <div className="phone">
                   <input id="lPhone" type="tel" inputMode="numeric" maxLength={8} value={phone} autoFocus dir="ltr"
                     onChange={(e) => setPhone(e.target.value.replace(/\D/g, "").slice(0, 8))}
@@ -112,25 +114,25 @@ export default function PhoneLogin() {
                 <span className="ferr" id="lErr">{error}</span>
               </div>
               <button type="submit" className="btn block lg" style={{ marginTop: 16 }} disabled={busy} data-testid="send-otp">
-                <Icon name="whatsapp" size={18} /> {busy ? "جارٍ الإرسال…" : g("أرسلي الرمز على واتساب", "أرسل الرمز على واتساب")}
+                <Icon name="whatsapp" size={18} /> {busy ? t("s172044") : t("sa3838d")}
               </button>
               <div className="perkline">
                 {storeConfig.features.loyalty && <div><Icon name="sparkle" size={15} /> {storeConfig.loyalty.pointsPerUnit} نقاط ولاء لكل ريال</div>}
-                <div><Icon name="box" size={15} /> طلباتك السابقة برقمك تظهر في حسابك تلقائياً</div>
-                <div><Icon name="heart" size={15} /> مفضلتك محفوظة على كل أجهزتك</div>
+                <div><Icon name="box" size={15} /> {t("sdd473a")}</div>
+                <div><Icon name="heart" size={15} /> {t("s1892f8")}</div>
               </div>
             </form>
           )}
 
           {step === "otp" && (
             <div>
-              <h1>{g("أدخلي الرمز", "أدخل الرمز")}</h1>
+              <h1>{t("se621b3")}</h1>
               <p className="lead">
-                أرسلنا رمزاً من 6 أرقام على واتساب إلى{" "}
+                {t("sd1510d")}{" "}
                 <span className="sentto"><bdi dir="ltr">{P.prefix} {phone}</bdi></span>{" "}
-                <button type="button" className="linkbtn" onClick={() => { setStep("phone"); setError(null) }}>تغيير</button>
+                <button type="button" className="linkbtn" onClick={() => { setStep("phone"); setError(null) }}>{t("sd01396")}</button>
               </p>
-              <div className={`otp ${error ? "err" : ""}`} role="group" aria-label="رمز التحقق">
+              <div className={`otp ${error ? "err" : ""}`} role="group" aria-label={t("scdce6b")}>
                 {digits.map((d, i) => (
                   <input
                     key={i}
@@ -139,7 +141,7 @@ export default function PhoneLogin() {
                     inputMode="numeric"
                     autoComplete={i === 0 ? "one-time-code" : "off"}
                     maxLength={i === 0 ? 6 : 1}
-                    aria-label={`الرقم ${i + 1}`}
+                    aria-label={t("digitN", { n: i + 1 })}
                     disabled={busy}
                     onChange={(e) => setDigit(i, e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Backspace" && !d && i > 0) boxes.current[i - 1]?.focus() }}
@@ -148,10 +150,10 @@ export default function PhoneLogin() {
                 ))}
               </div>
               {error && <div className="ferr-inline" role="alert" style={{ textAlign: "center" }}>{error}</div>}
-              {busy && <div className="okmsg" style={{ textAlign: "center" }}>جارٍ التحقق…</div>}
+              {busy && <div className="okmsg" style={{ textAlign: "center" }}>{t("sc3de69")}</div>}
               <div style={{ textAlign: "center", marginTop: 14 }}>
                 <button type="button" className="linkbtn" disabled={left > 0 || busy} onClick={() => send()}>
-                  {left > 0 ? `إعادة الإرسال بعد ${left} ث` : "إعادة إرسال الرمز"}
+                  {left > 0 ? t("resendIn", { s: left }) : t("s9d645b")}
                 </button>
               </div>
             </div>
@@ -159,19 +161,19 @@ export default function PhoneLogin() {
 
           {step === "profile" && (
             <form onSubmit={saveProfile} noValidate>
-              <h1>أهلاً! ما اسمك؟</h1>
-              <p className="lead">تم التحقق من رقمك. نحتاج اسمك فقط لإكمال حسابك.</p>
+              <h1>{t("sebe643")}</h1>
+              <p className="lead">{t("s83950b")}</p>
               <div className="profilerow">
-                <div className="field"><label htmlFor="pFirst">الاسم</label><input id="pFirst" value={first} onChange={(e) => setFirst(e.target.value)} autoFocus autoComplete="given-name" placeholder="مريم" /></div>
-                <div className="field"><label htmlFor="pLast">العائلة</label><input id="pLast" value={last} onChange={(e) => setLast(e.target.value)} autoComplete="family-name" placeholder="الهنائية" /></div>
+                <div className="field"><label htmlFor="pFirst">{t("s2e8b17")}</label><input id="pFirst" value={first} onChange={(e) => setFirst(e.target.value)} autoFocus autoComplete="given-name" placeholder={t("s0323c8")} /></div>
+                <div className="field"><label htmlFor="pLast">{t("s6183fe")}</label><input id="pLast" value={last} onChange={(e) => setLast(e.target.value)} autoComplete="family-name" placeholder={t("sfabcbc")} /></div>
               </div>
               <div className="field">
-                <label htmlFor="pEmail">البريد الإلكتروني <span style={{ fontWeight: 400 }}>(اختياري)</span></label>
+                <label htmlFor="pEmail">{t("s2436aa")} <span style={{ fontWeight: 400 }}>{t("s836573")}</span></label>
                 <input id="pEmail" type="email" value={email} onChange={(e) => setEmail(e.target.value)} dir="ltr" style={{ textAlign: "start" }} placeholder="name@example.com" autoComplete="email" />
               </div>
               {error && <div className="alert" role="alert"><Icon name="x" size={15} /> {error}</div>}
               <button type="submit" className="btn block lg" style={{ marginTop: 16 }} disabled={busy || !first.trim()} data-testid="save-profile">
-                {busy ? "جارٍ إنشاء الحساب…" : "إنشاء حسابي"}
+                {busy ? t("sa1b550") : t("s6e10ac")}
               </button>
             </form>
           )}

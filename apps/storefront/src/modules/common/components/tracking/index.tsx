@@ -5,6 +5,7 @@ import { flushTracking } from "@lib/tracking/events"
 import { g } from "@lib/voice"
 import Icon from "@modules/common/components/icon"
 import { useCallback, useEffect, useState } from "react"
+import { useT } from "@/i18n/t"
 
 type Consent = { analytics: boolean; ads: boolean }
 type W = Window & { dataLayer?: unknown[]; gtag?: (...a: unknown[]) => void; fbq?: any; _fbq?: any; snaptr?: any; ttq?: any; clarity?: any }
@@ -96,6 +97,7 @@ function apply(cfg: TrackingConfig, c: Consent) {
 
 /** البكسلات + شريط الموافقة. لا شيء يُحمَّل لمنصة بلا معرّف، ولا بكسل إعلاني بلا موافقة */
 export default function Tracking({ config }: { config: TrackingConfig | null }) {
+  const t = useT("tracking")
   const [open, setOpen] = useState(false)
   const [custom, setCustom] = useState(false)
   const [choice, setChoice] = useState<Consent>({ analytics: true, ads: true })
@@ -122,30 +124,27 @@ export default function Tracking({ config }: { config: TrackingConfig | null }) 
 
   if (!open) return null
   return (
-    <div className="consent" role="dialog" aria-live="polite" aria-label="ملفات تعريف الارتباط" data-testid="consent">
+    <div className="consent" role="dialog" aria-live="polite" aria-label={t("s918b7c")} data-testid="consent">
       <div className="consent-in">
         <p>
           <Icon name="shield" size={16} />{" "}
-          {g(
-            "نستخدم ملفات تعريف الارتباط لتحسين تجربتك وقياس أداء إعلاناتنا. اختاري ما يناسبك — يمكنك تغييره لاحقاً من أسفل الصفحة.",
-            "نستخدم ملفات تعريف الارتباط لتحسين تجربتك وقياس أداء إعلاناتنا. اختر ما يناسبك — يمكنك تغييره لاحقاً من أسفل الصفحة."
-          )}
+          {t("se67f41")}
         </p>
         {custom && (
           <div className="consent-opts">
-            <label><input type="checkbox" checked disabled /> الضرورية لعمل المتجر</label>
-            <label><input type="checkbox" checked={choice.analytics} onChange={(e) => setChoice({ ...choice, analytics: e.target.checked })} /> التحليلات (قياس الزيارات)</label>
-            <label><input type="checkbox" checked={choice.ads} onChange={(e) => setChoice({ ...choice, ads: e.target.checked })} /> الإعلانات (قياس الحملات)</label>
+            <label><input type="checkbox" checked disabled /> {t("sbd5c9b")}</label>
+            <label><input type="checkbox" checked={choice.analytics} onChange={(e) => setChoice({ ...choice, analytics: e.target.checked })} /> {t("s06c945")}</label>
+            <label><input type="checkbox" checked={choice.ads} onChange={(e) => setChoice({ ...choice, ads: e.target.checked })} /> {t("s45b745")}</label>
           </div>
         )}
         <div className="consent-acts">
           {custom ? (
-            <button type="button" className="btn sm" onClick={() => save(choice)} data-testid="consent-save">حفظ اختياري</button>
+            <button type="button" className="btn sm" onClick={() => save(choice)} data-testid="consent-save">{t("s54b103")}</button>
           ) : (
-            <button type="button" className="btn sm" onClick={() => save({ analytics: true, ads: true })} data-testid="consent-accept">قبول الكل</button>
+            <button type="button" className="btn sm" onClick={() => save({ analytics: true, ads: true })} data-testid="consent-accept">{t("s2377e7")}</button>
           )}
-          <button type="button" className="btn sm ghost" onClick={() => save({ analytics: false, ads: false })} data-testid="consent-reject">الضرورية فقط</button>
-          {!custom && <button type="button" className="linkbtn" onClick={() => { setCustom(true); setChoice({ analytics: true, ads: true }) }}>تخصيص</button>}
+          <button type="button" className="btn sm ghost" onClick={() => save({ analytics: false, ads: false })} data-testid="consent-reject">{t("se5e996")}</button>
+          {!custom && <button type="button" className="linkbtn" onClick={() => { setCustom(true); setChoice({ analytics: true, ads: true }) }}>{t("se0fc0d")}</button>}
         </div>
       </div>
     </div>

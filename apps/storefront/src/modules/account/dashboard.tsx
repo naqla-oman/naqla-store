@@ -10,6 +10,8 @@ import { ProfileForm, RedeemBox, SignOutButton } from "./account-client"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
 import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
+import { useLocale } from "next-intl"
+import { useT } from "@/i18n/t"
 
 type Props = {
   customer: HttpTypes.StoreCustomer
@@ -20,28 +22,31 @@ type Props = {
 const { loyalty: L, checkout, currencyLabel: CUR } = storeConfig
 // الميزات تُقرأ عند الرسم (تتغير من «إعدادات المتجر»)
 const F = new Proxy({} as typeof storeConfig.features, { get: (_t, k) => (storeConfig.features as any)[k] })
-const dateFmt = new Intl.DateTimeFormat("ar-OM", { day: "numeric", month: "long", timeZone: storeConfig.product.delivery.timezone })
-const STATUS: Record<string, string> = { pending: "معلّقة حتى التوصيل", available: "متاحة", canceled: "ملغاة" }
+type T = (k: string, v?: Record<string, string | number>) => string
 
-function orderStage(o: HttpTypes.StoreOrder) {
-  if (o.status === "canceled") return { t: "ملغى", c: "no" }
+function orderStage(o: HttpTypes.StoreOrder, t: T) {
+  if (o.status === "canceled") return { t: t("s598750"), c: "no" }
   // H14: التنفيذ الملغى لا يُحتسب
   const f = ((o.fulfillments ?? []) as any[]).filter((x) => !x.canceled_at)
-  if (f.some((x) => x.delivered_at)) return { t: "تم التوصيل", c: "ok" }
-  if (f.some((x) => x.shipped_at)) return { t: "في الطريق", c: "go" }
-  return { t: "قيد التجهيز", c: "go" }
+  if (f.some((x) => x.delivered_at)) return { t: t("s3a0c4f"), c: "ok" }
+  if (f.some((x) => x.shipped_at)) return { t: t("sdd39dc"), c: "go" }
+  return { t: t("sb1f58e"), c: "go" }
 }
 
 /** لوحة الحساب — مطابقة لصفحة «حسابي» في الديمو */
 export default function AccountDashboard({ customer, loyalty, orders }: Props) {
-  const name = customer.first_name || g("زبونتنا", "عميلنا", "عزيزنا")
+  const t = useT("account")
+  const locale = useLocale()
+  const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en-GB", { day: "numeric", month: "long", timeZone: storeConfig.product.delivery.timezone })
+  const STATUS: Record<string, string> = { pending: t("s5098dd"), available: t("s2cd29c"), canceled: t("se92ebe") }
+  const name = customer.first_name || t("s16b203")
   const phone = (customer.phone ?? "").replace(checkout.phone.prefix, "")
   const email = customer.email?.endsWith("@phone.invalid") ? "" : customer.email ?? ""
   const tier = loyalty?.tier
   const next = loyalty?.next_tier
   const confirmed = loyalty?.confirmed ?? 0
   const prog = next && tier ? Math.min(100, ((confirmed - tier.min) / (next.min - tier.min)) * 100) : 100
-  const active = orders.filter((o) => orderStage(o).c === "go").length
+  const active = orders.filter((o) => orderStage(o, t).c === "go").length
   // الامتيازات الفعّالة: لمستواها وما دونه، وفقط ما له نص في الإعدادات (أي مُطبَّق فعلاً)
   const myPerks = (loyalty?.rules.tiers ?? [])
     .filter((t) => tier && t.min > 0 && t.min <= tier.min && L.tierPerks[t.key])
@@ -49,15 +54,15 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
 
   return (
     <div className="wrap">
-      <div className="secthead"><div><h1>حسابي</h1><p><bdi dir="ltr">{checkout.phone.prefix} {phone}</bdi></p></div></div>
+      <div className="secthead"><div><h1>{t("sc0f526")}</h1><p><bdi dir="ltr">{checkout.phone.prefix} {phone}</bdi></p></div></div>
       <div className="acct">
         <div>
           <div className="tierhead" data-testid="tierhead">
             <div className="top">
               <div className="av">{name.slice(0, 1)}</div>
               <div>
-                <b className="hi">أهلاً {name}</b>
-                {F.loyaltyTiers && tier && <span className="tier"><Icon name="sparkle" size={12} /> {g("عضوة", "عضو", "عضوية")} {tier.name} في نادي {storeConfig.shortName}</span>}
+                <b className="hi">{t("hello", { name })}</b>
+                {F.loyaltyTiers && tier && <span className="tier"><Icon name="sparkle" size={12} /> {t("s5bf48a")} {tier.name} في نادي {storeConfig.shortName}</span>}
               </div>
             </div>
             {F.loyaltyTiers && myPerks.length > 0 && (
@@ -68,14 +73,14 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
             {F.loyalty && (<>
             <div className="balances">
               <div data-testid="pts-available">
-                <span>متاح للاستبدال</span>
+                <span>{t("s152254")}</span>
                 <b>{loyalty?.available ?? 0}</b>
                 <small>= {formatAmount(((loyalty?.available ?? 0) / L.redeemPoints) * L.redeemValue)} {CUR}</small>
               </div>
               <div data-testid="pts-pending">
-                <span>معلّق حتى التوصيل</span>
+                <span>{t("s99f82f")}</span>
                 <b>{loyalty?.pending ?? 0}</b>
-                <small>تُتاح عند استلام طلبك</small>
+                <small>{t("s232500")}</small>
               </div>
             </div>
             </>)}
@@ -83,34 +88,34 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
             <div className="pbar"><i style={{ width: `${prog}%` }} /></div>
             <div className="pl">
               <span>{tier?.name}</span>
-              <span>{next ? `تبقّى ${next.min - confirmed} نقطة مؤكَّدة للعضوية ال${next.name}` : "أعلى مستوى — شكراً لوفائك"}</span>
+              <span>{next ? t("toNextTier", { n: next.min - confirmed, tier: next.name }) : t("sc45476")}</span>
             </div>
             </>)}
           </div>
 
           <div className="stats">
-            <div><b>{orders.length}</b><span>طلبات</span></div>
-            <div><b>{active}</b><span>طلب نشط</span></div>
-            {F.loyalty && <div><b>{confirmed}</b><span>نقاط مؤكَّدة</span></div>}
+            <div><b>{orders.length}</b><span>{t("s01e1f2")}</span></div>
+            <div><b>{active}</b><span>{t("sa3ac90")}</span></div>
+            {F.loyalty && <div><b>{confirmed}</b><span>{t("sa9d0cb")}</span></div>}
           </div>
 
           {F.loyalty && (
           <div className="panelbox" style={{ marginTop: 16 }}>
-            <h3>برنامج الولاء</h3>
+            <h3>{t("sd6c6c1")}</h3>
             {F.loyaltyTiers && (
             <div className="tiers">
-              {(loyalty?.rules.tiers ?? []).map((t) => (
-                <div key={t.key} className={`t-${t.key} ${t.key === tier?.key ? "on" : ""}`}>
+              {(loyalty?.rules.tiers ?? []).map((tr) => (
+                <div key={tr.key} className={`t-${tr.key} ${tr.key === tier?.key ? "on" : ""}`}>
                   <i aria-hidden="true" />
-                  <b>{t.name}</b>
-                  {t.min ? `من ${t.min} نقطة` : "للجميع"}
-                  {L.tierPerks[t.key] && <><br />{L.tierPerks[t.key]}</>}
+                  <b>{tr.name}</b>
+                  {tr.min ? t("fromPoints", { n: tr.min }) : t("s53c40c")}
+                  {L.tierPerks[tr.key] && <><br />{L.tierPerks[tr.key]}</>}
                 </div>
               ))}
             </div>
             )}
             <div className="earnlist">
-              <div><span className="ic"><Icon name="bag" size={16} /></span>كل ريال تنفقينه<b><Signed sign="+" value={L.pointsPerUnit} /> نقاط</b></div>
+              <div><span className="ic"><Icon name="bag" size={16} /></span>{t("s6321b1")}<b><Signed sign="+" value={L.pointsPerUnit} /> {t("s9f7c70")}</b></div>
             </div>
             <RedeemBox available={loyalty?.available ?? 0} />
             {!!loyalty?.entries.length && (
@@ -119,7 +124,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
                   <div key={e.id} className="row">
                     <Icon name={e.kind === "redeem" ? "gift" : "box"} size={15} />
                     <div>
-                      {e.kind === "redeem" ? <>استبدال — <bdi dir="ltr">{e.code}</bdi></> : <>طلب <bdi dir="ltr">{orderNumber(e.order_display_id)}</bdi></>}
+                      {e.kind === "redeem" ? <>{t("sda77c3")} <bdi dir="ltr">{e.code}</bdi></> : <>{t("sf48e3a")} <bdi dir="ltr">{orderNumber(e.order_display_id)}</bdi></>}
                       {e.kind === "earn" && <> <span className={`pill-st ${e.status}`}>{STATUS[e.status]}</span></>}
                     </div>
                     <span className={`pts ${e.points < 0 ? "neg" : ""}`}><Signed sign={e.points > 0 ? "+" : "−"} value={Math.abs(e.points)} /></span>
@@ -133,10 +138,10 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
 
         <div>
           <div className="panelbox orders">
-            <h3>طلباتي</h3>
-            {!orders.length && <p className="muted" style={{ fontSize: 13 }}>لا توجد طلبات بعد — طلباتك برقمك تظهر هنا تلقائياً.</p>}
+            <h3>{t("s8c8d95")}</h3>
+            {!orders.length && <p className="muted" style={{ fontSize: 13 }}>{t("sa7b31b")}</p>}
             {orders.map((o) => {
-              const st = orderStage(o)
+              const st = orderStage(o, t)
               const n = orderNumber(o.display_id)
               return (
                 <LocalizedClientLink key={o.id} href={`/track?no=${n}`} className="ord" data-testid="account-order">
@@ -158,9 +163,9 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
           </div>
 
           <div className="rowlinks">
-            <LocalizedClientLink href="/track" className="rowlink"><span className="ic"><Icon name="truck" /></span><div>تتبّع طلب<span className="sub">برقم الطلب والهاتف</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
-            <LocalizedClientLink href="/account/wishlist" className="rowlink"><span className="ic"><Icon name="heart" /></span><div>المفضلة<span className="sub">{nProducts(((customer.metadata as any)?.wishlist ?? []).length)}</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
-            <a href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="rowlink"><span className="ic"><Icon name="whatsapp" /></span><div>{g("تواصلي معنا عبر واتساب", "تواصل معنا عبر واتساب")}<span className="sub">{storeConfig.contact.hours}</span></div><span className="chev"><Icon name="chevL" /></span></a>
+            <LocalizedClientLink href="/track" className="rowlink"><span className="ic"><Icon name="truck" /></span><div>{t("s94d17e")}<span className="sub">{t("scc57e6")}</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
+            <LocalizedClientLink href="/account/wishlist" className="rowlink"><span className="ic"><Icon name="heart" /></span><div>{t("s501839")}<span className="sub">{nProducts(((customer.metadata as any)?.wishlist ?? []).length)}</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
+            <a href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="rowlink"><span className="ic"><Icon name="whatsapp" /></span><div>{t("s0f8e37")}<span className="sub">{storeConfig.contact.hours}</span></div><span className="chev"><Icon name="chevL" /></span></a>
           </div>
 
           <div style={{ marginTop: 16 }}>

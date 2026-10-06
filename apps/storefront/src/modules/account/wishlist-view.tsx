@@ -12,9 +12,11 @@ import { useEffect, useState } from "react"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
 import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
+import { useT } from "@/i18n/t"
 
 /** صفحة المفضلة — تعمل للضيفات (من المتصفح) وللمسجّلات (من الحساب) */
 export default function WishlistView() {
+  const t = useT("account")
   const { ids, loggedIn } = useWishlist()
   const { countryCode } = useParams() as { countryCode: string }
   const [items, setItems] = useState<WishProduct[] | null>(null)
@@ -30,19 +32,19 @@ export default function WishlistView() {
 
   return (
     <div className="wrap" style={{ paddingBottom: 28 }}>
-      <div className="secthead"><div><h1>المفضلة</h1><p>{nProducts(ids.length)} محفوظة{!loggedIn && ids.length ? " على هذا الجهاز" : ""}</p></div></div>
+      <div className="secthead"><div><h1>{t("s501839")}</h1><p>{nProducts(ids.length)} محفوظة{!loggedIn && ids.length ? t("s277e4f") : ""}</p></div></div>
       {!loggedIn && ids.length > 0 && (
         <div className="guest" style={{ marginBottom: 16 }}>
-          <Icon name="user" size={15} /> <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{g("ادخلي برقمك", "ادخل برقمك")}</LocalizedClientLink> لحفظ مفضلتك على كل أجهزتك
+          <Icon name="user" size={15} /> <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{t("s33c19c")}</LocalizedClientLink> {t("wishSync")}
         </div>
       )}
       {items === null ? (
-        <div className="empty">جارٍ التحميل…</div>
+        <div className="empty">{t("s9832d8")}</div>
       ) : !shown.length ? (
         <div className="empty">
           <Icon name="heart" size={46} />
-          <p>{g("لم تحفظي أي منتج بعد — اضغطي على القلب فوق أي منتج يعجبك", "لم تحفظ أي منتج بعد — اضغط على القلب فوق أي منتج يعجبك")}</p>
-          <LocalizedClientLink href="/store" className="btn">{g("تصفحي المنتجات", "تصفح المنتجات")}</LocalizedClientLink>
+          <p>{t("s94d933")}</p>
+          <LocalizedClientLink href="/store" className="btn">{t("sae346c")}</LocalizedClientLink>
         </div>
       ) : (
         <div className="pgrid" data-testid="wishlist-grid">

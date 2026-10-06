@@ -3,10 +3,14 @@ import { getLoyalty, listMyOrders } from "@lib/data/account"
 import PhoneLogin from "@modules/account/phone-login"
 import AccountDashboard from "@modules/account/dashboard"
 import { Metadata } from "next"
+import { getT } from "@/i18n/t"
 
 export const dynamic = "force-dynamic"
 
-export const metadata: Metadata = { title: "حسابي", robots: { index: false } }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("account")
+  return { title: t("sc0f526"), robots: { index: false } }
+}
 
 export default async function AccountPage() {
   const customer = await retrieveCustomer()
