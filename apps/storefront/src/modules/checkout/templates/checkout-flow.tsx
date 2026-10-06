@@ -18,6 +18,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 import { tailoringNote } from "@lib/util/tailoring"
+import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
 
 type Props = {
   cart: HttpTypes.StoreCart
@@ -311,7 +312,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
         </div>
       )}
       <button type="button" className="sumtoggle" aria-expanded={step === "payment" || sumOpen} aria-controls="sumBox" onClick={() => setSumOpen((v) => !v)}>
-        <Icon name="bag" size={16} /> {items.reduce((s, i) => s + i.quantity, 0)} منتجات في طلبك <b className="num">{fmt(total)}</b> <Icon name="chevD" size={14} />
+        <Icon name="bag" size={16} /> {nProducts(items.reduce((s, i) => s + i.quantity, 0))} في طلبك <b className="num">{fmt(total)}</b> <Icon name="chevD" size={14} />
       </button>
 
       <div className="checkout">

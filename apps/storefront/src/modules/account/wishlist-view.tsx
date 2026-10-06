@@ -11,6 +11,7 @@ import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
+import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
 
 /** صفحة المفضلة — تعمل للضيفات (من المتصفح) وللمسجّلات (من الحساب) */
 export default function WishlistView() {
@@ -29,7 +30,7 @@ export default function WishlistView() {
 
   return (
     <div className="wrap" style={{ paddingBottom: 28 }}>
-      <div className="secthead"><div><h1>المفضلة</h1><p>{ids.length} منتجات محفوظة{!loggedIn && ids.length ? " على هذا الجهاز" : ""}</p></div></div>
+      <div className="secthead"><div><h1>المفضلة</h1><p>{nProducts(ids.length)} محفوظة{!loggedIn && ids.length ? " على هذا الجهاز" : ""}</p></div></div>
       {!loggedIn && ids.length > 0 && (
         <div className="guest" style={{ marginBottom: 16 }}>
           <Icon name="user" size={15} /> <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{g("ادخلي برقمك", "ادخل برقمك")}</LocalizedClientLink> لحفظ مفضلتك على كل أجهزتك

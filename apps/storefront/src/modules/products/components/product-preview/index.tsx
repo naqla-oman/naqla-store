@@ -45,7 +45,7 @@ export default async function ProductPreview({
         <div className="meta">
           {storeConfig.features.reviews && meta.rating && <span className="st"><Icon name="star" size={12} /> {meta.rating}</span>}
           {storeConfig.features.reviews && meta.reviews && <span>({meta.reviews})</span>}
-          {meta.sold_week >= 15 && <span className="ms-auto flex items-center gap-1"><Icon name="fire" size={12} /> اشترتها {meta.sold_week} هذا الأسبوع</span>}
+          {meta.sold_week >= 15 && <span className="ms-auto flex items-center gap-1"><Icon name="fire" size={12} /> {g("اشترتها", "اشتراها", "طُلب")} {meta.sold_week} هذا الأسبوع</span>}
         </div>
         <div className="pr">
           <span className="price" data-testid="price">{convertToLocale({ amount: price, currency_code: cur })}</span>

@@ -119,7 +119,10 @@ export default function TrackOrder({ initialNo, initialPhone, signedIn = false }
                 </div>
               )}
             <div className="helprow">
-              <a href={`https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(help + " — أرغب بتغيير وقت التوصيل")}`} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> تغيير وقت التوصيل</a>
+              {/* منخفضة: لا «تغيير وقت التوصيل» لطلب ملغى (stage < 0) أو مسلَّم (stage 3) */}
+              {stage >= 0 && stage < 3 && (
+                <a href={`https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(help + " — أرغب بتغيير وقت التوصيل")}`} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> تغيير وقت التوصيل</a>
+              )}
               <a href={`https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(help)}`} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" size={14} /> مساعدة في الطلب</a>
             </div>
           </div>
