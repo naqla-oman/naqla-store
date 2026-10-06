@@ -27,7 +27,7 @@ h1, h2, h3, h4, .font-display {
 /* الجوال الضيق: أزرار الهيدر 40px حتى لا تخرج السلة عن الشاشة (390px) */
 @media (max-width: 479px) {
   .hdr nav { gap: 8px; }
-  .hdr .iconbtn { width: 40px; height: 40px; border-radius: 12px; }
+  .hdr .iconbtn { width: 44px; height: 44px; border-radius: 12px; } /* منخفضة: 44px (كان 40) */
 }
 .hdr { background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
 .hsearch { position: relative; flex: 1; max-width: 300px; }
@@ -217,3 +217,24 @@ body:has(.costicky) .consent { top: calc(12px + env(safe-area-inset-top, 0px)); 
 .pcard .pr { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; row-gap: 2px; min-width: 0; }
 .pcard .pr > span { white-space: nowrap; }
 .pcard .pb { min-width: 0; }
+
+/* ===== منخفضة: أهداف اللمس ≥ 44px على الجوال (توصية Apple/Google) ===== */
+.iconbtn { width: max(var(--h-ctl, 40px), 44px); height: max(var(--h-ctl, 40px), 44px); }
+.btn, .btn.sm, .btn.wa { min-height: 44px; }
+.catchip, .linkbtn { min-height: 44px; display: inline-flex; align-items: center; }
+.qty button { min-width: 44px; min-height: 44px; }
+.searchbox input { align-self: stretch; height: 100%; }
+/* القلب على البطاقة: شكله 36px كما هو، ومنطقة اللمس 44px بهامش شفاف */
+.pcard .wish { width: 44px; height: 44px; top: 6px; inset-inline-start: 6px; background: transparent; box-shadow: none; display: grid; place-items: center; isolation: isolate; }
+.pcard .wish::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); z-index: -1; }
+/* روابط القوائم (الفوتر والشعار والشبكات) — لا الروابط داخل النص */
+footer.site a { display: inline-flex; align-items: center; min-height: 44px; }
+footer.site .social a { min-width: 44px; min-height: 44px; justify-content: center; }
+.hdr a[aria-label]:not(.iconbtn) { min-height: 44px; }
+/* منطقة لمس 44px مع بقاء الشكل كما هو: هامش داخلي يقابله هامش سالب مساوٍ */
+.dot { position: relative; }
+.dot::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
+.cartline .cname { padding-block: 12px; margin-block: -12px; }
+.cartline .rm { min-height: 44px; min-width: 44px; display: inline-flex; align-items: center; justify-content: center; margin-block: -12px; }
+.crumbs a { padding-block: 12px; margin-block: -12px; display: inline-block; }
+.linkbtn { min-width: 44px; justify-content: center; }
