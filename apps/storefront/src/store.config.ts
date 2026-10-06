@@ -113,6 +113,12 @@ const PAYMENTS = [
 /** ملف من مجلد العميل (images/…، icons/…، logo.svg، og.jpg) يُقدَّم عبر /client-assets */
 export const clientAsset = (p: string) => (/^https?:\/\//.test(p) ? p : `/client-assets/${p.replace(/^\/+/, "")}`)
 
+/** عملات كل مزوّد تقسيط (يُتحقق من العقد عند التفعيل) */
+const BNPL_CURRENCIES: Record<string, string[]> = { tabby: ["sar", "aed", "kwd"], tamara: ["sar", "aed", "kwd", "bhd"] }
+const bnplProviders: string[] = ((c.product as any).bnpl?.providers ?? []).filter((p: string) =>
+  (BNPL_CURRENCIES[p.toLowerCase()] ?? []).includes(String(c.currency).toLowerCase())
+)
+
 export const storeConfig = {
   slug: c.slug,
   voice: (c.voice ?? "neutral") as "f" | "m" | "neutral",
@@ -172,7 +178,7 @@ export const storeConfig = {
     loyalty: on("loyalty"),
     loyaltyTiers: on("loyalty") && on("loyaltyTiers"),
     whatsappOrder: on("whatsappOrder"),
-    bnpl: on("bnpl"),
+    bnpl: on("bnpl") && bnplProviders.length > 0,
     reviews: on("reviews"),
   },
 
@@ -215,7 +221,8 @@ export const storeConfig = {
     availability: c.product.availability ?? { inStock: "متوفر", outOfStock: "سنعيد توفيره قريباً" },
     lengthField: on("lengthField") && c.product.lengthField ? c.product.lengthField : { categories: [] as string[], note: "" },
     atelier: on("tailoring") && c.product.atelier ? c.product.atelier : { categories: [] as string[] },
-    bnpl: { enabled: on("bnpl"), installments: c.product.bnpl?.installments ?? 4, providers: c.product.bnpl?.providers ?? [] },
+    // منخفضة: مزوّدو التقسيط حسب عملة المتجر (تابي وتمارا لا يدعمان الريال العُماني) — يُفعَّل فقط إن بقي مزوّد يدعمها
+    bnpl: { enabled: on("bnpl") && bnplProviders.length > 0, installments: c.product.bnpl?.installments ?? 4, providers: bnplProviders },
     delivery: c.product.delivery,
     perks: c.product.perks,
     craftNote: c.product.craftNote ?? "",
