@@ -28,3 +28,9 @@ table { width: 100%; border-collapse: collapse; font-size: 14px; } th, td { text
 .login { min-height: 100vh; display: grid; place-items: center; background: var(--navy); }
 .login .card { width: 380px; display: grid; gap: 14px; }
 bdi { unicode-bidi: isolate; }
+.steps { display: flex; gap: 8px; list-style: none; padding: 0; margin: 0; flex-wrap: wrap; } .steps li { padding: 6px 12px; border-radius: 99px; background: #E7EEF1; font-size: 13px; color: var(--muted); } .steps li.on { background: var(--teal); color: #fff; } .steps li.done { background: #D6EFE9; color: var(--teal); }
+.pick { text-align: start; display: grid; gap: 4px; cursor: pointer; font: inherit; } .pick.on { outline: 2px solid var(--teal); }
+.sw { display: flex; height: 18px; border-radius: 6px; overflow: hidden; } .sw i { flex: 1; }
+.check { display: flex; align-items: center; gap: 8px; font-weight: 500; } .check input { width: auto; min-height: 0; }
+.log { background: #0B1B2B; color: #CFE3EA; border-radius: 12px; padding: 12px; font: 12px/1.6 ui-monospace, monospace; max-height: 340px; overflow: auto; white-space: pre-wrap; direction: ltr; text-align: left; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; }
