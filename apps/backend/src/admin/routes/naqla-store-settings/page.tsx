@@ -82,7 +82,7 @@ const TABS: { id: string; title: string; fields?: Field[]; soon?: string }[] = [
   { id: "features", title: "الميزات", fields: FEATURES },
   { id: "voice", title: "المخاطبة", fields: VOICE },
   { id: "shipping", title: "التوصيل" },
-  { id: "payments", title: "الدفع والتواصل", soon: "مفاتيح ثواني وواتساب — قيد الإضافة" },
+  { id: "payments", title: "الدفع والتواصل" },
   { id: "store", title: "بيانات المتجر", fields: STORE },
 ]
 const VOICE_SAMPLE: Record<string, string> = { f: "أضيفي للسلة · أدخلي رقمك", m: "أضف للسلة · أدخل رقمك", neutral: "إضافة إلى السلة · رقم الهاتف" }
@@ -180,6 +180,79 @@ const ShippingTab = ({ onSaved }: { onSaved: () => void }) => {
       </div>
       <div className="flex items-center gap-3">
         <Button onClick={save} isLoading={busy} data-testid="save-shipping">حفظ</Button>
+        {msg && <Text size="small" data-testid="settings-msg" className={msg.ok ? "text-ui-fg-interactive" : "text-ui-fg-error"}>{msg.text}</Text>}
+      </div>
+    </div>
+  )
+}
+
+/** تبويب «الدفع والتواصل»: أسرار مشفّرة تظهر مخفية بعد الحفظ، مع زر اختبار لكل منصة */
+type Sec = Record<string, { value: string | null; source: "settings" | "env" | null }>
+const SECRET_FIELDS: { key: string; label: string; group: "thawani" | "whatsapp" }[] = [
+  { key: "thawani.secretKey", label: "المفتاح السري", group: "thawani" },
+  { key: "thawani.publishableKey", label: "مفتاح النشر", group: "thawani" },
+  { key: "whatsapp.accessToken", label: "رمز الوصول الدائم", group: "whatsapp" },
+  { key: "whatsapp.phoneNumberId", label: "معرّف رقم الهاتف (Phone number ID)", group: "whatsapp" },
+  { key: "whatsapp.businessAccountId", label: "معرّف حساب واتساب للأعمال (WABA ID)", group: "whatsapp" },
+]
+const SOURCE: Record<string, string> = { settings: "من اللوحة", env: "من الإعداد التقني" }
+const PaymentsTab = ({ onSaved }: { onSaved: () => void }) => {
+  const [sec, setSec] = useState<Sec | null>(null)
+  const [draft, setDraft] = useState<Record<string, string>>({})
+  const [phones, setPhones] = useState("")
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [test, setTest] = useState<Record<string, { ok: boolean; message: string }>>({})
+  const [busy, setBusy] = useState<string | null>(null)
+  const load = () => api("/admin/naqla/store-settings/payments").then((d) => { setSec(d.secrets); setPhones((d.merchantPhones ?? []).join("، ")); setDraft({}) })
+  useEffect(() => { load() }, [])
+  if (!sec) return <Text>جارٍ التحميل…</Text>
+  const save = async (extra: Record<string, string> = {}) => {
+    setBusy("save")
+    try {
+      const secrets = { ...draft, ...extra }
+      const r = await api("/admin/naqla/store-settings/payments", { method: "POST", body: JSON.stringify({ secrets, merchantPhones: phones.split(/[،,\s]+/).filter(Boolean) }) })
+      setMsg({ ok: true, text: r.changes.length ? `تم الحفظ (${r.changes.length}) — المفاتيح مشفّرة ومخفية` : "لا تغييرات للحفظ" })
+      await load(); onSaved()
+    } catch (e) { setMsg({ ok: false, text: (e as Error).message }) } finally { setBusy(null) }
+  }
+  const runTest = async (platform: string) => {
+    setBusy(platform)
+    try { const r = await api(`/admin/naqla/store-settings/payments/test/${platform}`, { method: "POST" }); setTest((t) => ({ ...t, [platform]: r })) }
+    catch (e) { setTest((t) => ({ ...t, [platform]: { ok: false, message: (e as Error).message } })) } finally { setBusy(null) }
+  }
+  const group = (g: "thawani" | "whatsapp", title: string) => (
+    <div className="grid gap-3 rounded-lg border p-4">
+      <div className="flex items-center justify-between"><Heading level="h3">{title}</Heading>
+        <Button size="small" variant="secondary" onClick={() => runTest(g)} isLoading={busy === g} data-testid={`test-${g}`}>اختبار</Button></div>
+      {test[g] && <Text size="small" data-testid={`test-${g}-result`} className={test[g].ok ? "text-ui-fg-interactive" : "text-ui-fg-error"}>{test[g].message}</Text>}
+      {g === "thawani" && (
+        <div className="grid gap-1"><Label>الوضع</Label>
+          <Select value={draft["thawani.mode"] ?? sec["thawani.mode"]?.value ?? "uat"} onValueChange={(v) => setDraft({ ...draft, "thawani.mode": v })}>
+            <Select.Trigger data-testid="thawani-mode"><Select.Value /></Select.Trigger>
+            <Select.Content><Select.Item value="uat">تجريبي (UAT)</Select.Item><Select.Item value="live">حقيقي (Live)</Select.Item></Select.Content>
+          </Select></div>
+      )}
+      {SECRET_FIELDS.filter((f) => f.group === g).map((f) => (
+        <div key={f.key} className="grid gap-1">
+          <div className="flex items-center gap-2"><Label>{f.label}</Label>{sec[f.key]?.source && <Badge size="2xsmall" color={sec[f.key].source === "settings" ? "green" : "grey"}>{SOURCE[sec[f.key].source!]}</Badge>}</div>
+          <div className="flex gap-2">
+            <Input dir="ltr" autoComplete="off" data-testid={`secret-${f.key}`} placeholder={sec[f.key]?.value ?? "غير مضبوط"} value={draft[f.key] ?? ""} onChange={(e) => setDraft({ ...draft, [f.key]: e.target.value })} />
+            {sec[f.key]?.source === "settings" && <Button size="small" variant="secondary" onClick={() => save({ [f.key]: "" })} data-testid={`delete-${f.key}`}>حذف</Button>}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+  return (
+    <div className="grid max-w-3xl gap-4">
+      <Text size="small" className="text-ui-fg-subtle">تُحفظ المفاتيح مشفّرة ولا تظهر بعد الحفظ إلا آخر 4 أحرف. اترك الحقل فارغاً لإبقاء القيمة الحالية.</Text>
+      {group("thawani", "ثواني")}
+      {group("whatsapp", "واتساب للأعمال")}
+      <div className="grid gap-1"><Label>أرقام التاجر لتنبيهات الطلبات الجديدة</Label>
+        <Input dir="ltr" data-testid="merchant-phones" placeholder="96890000000، 96891111111" value={phones} onChange={(e) => setPhones(e.target.value)} />
+        <Text size="xsmall" className="text-ui-fg-subtle">حتى 5 أرقام مع رمز الدولة، تصلها رسالة واتساب بكل طلب جديد</Text></div>
+      <div className="flex items-center gap-3">
+        <Button onClick={() => save()} isLoading={busy === "save"} data-testid="save-payments">حفظ</Button>
         {msg && <Text size="small" data-testid="settings-msg" className={msg.ok ? "text-ui-fg-interactive" : "text-ui-fg-error"}>{msg.text}</Text>}
       </div>
     </div>
@@ -386,7 +459,7 @@ const StoreSettingsPage = () => {
           <Tabs.List>{TABS.map((t) => <Tabs.Trigger key={t.id} value={t.id} data-testid={`tab-${t.id}`}>{t.title}</Tabs.Trigger>)}</Tabs.List>
           {TABS.map((t) => (
             <Tabs.Content key={t.id} value={t.id} className="pt-4">
-              {t.id === "shipping" ? <ShippingTab onSaved={load} /> : t.soon ? <Text className="text-ui-fg-subtle">{t.soon}</Text> : (
+              {t.id === "shipping" ? <ShippingTab onSaved={load} /> : t.id === "payments" ? <PaymentsTab onSaved={load} /> : t.soon ? <Text className="text-ui-fg-subtle">{t.soon}</Text> : (
                 <div className={`${t.id === "identity" ? "max-w-4xl" : "max-w-2xl"} divide-y`}>
                   {t.id === "identity" && <><link rel="stylesheet" href={fontsHref} /><div className="pb-4"><Text size="small" weight="plus" className="mb-2">معاينة قبل الحفظ</Text>{preview}</div></>}
                   {t.fields!.map(field)}

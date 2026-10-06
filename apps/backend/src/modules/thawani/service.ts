@@ -1,3 +1,4 @@
+import { thawaniCreds } from "../../lib/credentials"
 import {
   AbstractPaymentProvider,
   MedusaError,
@@ -59,10 +60,15 @@ class ThawaniPaymentProvider extends AbstractPaymentProvider<ThawaniOptions> {
   protected logger_: Logger
   protected options_: ThawaniOptions
 
-  static validateOptions(options: Record<string, unknown>) {
-    if (!options.secretKey || !options.publishableKey) {
-      throw new MedusaError(MedusaError.Types.INVALID_DATA, "Thawani: secretKey و publishableKey مطلوبان")
-    }
+  // المفاتيح تُقرأ عند كل استدعاء (إعدادات المتجر ثم .env) — المزوّد مسجّل دائماً، وظهوره في المنطقة بشرط وجودها (M12)
+  static validateOptions(_options: Record<string, unknown>) {}
+
+  protected get creds() {
+    const c = thawaniCreds()
+    const secretKey = c.secretKey ?? this.options_.secretKey
+    const publishableKey = c.publishableKey ?? this.options_.publishableKey
+    if (!secretKey || !publishableKey) throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "مفاتيح ثواني غير مضبوطة")
+    return { secretKey, publishableKey, mode: c.mode ?? this.options_.mode }
   }
 
   constructor(container: { logger: Logger }, options: ThawaniOptions) {
@@ -72,13 +78,13 @@ class ThawaniPaymentProvider extends AbstractPaymentProvider<ThawaniOptions> {
   }
 
   protected get base() {
-    return this.options_.mode === "live" ? "https://checkout.thawani.om" : "https://uatcheckout.thawani.om"
+    return this.creds.mode === "live" ? "https://checkout.thawani.om" : "https://uatcheckout.thawani.om"
   }
 
   protected async request<T>(path: string, init: { method?: string; body?: unknown } = {}): Promise<T> {
     const res = await fetch(`${this.base}/api/v1${path}`, {
       method: init.method ?? "GET",
-      headers: { "Content-Type": "application/json", "thawani-api-key": this.options_.secretKey },
+      headers: { "Content-Type": "application/json", "thawani-api-key": this.creds.secretKey },
       body: init.body ? JSON.stringify(init.body) : undefined,
     })
     const json = (await res.json().catch(() => ({}))) as { success?: boolean; description?: string; data?: T }
@@ -89,7 +95,7 @@ class ThawaniPaymentProvider extends AbstractPaymentProvider<ThawaniOptions> {
   }
 
   protected checkoutUrl(sessionId: string) {
-    return `${this.base}/pay/${sessionId}?key=${this.options_.publishableKey}`
+    return `${this.base}/pay/${sessionId}?key=${this.creds.publishableKey}`
   }
 
   /** H3: ثواني يدعم الريال العُماني فقط — أي عملة أخرى تُرفض (لا تحويل صامت: 100 ر.س ≠ 100 ر.ع) */

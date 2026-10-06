@@ -1,3 +1,4 @@
+import { secretFromSettings, whatsappCreds } from "../../lib/credentials"
 import { AbstractNotificationProviderService, MedusaError } from "@medusajs/framework/utils"
 import type {
   Logger,
@@ -44,11 +45,22 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
     this.options_ = { language: "ar", apiVersion: "v21.0", ...options }
   }
 
+  /** المفاتيح من «إعدادات المتجر» ← الدفع والتواصل، ثم .env */
+  protected get creds() {
+    const c = whatsappCreds()
+    return { accessToken: c.accessToken ?? this.options_.accessToken, phoneNumberId: c.phoneNumberId ?? this.options_.phoneNumberId }
+  }
+  /** مفعّل عند وجود الرمز ومعرّف الرقم (من اللوحة أو .env مع WHATSAPP_ENABLED) — وإلا وضع السجل */
+  protected get enabled() {
+    const c = this.creds
+    return !!c.accessToken && !!c.phoneNumberId && (this.options_.enabled || !!secretFromSettings("whatsapp.accessToken"))
+  }
+
   async send(n: ProviderSendNotificationDTO): Promise<ProviderSendNotificationResultsDTO> {
     const to = String(n.to).replace(/\D/g, "")
     const data = (n.data ?? {}) as Record<string, string>
 
-    if (!this.options_.enabled) {
+    if (!this.enabled) {
       if (process.env.NODE_ENV === "production") {
         throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "WhatsApp غير مفعّل — لا يمكن إرسال الرمز")
       }
@@ -63,10 +75,10 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
     if (!data.otp) throw new MedusaError(MedusaError.Types.INVALID_DATA, "WhatsApp: الرمز مفقود")
 
     const res = await fetch(
-      `https://graph.facebook.com/${this.options_.apiVersion}/${this.options_.phoneNumberId}/messages`,
+      `https://graph.facebook.com/${this.options_.apiVersion}/${this.creds.phoneNumberId}/messages`,
       {
         method: "POST",
-        headers: { Authorization: `Bearer ${this.options_.accessToken}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${this.creds.accessToken}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           messaging_product: "whatsapp",
           to,
@@ -98,9 +110,9 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
       return {}
     }
     const params = (((n.data as any)?.params ?? []) as unknown[]).map((p) => ({ type: "text", text: String(p) }))
-    const res = await fetch(`https://graph.facebook.com/${this.options_.apiVersion}/${this.options_.phoneNumberId}/messages`, {
+    const res = await fetch(`https://graph.facebook.com/${this.options_.apiVersion}/${this.creds.phoneNumberId}/messages`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${this.options_.accessToken}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${this.creds.accessToken}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         messaging_product: "whatsapp",
         to,

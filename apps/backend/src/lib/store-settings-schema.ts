@@ -80,6 +80,17 @@ export const SCHEMA: Record<string, { tab: string; check: Check }> = {
     tab: "shipping",
     check: (v) => (Array.isArray(v) && v.every((d) => Number.isInteger(d) && d >= 0 && d <= 6) && v.length < 7 ? [...new Set(v as number[])].sort() : fail("أيام العطل: أيام الأسبوع 0–6، ويبقى يوم عمل واحد على الأقل")),
   },
+  // 5) الدفع والتواصل: أرقام التاجر للتنبيهات (الأسرار في saveSecrets)
+  merchantPhones: {
+    tab: "payments",
+    check: (v) => {
+      if (!Array.isArray(v)) return fail("أرقام التاجر: قائمة أرقام")
+      const out = [...new Set(v.map((x) => String(x).replace(/[\s\-()+]/g, "")).filter(Boolean))]
+      if (out.length > 5) fail("5 أرقام كحد أقصى")
+      if (!out.every((x) => /^\d{8,15}$/.test(x))) fail("أرقام التاجر: أرقام فقط (8–15) مع رمز الدولة")
+      return out
+    },
+  },
   // 6) بيانات المتجر
   "contact.phone": { tab: "store", check: phoneDigits("هاتف المتجر") },
   "contact.whatsapp": { tab: "store", check: phoneDigits("رقم واتساب المتجر") },
@@ -110,6 +121,20 @@ export function setPath(o: Record<string, any>, path: string, v: unknown) {
   let x = o
   for (const k of ks.slice(0, -1)) x = x[k] = x[k] && typeof x[k] === "object" ? x[k] : {}
   x[ks[ks.length - 1]] = v
+}
+
+/** صيغة أسرار الدفع والتواصل (تُحفظ مشفّرة) */
+export function checkSecret(key: string, v: string) {
+  const rules: Record<string, [RegExp, string]> = {
+    "thawani.secretKey": [/^[A-Za-z0-9_\-]{16,200}$/, "المفتاح السري لثواني: حروف وأرقام بلا مسافات"],
+    "thawani.publishableKey": [/^[A-Za-z0-9_\-]{16,200}$/, "مفتاح النشر لثواني: حروف وأرقام بلا مسافات"],
+    "thawani.mode": [/^(uat|live)$/, "وضع ثواني: تجريبي أو حقيقي"],
+    "whatsapp.accessToken": [/^[A-Za-z0-9_\-.|]{20,600}$/, "رمز وصول واتساب غير صحيح"],
+    "whatsapp.phoneNumberId": [/^\d{10,20}$/, "معرّف رقم واتساب: أرقام (10–20)"],
+    "whatsapp.businessAccountId": [/^\d{10,20}$/, "معرّف حساب واتساب للأعمال: أرقام (10–20)"],
+  }
+  const r = rules[key]
+  if (r && !r[0].test(v)) fail(r[1])
 }
 
 /** قيود بين الحقول على القيمة الفعلية بعد الدمج */

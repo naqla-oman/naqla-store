@@ -1,8 +1,11 @@
 import { MedusaService } from "@medusajs/framework/utils"
 import { clientDefaults, deepMerge, setClientOverrides } from "../../lib/client"
 import { queueRevalidate } from "../../lib/revalidate"
-import { SCHEMA, SettingsError, crossCheck, getPath, setPath } from "../../lib/store-settings-schema"
+import { SCHEMA, SettingsError, checkSecret, crossCheck, getPath, setPath } from "../../lib/store-settings-schema"
+const fail = (m: string): never => { throw new SettingsError(m) }
 import { StoreSettings, StoreSettingsChange } from "./models/store-settings"
+import { SECRET_KEYS, secretFromSettings, setSealedSecrets, type SecretKey } from "../../lib/credentials"
+import { seal } from "../../lib/secret-box"
 
 type Actor = { id?: string | null; email?: string | null }
 export type Change = { key: string; from: unknown; to: unknown }
@@ -55,6 +58,35 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
   async recordChanges(changes: Change[], actor: Actor = {}) {
     if (!changes.length) return
     await this.createStoreSettingsChanges({ actor_id: actor.id ?? null, actor_email: actor.email ?? null, changes: { items: changes } as any })
+  }
+
+  /**
+   * أسرار الدفع والتواصل: مشفّرة (AES-256-GCM). «••••…» = بلا تغيير، والفارغ = حذف (يعود .env).
+   * السجل يذكر «تغيّر» فقط — لا قيم.
+   */
+  async saveSecrets(patch: Record<string, unknown>, actor: Actor = {}, pg?: any) {
+    const row: any = await this.getRow()
+    const sealed: Record<string, string> = { ...(row.secrets ?? {}) }
+    const changes: Change[] = []
+    for (const [key, raw] of Object.entries(patch ?? {})) {
+      if (!(SECRET_KEYS as readonly string[]).includes(key)) throw new SettingsError(`المفتاح «${key}» غير قابل للتعديل`)
+      const v = typeof raw === "string" ? raw.trim() : raw == null ? "" : fail(`${key}: قيمة نصية مطلوبة`)
+      if (v.startsWith("••••")) continue
+      if (!v) {
+        if (sealed[key]) { delete sealed[key]; changes.push({ key, from: "••••", to: "حُذف (يعود للإعداد التقني)" }) }
+        continue
+      }
+      checkSecret(key, v)
+      if (secretFromSettings(key as SecretKey) === v) continue
+      const had = !!sealed[key]
+      sealed[key] = seal(v)
+      changes.push({ key, from: had ? "••••" : null, to: had ? "تغيّر" : "أُضيف" })
+    }
+    if (!changes.length) return { changes }
+    await this.replaceJson(pg, row.id, "secrets", sealed)
+    setSealedSecrets(sealed)
+    await this.recordChanges(changes, actor)
+    return { changes }
   }
 
   async history(limit = 20) {

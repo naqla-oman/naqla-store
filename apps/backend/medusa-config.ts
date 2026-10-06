@@ -1,7 +1,6 @@
 import { loadEnv, defineConfig, Modules, ContainerRegistrationKeys, MedusaError } from '@medusajs/framework/utils'
 import { client } from './src/lib/client'
 import { BACKEND_DIR, PRIVATE_FILES_DIR, UPLOADS_DIR } from './src/lib/paths'
-import { thawaniConfigured } from './src/lib/thawani-env'
 import { join } from 'node:path'
 import { naqlaAdminBrand } from './admin-brand/vite-plugin'
 import { installSecurityHeaders } from './src/api/security-headers'
@@ -102,8 +101,8 @@ if (revalidateSecret.length < 32) {
 }
 
 /** ثواني لا يُحمَّل إلا عند THAWANI_ENABLED=true ووجود المفتاحين */
-const thawaniEnabled =
-  thawaniConfigured()
+// تبويب «الدفع والتواصل»: المزوّد مسجّل دائماً — المفاتيح من الإعدادات أو .env عند الاستدعاء، وظهوره في المنطقة بشرط وجودها (M12)
+const thawaniEnabled = true
 
 module.exports = defineConfig({
   // لوحة نقلة: الهوية في رأس الصفحة فقط (admin-brand/vite-plugin.ts) — لا نسخ لكود Medusa
