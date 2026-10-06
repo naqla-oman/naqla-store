@@ -74,6 +74,12 @@ export const SCHEMA: Record<string, { tab: string; check: Check }> = {
   ...Object.fromEntries(FEATURES.map((f) => [`features.${f}`, { tab: "features", check: bool }])),
   // 3) المخاطبة
   voice: { tab: "voice", check: oneOf(["f", "m", "neutral"], "المخاطبة") },
+  // 4) التوصيل (الأسعار والمحافظات في Medusa — هنا ما ليس من بيانات Medusa)
+  cutoffHour: { tab: "shipping", check: int(8, 23, "وقت إغلاق التوصيل السريع (ساعة)") },
+  deliveryOffDays: {
+    tab: "shipping",
+    check: (v) => (Array.isArray(v) && v.every((d) => Number.isInteger(d) && d >= 0 && d <= 6) && v.length < 7 ? [...new Set(v as number[])].sort() : fail("أيام العطل: أيام الأسبوع 0–6، ويبقى يوم عمل واحد على الأقل")),
+  },
   // 6) بيانات المتجر
   "contact.phone": { tab: "store", check: phoneDigits("هاتف المتجر") },
   "contact.whatsapp": { tab: "store", check: phoneDigits("رقم واتساب المتجر") },

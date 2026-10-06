@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { readShipping } from "../../../../lib/shipping-settings"
 
 /**
  * M19: حد التوصيل المجاني من مصدر واحد — قاعدة السعر الفعلية في Medusa (سعر 0 عند item_total gte X)
@@ -16,6 +17,8 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
       join price_rule pr on pr.price_id = p.id and pr.deleted_at is null
      where so.deleted_at is null and sot.code = 'standard' and pr.attribute = 'item_total' and pr.operator in ('gte', 'gt')`)
   const v = (r.rows ?? r)[0]?.free_over
+  // تبويب «التوصيل»: المحافظات المفعّلة من منطقة الخدمة (null = كلها) — قائمة المحافظات في الدفع تُصفّى بها
+  const s = await readShipping(req.scope)
   res.setHeader("Cache-Control", "public, max-age=60")
-  res.json({ free_over: v == null ? null : Number(v) })
+  res.json({ free_over: v == null ? null : Number(v), governorates: s.governorates, express_provinces: s.express?.provinces ?? null })
 }

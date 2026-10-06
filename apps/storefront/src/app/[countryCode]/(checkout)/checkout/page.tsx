@@ -6,6 +6,7 @@ import { CART_FIELDS } from "@lib/util/cart-fields"
 import CheckoutFlow from "@modules/checkout/templates/checkout-flow"
 import { Metadata } from "next"
 import { redirect } from "next/navigation"
+import { getShippingConfig } from "@lib/data/shipping-threshold"
 
 export const metadata: Metadata = {
   title: "إتمام الطلب",
@@ -29,10 +30,11 @@ export default async function Checkout(props: Props) {
   const hasAddress = !!cart.shipping_address?.province && !!cart.shipping_address?.phone
   const current = step === "payment" && hasAddress ? "payment" : "address"
 
-  const [{ shipping_options }, providers, customer] = await Promise.all([
+  const [{ shipping_options }, providers, customer, shipCfg] = await Promise.all([
     hasAddress ? listCartOptions() : Promise.resolve({ shipping_options: [] }),
     cart.region_id ? listCartPaymentMethods(cart.region_id) : Promise.resolve([]),
     retrieveCustomer(),
+    getShippingConfig(),
   ])
 
   return (
@@ -44,6 +46,7 @@ export default async function Checkout(props: Props) {
       step={current}
       error={error}
       customer={customer}
+      enabledGovernorates={shipCfg.governorates}
     />
   )
 }

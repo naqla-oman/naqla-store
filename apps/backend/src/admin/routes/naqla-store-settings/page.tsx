@@ -81,7 +81,7 @@ const TABS: { id: string; title: string; fields?: Field[]; soon?: string }[] = [
   { id: "identity", title: "الهوية", fields: IDENTITY },
   { id: "features", title: "الميزات", fields: FEATURES },
   { id: "voice", title: "المخاطبة", fields: VOICE },
-  { id: "shipping", title: "التوصيل", soon: "المحافظات والأسعار وحد المجاني — قيد الإضافة" },
+  { id: "shipping", title: "التوصيل" },
   { id: "payments", title: "الدفع والتواصل", soon: "مفاتيح ثواني وواتساب — قيد الإضافة" },
   { id: "store", title: "بيانات المتجر", fields: STORE },
 ]
@@ -92,6 +92,98 @@ async function api(path: string, init?: RequestInit) {
   const body = await res.json().catch(() => ({}))
   if (!res.ok) throw new Error(body.message ?? "تعذّر الحفظ")
   return body
+}
+
+/** تبويب «التوصيل»: يقرأ ويكتب خيارات شحن Medusa مباشرة (مصدر واحد) */
+type Ship = {
+  standard: { amount: number | null; free_over: number | null } | null
+  express: { amount: number | null; provinces: string[] | null } | null
+  governorates: string[] | null
+  cutoffHour: number | null
+  deliveryOffDays: number[]
+  all: { code: string; name: string }[]
+  pickupProvince: string | null
+}
+const DAYS = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
+const ShippingTab = ({ onSaved }: { onSaved: () => void }) => {
+  const [d, setD] = useState<Ship | null>(null)
+  const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
+  const [busy, setBusy] = useState(false)
+  const load = () => api("/admin/naqla/store-settings/shipping").then((x: Ship) => setD({ ...x, governorates: x.governorates ?? x.all.map((g) => g.code) }))
+  useEffect(() => { load() }, [])
+  if (!d) return <Text>جارٍ التحميل…</Text>
+  const toggle = (list: string[], v: string) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v])
+  const save = async () => {
+    setBusy(true)
+    try {
+      const r = await api("/admin/naqla/store-settings/shipping", {
+        method: "POST",
+        body: JSON.stringify({
+          standard: d.standard ? { amount: d.standard.amount, free_over: d.standard.free_over } : undefined,
+          express: d.express ? { amount: d.express.amount, provinces: d.express.provinces ?? [] } : undefined,
+          governorates: d.governorates,
+          cutoffHour: d.cutoffHour,
+          deliveryOffDays: d.deliveryOffDays,
+        }),
+      })
+      setMsg({ ok: true, text: r.changes.length ? `تم الحفظ (${r.changes.length}) — يظهر في المتجر خلال ثوانٍ` : "لا تغييرات للحفظ" })
+      await load(); onSaved()
+    } catch (e) {
+      setMsg({ ok: false, text: (e as Error).message })
+    } finally {
+      setBusy(false)
+    }
+  }
+  const num = (v: string) => (v === "" ? null : Number(v))
+  return (
+    <div className="grid max-w-3xl gap-5">
+      {d.standard && (
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label>سعر التوصيل العادي</Label><Input data-testid="ship-standard-amount" type="number" step="0.001" value={d.standard.amount ?? ""} onChange={(e) => setD({ ...d, standard: { ...d.standard!, amount: num(e.target.value) } })} /></div>
+          <div><Label>التوصيل مجاني للطلبات من</Label><Input data-testid="ship-free-over" type="number" step="0.001" placeholder="بلا توصيل مجاني" value={d.standard.free_over ?? ""} onChange={(e) => setD({ ...d, standard: { ...d.standard!, free_over: num(e.target.value) } })} /></div>
+        </div>
+      )}
+      {d.express && (
+        <div className="grid gap-2">
+          <div className="grid grid-cols-2 gap-3">
+            <div><Label>سعر التوصيل السريع</Label><Input data-testid="ship-express-amount" type="number" step="0.001" value={d.express.amount ?? ""} onChange={(e) => setD({ ...d, express: { ...d.express!, amount: num(e.target.value) } })} /></div>
+            <div><Label>إغلاق طلبات السريع لنفس اليوم (الساعة)</Label>
+              <Select value={String(d.cutoffHour ?? 15)} onValueChange={(v) => setD({ ...d, cutoffHour: Number(v) })}>
+                <Select.Trigger data-testid="ship-cutoff"><Select.Value /></Select.Trigger>
+                <Select.Content>{Array.from({ length: 16 }, (_, i) => i + 8).map((h) => <Select.Item key={h} value={String(h)}>{h}:00</Select.Item>)}</Select.Content>
+              </Select>
+            </div>
+          </div>
+          <Label>محافظات التوصيل السريع</Label>
+          <div className="flex flex-wrap gap-2">{d.all.map((g) => (
+            <label key={g.code} className="flex items-center gap-1 rounded border px-2 py-1 text-sm" data-testid={`express-${g.code}`}>
+              <input type="checkbox" checked={(d.express!.provinces ?? []).includes(g.code)} onChange={() => setD({ ...d, express: { ...d.express!, provinces: toggle(d.express!.provinces ?? [], g.code) } })} />{g.name}
+            </label>))}</div>
+        </div>
+      )}
+      <div className="grid gap-2">
+        <Label>المحافظات المفعّلة للتوصيل</Label>
+        <div className="flex flex-wrap gap-2">{d.all.map((g) => {
+          const locked = g.code === d.pickupProvince
+          return (
+            <label key={g.code} className="flex items-center gap-1 rounded border px-2 py-1 text-sm" data-testid={`gov-${g.code}`} title={locked ? "محافظة موقع الاستلام — تبقى مفعّلة" : ""}>
+              <input type="checkbox" disabled={locked} checked={locked || (d.governorates ?? []).includes(g.code)} onChange={() => setD({ ...d, governorates: toggle(d.governorates ?? [], g.code) })} />{g.name}
+            </label>)
+        })}</div>
+      </div>
+      <div className="grid gap-2">
+        <Label>أيام العطل (لا توصيل سريع ولا مواعيد توصيل)</Label>
+        <div className="flex flex-wrap gap-2">{DAYS.map((name, i) => (
+          <label key={i} className="flex items-center gap-1 rounded border px-2 py-1 text-sm" data-testid={`offday-${i}`}>
+            <input type="checkbox" checked={d.deliveryOffDays.includes(i)} onChange={() => setD({ ...d, deliveryOffDays: d.deliveryOffDays.includes(i) ? d.deliveryOffDays.filter((x) => x !== i) : [...d.deliveryOffDays, i].sort() })} />{name}
+          </label>))}</div>
+      </div>
+      <div className="flex items-center gap-3">
+        <Button onClick={save} isLoading={busy} data-testid="save-shipping">حفظ</Button>
+        {msg && <Text size="small" data-testid="settings-msg" className={msg.ok ? "text-ui-fg-interactive" : "text-ui-fg-error"}>{msg.text}</Text>}
+      </div>
+    </div>
+  )
 }
 
 const StoreSettingsPage = () => {
@@ -294,7 +386,7 @@ const StoreSettingsPage = () => {
           <Tabs.List>{TABS.map((t) => <Tabs.Trigger key={t.id} value={t.id} data-testid={`tab-${t.id}`}>{t.title}</Tabs.Trigger>)}</Tabs.List>
           {TABS.map((t) => (
             <Tabs.Content key={t.id} value={t.id} className="pt-4">
-              {t.soon ? <Text className="text-ui-fg-subtle">{t.soon}</Text> : (
+              {t.id === "shipping" ? <ShippingTab onSaved={load} /> : t.soon ? <Text className="text-ui-fg-subtle">{t.soon}</Text> : (
                 <div className={`${t.id === "identity" ? "max-w-4xl" : "max-w-2xl"} divide-y`}>
                   {t.id === "identity" && <><link rel="stylesheet" href={fontsHref} /><div className="pb-4"><Text size="small" weight="plus" className="mb-2">معاينة قبل الحفظ</Text>{preview}</div></>}
                   {t.fields!.map(field)}

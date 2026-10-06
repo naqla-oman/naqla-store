@@ -51,6 +51,12 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
     await pg.raw(`update store_settings set ${field} = ?::jsonb, updated_at = now() where id = ?`, [JSON.stringify(value), id])
   }
 
+  /** تسجيل تغييرات لا تمر بـ overrides (مثل خيارات شحن Medusa في تبويب التوصيل) */
+  async recordChanges(changes: Change[], actor: Actor = {}) {
+    if (!changes.length) return
+    await this.createStoreSettingsChanges({ actor_id: actor.id ?? null, actor_email: actor.email ?? null, changes: { items: changes } as any })
+  }
+
   async history(limit = 20) {
     return this.listStoreSettingsChanges({}, { take: limit, order: { created_at: "DESC" } })
   }

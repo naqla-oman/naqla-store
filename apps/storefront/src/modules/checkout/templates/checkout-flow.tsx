@@ -29,6 +29,8 @@ type Props = {
   step: "address" | "payment"
   error?: string
   customer?: HttpTypes.StoreCustomer | null
+  /** تبويب «التوصيل»: المحافظات المفعّلة من Medusa (null = كلها) */
+  enabledGovernorates?: string[] | null
 }
 
 const { checkout, currencyLabel: CUR } = storeConfig
@@ -60,7 +62,8 @@ function validate(f: DeliveryInput): Errors {
 
 const fmt = (n: number) => `${formatAmount(n)} ${CUR}`
 
-export default function CheckoutFlow({ cart, shippingOptions, providers, countryCode, step, error, customer }: Props) {
+export default function CheckoutFlow({ cart, shippingOptions, providers, countryCode, step, error, customer, enabledGovernorates }: Props) {
+  const govOptions = checkout.governorates.filter((x) => !enabledGovernorates || enabledGovernorates.includes(x.code))
   const router = useRouter()
   const addr = cart.shipping_address
   const meta = (cart.metadata ?? {}) as Record<string, any>
@@ -365,7 +368,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                     aria-describedby="eGov"
                   >
                     <option value="">{g("اختاري المحافظة", "اختر المحافظة")}</option>
-                    {checkout.governorates.map((g) => <option key={g.code} value={g.code}>{g.name}</option>)}
+                    {govOptions.map((g) => <option key={g.code} value={g.code}>{g.name}</option>)}
                   </select>
                   <span className="ferr" id="eGov">{showErr("province")}</span>
                 </div>
