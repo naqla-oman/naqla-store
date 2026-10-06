@@ -42,7 +42,8 @@ const FEATURES = ["tailoring", "sizeGuide", "lengthField", "gift", "expressDeliv
 
 /** رابط صورة هوية: من مجلد هوية المتجر المرفوع، أو قيمة store.json الافتراضية (أو null للأيقونة svg) */
 const brandAsset = (key: string): Check => (v) => {
-  if (v === null && key === "icons.svg") return null
+  // null = العودة لافتراضي store.json (قد لا يحوي مفتاح icons أصلاً)
+  if (v === null || v === "") return null
   const s = String(v ?? "")
   const prefix = `${process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"}/static/${client().slug}/brand/`
   if (s.startsWith(prefix) && /^[a-z0-9-]+\.png$/.test(s.slice(prefix.length))) return s
