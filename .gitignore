@@ -76,3 +76,8 @@ deploy/.env
 # لوحة نقلة: بيانات الخادم (نسخ احتياطية وأرشيف المتاجر المحذوفة) — لا تُرفع إلى Git
 .backups/
 .archive/
+# متاجر العملاء التي تنشئها لوحة نقلة بيانات خادم — المستودع يحوي القالب والديموهين فقط
+clients/*
+!clients/_template/
+!clients/layan/
+!clients/demo-perfume/
