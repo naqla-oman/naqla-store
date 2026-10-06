@@ -65,6 +65,20 @@ async function auth() {
   ok(Number(n) >= 8, "سجل العمليات يسجّل كل محاولة", `${n} قيد`)
   const audit = await get("/audit", good.cookie)
   ok(audit.status === 200 && (await audit.text()).includes("audit-row"), "صفحة سجل العمليات")
+  // دفعة اللوحة: القفل لكل حساب (تغيير العنوان لا يفيد) — بعد 5 فشل من عناوين مختلفة
+  await q(`delete from audit where action='login' and ok=false`)
+  for (let i = 0; i < 5; i++) await login({ password: "x", from: ip() })
+  const byAccount = await login({ from: ip() })
+  ok(byAccount.status === 401 && /محاولات كثيرة/.test(byAccount.body.error ?? ""), "القفل لكل حساب: 5 فشل من عناوين مختلفة ثم عنوان جديد مرفوض")
+  await q(`delete from audit where action='login' and ok=false`)
+  // دفعة اللوحة: سباق TOTP — 3 طلبات متزامنة بنفس الرمز ← جلسة واحدة
+  await q(`update admins set totp_last_step=0 where email=$1`, [EMAIL])
+  const [adm] = await q(`select totp_secret from admins where email=$1`, [EMAIL])
+  const st = Math.floor(Date.now() / 30000), code = totp(adm.totp_secret, st)
+  const race = await Promise.all([1, 2, 3].map(() => fetch(`${BASE}/api/auth/login`, { method: "POST", headers: { "Content-Type": "application/json", "X-Forwarded-For": ip() }, body: JSON.stringify({ email: EMAIL, password: PASSWORD, code }) }).then((r) => r.status)))
+  ok(race.filter((x) => x === 200).length === 1, "سباق TOTP: 3 طلبات متزامنة بنفس الرمز ← جلسة واحدة", race.join(","))
+  // دفعة اللوحة: مسار السجلات يرفض رمزاً غير صالح
+  ok((await get("/api/stores/..%2F..%2Fetc/logs", good.cookie)).status !== 200 && (await get("/api/stores/Bad_Slug/logs", good.cookie)).status === 400, "مسار السجلات يرفض رمزاً غير صالح")
   const out = await fetch(`${BASE}/api/auth/logout`, { method: "POST", headers: { Cookie: good.cookie }, redirect: "manual" })
   ok(out.status === 303 && (await get("/", good.cookie)).status === 307, "الخروج يُبطل الجلسة")
 }
@@ -122,6 +136,8 @@ function crucialFor(slug, template, name, palette) {
     const notify = j.steps.find((s) => s.key === "notify")?.log.join(" ") ?? ""
     ok(/store_ready → \+96891234567/.test(notify) && /reset-password\?token=/.test(notify), "رسالة واتساب للعميل برابط اللوحة ورابط التعيين")
     ok(!/ADMIN_PASSWORD|password=/i.test(JSON.stringify(j.steps)), "لا كلمة مرور في أي رسالة أو سجل خطوة")
+    const [jr] = await q(`select steps::text || input::text as blob from jobs where id=$1`, [c.body.jobId])
+    ok(!/RESET_TOKEN=[^•\s"]|token=[^•&"]{8}|resetUrl/.test(jr.blob), "رمز التعيين لا يُحفظ في قاعدة اللوحة (مخفي في السجل ومحذوف من الحالة)")
     const [row] = await q(`select * from stores where slug=$1`, [slug])
     ok(row.status === "running" && row.health === "ok", "الحالة «يعمل» والصحة /ready")
     const e = storeEnv(slug), sj = JSON.parse(readFileSync(`${ROOT}clients/${slug}/store.json`, "utf8"))
