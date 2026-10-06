@@ -21,7 +21,6 @@ function CartMismatchBanner(props: {
   }
 
   const handleSubmit = async () => {
-    const t = useT("cart")
     try {
       setIsPending(true)
       setActionText(t("s2cc657"))

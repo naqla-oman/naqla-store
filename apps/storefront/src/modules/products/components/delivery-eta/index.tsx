@@ -46,6 +46,7 @@ export default function DeliveryEta() {
     setEta(compute(t, locale))
     const timer = setInterval(() => setEta(compute(t, locale)), 30_000)
     return () => clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- t وlocale ثابتان للصفحة
   }, [])
 
   return (

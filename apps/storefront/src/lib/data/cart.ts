@@ -15,7 +15,7 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
-import { getT, useT } from "@/i18n/t"
+import { getT } from "@/i18n/t"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -121,8 +121,8 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
  */
 export type CartResult = { ok: true } | { ok: false; code: "out_of_stock" | "invalid" | "error"; message: string }
 
-function cartFail(e: unknown): CartResult {
-  const t = useT("cartActions")
+async function cartFail(e: unknown): Promise<CartResult> {
+  const t = await getT("cartActions")
   const msg = String((e as any)?.message ?? "")
   if (/inventory|stock|غير متوفرة|المخزون|تتوفر/i.test(msg)) return { ok: false, code: "out_of_stock", message: t("s68650b") }
   // رسائل خادمنا العربية الواضحة (الطول، قفل الدفع…) تُعرض كما هي
