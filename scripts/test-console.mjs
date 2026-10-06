@@ -153,7 +153,8 @@ function crucialFor(slug, template, name, palette) {
     const [after] = await q(`select status from stores where slug=$1`, [slug])
     const dbs = (await q(`select 1 from pg_database where datname=$1`, [`naqla_${slug.replace(/-/g, "_")}`])).length
     const archived = readdirSync(`${ROOT}.archive`).some((d) => d.startsWith(`${slug}-`))
-    const [fin] = await q(`select count(*) n from backups where store_slug=$1 and kind='final'`, [slug])
+    // النسخة الأخيرة لهذا التشغيل فقط (الرمز يُعاد استخدامه بين التشغيلات)
+    const [fin] = await q(`select count(*) n from backups where store_slug=$1 and kind='final' and created_at > now() - interval '10 minutes'`, [slug])
     ok(after.status === "deleted" && dbs === 0 && !existsSync(`${ROOT}clients/${slug}`) && archived && Number(fin.n) === 1, "حُذف: القاعدة والمجلد أُزيلا، والأرشيف والنسخة الأخيرة موجودان")
     const audit = await q(`select action from audit where target=$1`, [slug])
     ok(["store.create", "store.pause", "store.resume", "store.backup", "store.restore", "store.delete"].every((x) => audit.some((a) => a.action === x)), "كل عملية في سجل العمليات")
