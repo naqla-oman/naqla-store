@@ -1,0 +1,49 @@
+/* لوحة نقلة الجاهزة «لبان ظفار» — بخور ولبان وعود ومنتجات تراثية (slug: luban) */
+:root {
+  --bg: #F8F1E7;
+  --surface: #FFFFFF;
+  --surface-2: #F2E7D8;
+  --ink: #2B1D12;
+  --ink-2: #64432A;
+  --muted: #776456;
+  --accent: #7A3E1D;
+  --accent-2: #5D2F16;
+  --accent-soft: #F3EBE7;
+  --accent-ink: #FFFFFF;
+  --copper: #2F6B4F;
+  --copper-ink: #FFFFFF;
+  --copper-soft: #E9F1ED;
+  --line: #E5DFDC;
+  --footer: #24150B;
+  --footer-ink: #F2EFED;
+  --footer-muted: #AD9B90;
+  --hero: #4A2512;
+  --hero-cta: var(--copper);
+  --hero-cta-ink: var(--copper-ink);
+  --r-lg: 18px;
+  --r-md: 14px;
+  --r-sm: 10px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #18120E;
+  --surface: #241B17;
+  --surface-2: #1E1713;
+  --ink: #F2EFEE;
+  --ink-2: #D7D0CC;
+  --muted: #AA9B92;
+  --accent: #D88D64;
+  --accent-2: #E2AB8D;
+  --accent-soft: #38281E;
+  --accent-ink: #18120E;
+  --copper: #8DCEB0;
+  --copper-ink: #0E1B15;
+  --copper-soft: #1D352A;
+  --line: #3D3029;
+  --footer: #0E0B09;
+  --footer-ink: #F2EFEE;
+  --footer-muted: #A89B94;
+  --hero: #140E0B;
+  color-scheme: dark;
+}

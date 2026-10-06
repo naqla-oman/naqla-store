@@ -1,0 +1,49 @@
+/* لوحة نقلة الجاهزة «سماء صحار» — متاجر عامة، أطفال، إلكترونيات (slug: sama) */
+:root {
+  --bg: #F5F8FB;
+  --surface: #FFFFFF;
+  --surface-2: #EAF0F7;
+  --ink: #13233A;
+  --ink-2: #2B4F83;
+  --muted: #556781;
+  --accent: #1E4F8A;
+  --accent-2: #183E6D;
+  --accent-soft: #E7EDF3;
+  --accent-ink: #FFFFFF;
+  --copper: #B3361E;
+  --copper-ink: #FFFFFF;
+  --copper-soft: #F5E8E6;
+  --line: #DCE0E5;
+  --footer: #0E1D33;
+  --footer-ink: #EDEFF2;
+  --footer-muted: #909BAD;
+  --hero: #163A66;
+  --hero-cta: var(--copper);
+  --hero-cta-ink: var(--copper-ink);
+  --r-lg: 14px;
+  --r-md: 10px;
+  --r-sm: 8px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0E1318;
+  --surface: #171D24;
+  --surface-2: #13181E;
+  --ink: #EEF0F2;
+  --ink-2: #CCD1D7;
+  --muted: #929DAA;
+  --accent: #6499D8;
+  --accent-2: #8DB4E2;
+  --accent-soft: #1E2A38;
+  --accent-ink: #0E1318;
+  --copper: #E28978;
+  --copper-ink: #1B100E;
+  --copper-soft: #35211D;
+  --line: #29323D;
+  --footer: #090B0E;
+  --footer-ink: #EEF0F2;
+  --footer-muted: #949DA8;
+  --hero: #0B0F14;
+  color-scheme: dark;
+}

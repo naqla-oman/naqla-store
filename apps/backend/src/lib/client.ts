@@ -2,6 +2,7 @@ import { MedusaError } from "@medusajs/framework/utils"
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { CLIENTS_DIR } from "./paths"
+import { detectFont, detectPalette } from "./themes"
 
 /**
  * بيانات العميل من clients/<STORE>/store.json — المصدر الوحيد لكل ما يخص المتجر.
@@ -97,7 +98,12 @@ export function deepMerge<T>(base: T, over: Record<string, unknown>): T {
 
 /** القيم الافتراضية كما في store.json (بلا تعديلات اللوحة) */
 export function clientDefaults(): ClientStore {
-  if (!cache) cache = JSON.parse(readFileSync(join(clientDir(), "store.json"), "utf-8")) as ClientStore
+  if (!cache) {
+    cache = JSON.parse(readFileSync(join(clientDir(), "store.json"), "utf-8")) as ClientStore
+    // الهوية الافتراضية: اللوحة والخط المطابقان لملفات العميل (أو custom) — تبويب «الهوية»
+    // (استيراد دائري آمن مع themes.ts: الدوال تُستدعى بعد اكتمال التحميل)
+    ;(cache as any).theme = { palette: detectPalette(), font: detectFont((cache as any).fonts), ...((cache as any).theme ?? {}) }
+  }
   return cache
 }
 

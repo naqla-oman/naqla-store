@@ -1,0 +1,49 @@
+/* لوحة نقلة الجاهزة «لؤلؤ» — أزياء عصرية بسيطة (مينيمال) (slug: lulu) */
+:root {
+  --bg: #F4F2EF;
+  --surface: #FFFFFF;
+  --surface-2: #ECE9E4;
+  --ink: #1E1D1B;
+  --ink-2: #4E4C46;
+  --muted: #6D6860;
+  --accent: #2E2D2A;
+  --accent-2: #1B1B19;
+  --accent-soft: #EEEDED;
+  --accent-ink: #FFFFFF;
+  --copper: #A0382B;
+  --copper-ink: #FFFFFF;
+  --copper-soft: #F3E8E7;
+  --line: #E6E2DB;
+  --footer: #1A1918;
+  --footer-ink: #F0F0EF;
+  --footer-muted: #A29E9A;
+  --hero: #2E2D2A;
+  --hero-cta: var(--copper);
+  --hero-cta-ink: var(--copper-ink);
+  --r-lg: 2px;
+  --r-md: 2px;
+  --r-sm: 2px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #141313;
+  --surface: #1E1E1D;
+  --surface-2: #191818;
+  --ink: #F0F0EF;
+  --ink-2: #D2D1D0;
+  --muted: #9F9F9D;
+  --accent: #DAD9D8;
+  --accent-2: #E6E6E5;
+  --accent-soft: #2C2C2A;
+  --accent-ink: #141313;
+  --copper: #DC897E;
+  --copper-ink: #1B100E;
+  --copper-soft: #351F1D;
+  --line: #343332;
+  --footer: #0C0C0B;
+  --footer-ink: #F0F0EF;
+  --footer-muted: #A8A394;
+  --hero: #10100F;
+  color-scheme: dark;
+}

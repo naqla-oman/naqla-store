@@ -1,0 +1,49 @@
+/* لوحة نقلة الجاهزة «ليل وذهب» — فخامة: عبايات سهرة، عطور، مجوهرات (slug: lail-dhahab) */
+:root {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --surface-2: #EFECE4;
+  --ink: #141414;
+  --ink-2: #4C4C4C;
+  --muted: #726565;
+  --accent: #1C1C1C;
+  --accent-2: #0D0D0D;
+  --accent-soft: #EDEDED;
+  --accent-ink: #FFFFFF;
+  --copper: #7C5A12;
+  --copper-ink: #FFFFFF;
+  --copper-soft: #F5F0E5;
+  --line: #EAE4D7;
+  --footer: #0B0B0B;
+  --footer-ink: #F0F0F0;
+  --footer-muted: #9E9E9E;
+  --hero: #121212;
+  --hero-cta: var(--copper);
+  --hero-cta-ink: var(--copper-ink);
+  --r-lg: 6px;
+  --r-md: 4px;
+  --r-sm: 3px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #131313;
+  --surface: #1D1D1D;
+  --surface-2: #181818;
+  --ink: #F0F0F0;
+  --ink-2: #D1D1D1;
+  --muted: #9E9E9E;
+  --accent: #DAD8D8;
+  --accent-2: #E6E5E5;
+  --accent-soft: #2B2B2B;
+  --accent-ink: #131313;
+  --copper: #E2C078;
+  --copper-ink: #1B170E;
+  --copper-soft: #352D1D;
+  --line: #333333;
+  --footer: #0B0B0B;
+  --footer-ink: #F0F0F0;
+  --footer-muted: #A89494;
+  --hero: #0F0F0F;
+  color-scheme: dark;
+}

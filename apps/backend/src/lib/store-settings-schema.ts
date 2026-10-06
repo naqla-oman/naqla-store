@@ -1,6 +1,7 @@
-import { client } from "./client"
+import { client, clientDefaults } from "./client"
 import { g } from "./voice"
 import { thawaniConfigured } from "./thawani-env"
+import { themePresets } from "./themes"
 
 /**
  * القائمة البيضاء لمفاتيح «إعدادات المتجر» القابلة للتعديل من لوحة العميل، مع التحقق من كل حقل على الخادم.
@@ -39,7 +40,22 @@ const oneOf = (vals: string[], label: string): Check => (v) => (vals.includes(St
 
 const FEATURES = ["tailoring", "sizeGuide", "lengthField", "gift", "expressDelivery", "pickup", "loyalty", "loyaltyTiers", "cod", "thawani", "whatsappOrder", "bnpl", "reviews"]
 
+/** لوحة/خط: من اللوحات الجاهزة، أو «custom» فقط إن كانت هوية العميل الافتراضية مخصصة من نقلة */
+const preset = (kind: "palettes" | "fonts", label: string): Check => (v) => {
+  const s = String(v ?? "")
+  if (themePresets()[kind].some((p) => p.slug === s)) return s
+  const def = (clientDefaults() as any).theme?.[kind === "palettes" ? "palette" : "font"]
+  return s === "custom" && def === "custom" ? s : fail(`${label}: اختيار غير متاح`)
+}
+
 export const SCHEMA: Record<string, { tab: string; check: Check }> = {
+  // 1) الهوية
+  name: { tab: "identity", check: text(60, 2, "اسم المتجر") },
+  shortName: { tab: "identity", check: text(24, 2, "الاسم المختصر") },
+  tagline: { tab: "identity", check: text(120, 0, "الشعار النصي") },
+  description: { tab: "identity", check: text(300, 0, "وصف المتجر") },
+  "theme.palette": { tab: "identity", check: preset("palettes", "لوحة الألوان") },
+  "theme.font": { tab: "identity", check: preset("fonts", "زوج الخطوط") },
   // 2) الميزات
   ...Object.fromEntries(FEATURES.map((f) => [`features.${f}`, { tab: "features", check: bool }])),
   // 3) المخاطبة

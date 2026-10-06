@@ -9,6 +9,8 @@ const CLIENT_DIR = clientDir()
 const CLIENT = clientStore()
 const ALIASES = {
   "@client": CLIENT_DIR,
+  // لوحات نقلة وأزواج الخطوط (مصدر واحد مع الخادم) — تبويب «الهوية»
+  "@naqla-themes": path.join(__dirname, "../../themes"),
   "@client-font-display": path.join(__dirname, "src/fonts/display", `${CLIENT.fonts.display}.ts`),
   "@client-font-body": path.join(__dirname, "src/fonts/body", `${CLIENT.fonts.body}.ts`),
   "@client-font-latin": path.join(__dirname, "src/fonts/latin", `${CLIENT.fonts.latin}.ts`),

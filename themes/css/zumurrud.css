@@ -1,0 +1,49 @@
+/* لوحة نقلة الجاهزة «زمرّد ونحاس» — أزياء وعبايات راقية (ليان) (slug: zumurrud) */
+:root {
+  --bg: #F6F1EA;
+  --surface: #FFFFFF;
+  --surface-2: #FAF7F2;
+  --ink: #17201D;
+  --ink-2: #4B5550;
+  --muted: #6B665F;
+  --accent: #0F4A3C;
+  --accent-2: #0A3328;
+  --accent-soft: #E6F0EC;
+  --accent-ink: #FFFFFF;
+  --copper: #93552F;
+  --copper-ink: #FFFFFF;
+  --copper-soft: #F6E8DD;
+  --line: #E3DED4;
+  --footer: #0B1A15;
+  --footer-ink: #EEF2EE;
+  --footer-muted: #93A39A;
+  --hero: #0F2D26;
+  --hero-cta: var(--copper);
+  --hero-cta-ink: var(--copper-ink);
+  --r-lg: 24px;
+  --r-md: 18px;
+  --r-sm: 14px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #0E1513;
+  --surface: #162019;
+  --surface-2: #121A16;
+  --ink: #EEF2EE;
+  --ink-2: #C9D2CC;
+  --muted: #93A39A;
+  --accent: #5FC3A3;
+  --accent-2: #8FDCC4;
+  --accent-soft: #1C2F28;
+  --accent-ink: #0B1A15;
+  --copper: #D9A07A;
+  --copper-ink: #1A120D;
+  --copper-soft: #2F231B;
+  --line: #243A32;
+  --footer: #070F0C;
+  --footer-ink: #EEF2EE;
+  --footer-muted: #93A39A;
+  --hero: #08140F;
+  color-scheme: dark;
+}

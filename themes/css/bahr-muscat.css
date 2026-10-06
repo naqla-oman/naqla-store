@@ -1,0 +1,49 @@
+/* لوحة نقلة الجاهزة «بحر مسقط» — عطور ومنتجات عناية (عبق) (slug: bahr-muscat) */
+:root {
+  --bg: #F8FBFA;
+  --surface: #FFFFFF;
+  --surface-2: #EAF3F1;
+  --ink: #1F3B3F;
+  --ink-2: #3E5A5D;
+  --muted: #56706F;
+  --accent: #2F6E70;
+  --accent-2: #245759;
+  --accent-soft: #E3EFEC;
+  --accent-ink: #FFFFFF;
+  --copper: #A94B35;
+  --copper-ink: #FFFFFF;
+  --copper-soft: #F6E3DD;
+  --line: #DCE8E5;
+  --footer: #1F3B3F;
+  --footer-ink: #E8F1EF;
+  --footer-muted: #9DB6B5;
+  --hero: #2F6E70;
+  --hero-cta: var(--copper);
+  --hero-cta-ink: var(--copper-ink);
+  --r-lg: 16px;
+  --r-md: 12px;
+  --r-sm: 8px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #10272A;
+  --surface: #17343A;
+  --surface-2: #132E32;
+  --ink: #E8F1EF;
+  --ink-2: #C4D6D4;
+  --muted: #9DB6B5;
+  --accent: #7CC0BC;
+  --accent-2: #A3D6D2;
+  --accent-soft: #1F4247;
+  --accent-ink: #10272A;
+  --copper: #E08A70;
+  --copper-ink: #10272A;
+  --copper-soft: #3A2A26;
+  --line: #24464B;
+  --footer: #0B1E20;
+  --footer-ink: #E8F1EF;
+  --footer-muted: #9DB6B5;
+  --hero: #0B1E20;
+  color-scheme: dark;
+}

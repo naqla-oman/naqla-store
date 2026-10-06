@@ -11,14 +11,17 @@ type Val = string | number | boolean | null
 type Field = {
   key: string
   label: string
-  type: "switch" | "text" | "number" | "select" | "voice"
+  type: "switch" | "text" | "number" | "select" | "voice" | "palette" | "font"
   hint?: string
   options?: { value: string; label: string }[]
   requires?: string
   placeholder?: string
   dir?: "ltr" | "rtl"
 }
+type Palette = { slug: string; name: string; use?: string; radius: Record<string, number>; light: Record<string, string>; dark: Record<string, string> }
+type FontPair = { slug: string; name: string; display: string; body: string; latin?: string }
 type Data = {
+  presets: { palettes: Palette[]; fonts: FontPair[] }
   values: Record<string, Val>
   defaults: Record<string, Val>
   governorates: { code: string; name: string; wilayats?: string[] }[]
@@ -61,8 +64,18 @@ const STORE: Field[] = [
   { key: "reservationHours.whatsapp", label: "حجز مخزون طلبات واتساب (ساعات)", type: "number", hint: "يُلغى الطلب غير المؤكد بعدها ويُفك الحجز" },
   { key: "reservationHours.pickup", label: "حجز مخزون طلبات الاستلام (ساعات)", type: "number" },
 ]
+const IDENTITY: Field[] = [
+  { key: "name", label: "اسم المتجر", type: "text" },
+  { key: "shortName", label: "الاسم المختصر", type: "text", hint: "يظهر على الجوال وأيقونة التطبيق" },
+  { key: "tagline", label: "الشعار النصي", type: "text" },
+  { key: "description", label: "وصف المتجر", type: "text", hint: "لمحركات البحث ومشاركة الروابط" },
+  { key: "theme.palette", label: "لوحة الألوان", type: "palette" },
+  { key: "theme.font", label: "الخطوط", type: "font" },
+]
+// أسماء عائلات Google لمعاينة الخطوط في اللوحة
+const FAMILY = (slug: string) => slug === "ibm-plex-sans-arabic" ? "IBM Plex Sans Arabic" : slug.split("-").map((w) => w[0].toUpperCase() + w.slice(1)).join(" ")
 const TABS: { id: string; title: string; fields?: Field[]; soon?: string }[] = [
-  { id: "identity", title: "الهوية", soon: "الاسم والشعار ولوحة الألوان والخط — قيد الإضافة" },
+  { id: "identity", title: "الهوية", fields: IDENTITY },
   { id: "features", title: "الميزات", fields: FEATURES },
   { id: "voice", title: "المخاطبة", fields: VOICE },
   { id: "shipping", title: "التوصيل", soon: "المحافظات والأسعار وحد المجاني — قيد الإضافة" },
@@ -135,6 +148,45 @@ const StoreSettingsPage = () => {
           ))}
         </div>
       )
+    if (f.type === "palette") {
+      const custom = data?.defaults["theme.palette"] === "custom"
+      const opts = [...(custom ? [{ slug: "custom", name: "هوية مخصصة", use: "هوية المتجر من نقلة", light: {} as Record<string, string> }] : []), ...(data?.presets.palettes ?? [])]
+      return (
+        <div key={f.key} className="grid gap-2 py-2">
+          {label}
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4" role="radiogroup" aria-label={f.label}>
+            {opts.map((p) => (
+              <button key={p.slug} type="button" role="radio" aria-checked={v === p.slug} data-testid={`palette-${p.slug}`} onClick={() => set(f.key, p.slug)}
+                className={`rounded-lg border p-2 text-start ${v === p.slug ? "border-ui-fg-interactive ring-1 ring-ui-fg-interactive" : ""}`}>
+                <div className="mb-1 flex h-6 overflow-hidden rounded">
+                  {p.slug === "custom" ? <div className="flex-1 bg-ui-bg-subtle" /> : ["bg", "accent", "copper", "hero", "ink"].map((k) => <div key={k} className="flex-1" style={{ background: (p as Palette).light[k] }} />)}
+                </div>
+                <div className="text-xs font-medium">{p.name}</div>
+                <div className="text-[11px] text-ui-fg-subtle">{p.use}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    }
+    if (f.type === "font") {
+      const custom = data?.defaults["theme.font"] === "custom"
+      const opts = [...(custom ? [{ slug: "custom", name: "خطوط مخصصة", display: "", body: "" }] : []), ...(data?.presets.fonts ?? [])]
+      return (
+        <div key={f.key} className="grid gap-2 py-2">
+          {label}
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-3" role="radiogroup" aria-label={f.label}>
+            {opts.map((x) => (
+              <button key={x.slug} type="button" role="radio" aria-checked={v === x.slug} data-testid={`font-${x.slug}`} onClick={() => set(f.key, x.slug)}
+                className={`rounded-lg border p-3 text-start ${v === x.slug ? "border-ui-fg-interactive ring-1 ring-ui-fg-interactive" : ""}`}>
+                <div style={{ fontFamily: x.display ? `"${FAMILY(x.display)}"` : undefined, fontSize: 18, fontWeight: 700 }}>عباءة مطرزة</div>
+                <div style={{ fontFamily: x.body ? `"${FAMILY(x.body)}"` : undefined, fontSize: 13 }}>{x.name} — توصيل لكل المحافظات</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )
+    }
     if (f.type === "select") {
       const opts = f.key === "location.province" ? (data?.governorates ?? []).map((g) => ({ value: g.code, label: g.name })) : wilayats.map((w) => ({ value: w, label: w }))
       return (
@@ -157,6 +209,32 @@ const StoreSettingsPage = () => {
     )
   }
 
+  // معاينة حية للهوية قبل الحفظ (اللوحة والخط والاسم من المسودة)
+  const preview = (() => {
+    if (!data) return null
+    const pal = data.presets.palettes.find((p) => p.slug === draft["theme.palette"])
+    const font = data.presets.fonts.find((x) => x.slug === draft["theme.font"])
+    const card = (mode: "light" | "dark") => {
+      const c = pal?.[mode]
+      if (!c) return <div key={mode} className="rounded-lg border p-4 text-ui-fg-subtle">الهوية المخصصة تبقى كما صمّمتها نقلة</div>
+      return (
+        <div key={mode} data-testid={`preview-${mode}`} style={{ background: c.bg, color: c.ink, borderRadius: pal!.radius.lg, padding: 14, fontFamily: font ? `"${FAMILY(font.body)}"` : undefined }}>
+          <div style={{ fontFamily: font ? `"${FAMILY(font.display)}"` : undefined, fontWeight: 700, fontSize: 18, color: c.accent }}>{String(draft.name ?? "")}</div>
+          <div style={{ fontSize: 12, color: c.muted }}>{String(draft.tagline ?? "")}</div>
+          <div style={{ background: c.surface, border: `1px solid ${c.line}`, borderRadius: pal!.radius.md, padding: 10, marginTop: 10 }}>
+            <div style={{ fontWeight: 600 }}>عباءة مطرزة بحواف ذهبية</div>
+            <span style={{ color: c.accent, fontWeight: 700 }}>24.500 ر.ع</span> <s style={{ color: c.muted, fontSize: 12 }}>29.000</s>
+            <span style={{ background: c.copper, color: c["copper-ink"], borderRadius: pal!.radius.sm, fontSize: 11, padding: "1px 6px", marginInlineStart: 6 }}>-16%</span>
+            <div style={{ background: c.accent, color: c["accent-ink"], borderRadius: pal!.radius.sm, textAlign: "center", padding: 8, marginTop: 8, fontWeight: 600 }}>أضف إلى السلة</div>
+          </div>
+          <div style={{ background: c.footer, color: c["footer-ink"], borderRadius: pal!.radius.sm, padding: 8, marginTop: 10, fontSize: 11 }}>© {String(draft.name ?? "")}</div>
+        </div>
+      )
+    }
+    return <div className="grid grid-cols-1 gap-3 md:grid-cols-2" data-testid="identity-preview">{card("light")}{card("dark")}</div>
+  })()
+  const fontsHref = data ? `https://fonts.googleapis.com/css2?${[...new Set(data.presets.fonts.flatMap((x) => [x.display, x.body, x.latin]).filter((x): x is string => !!x && x !== "none"))].map((x) => `family=${FAMILY(x).replace(/ /g, "+")}:wght@400;700`).join("&")}&display=swap` : ""
+
   if (!data) return <Container><Text>جارٍ التحميل…</Text></Container>
   return (
     <div className="flex flex-col gap-y-3" dir="rtl">
@@ -167,7 +245,8 @@ const StoreSettingsPage = () => {
           {TABS.map((t) => (
             <Tabs.Content key={t.id} value={t.id} className="pt-4">
               {t.soon ? <Text className="text-ui-fg-subtle">{t.soon}</Text> : (
-                <div className="max-w-2xl divide-y">
+                <div className={`${t.id === "identity" ? "max-w-4xl" : "max-w-2xl"} divide-y`}>
+                  {t.id === "identity" && <><link rel="stylesheet" href={fontsHref} /><div className="pb-4"><Text size="small" weight="plus" className="mb-2">معاينة قبل الحفظ</Text>{preview}</div></>}
                   {t.fields!.map(field)}
                   <div className="flex items-center gap-3 pt-4">
                     <Button onClick={() => save(t.id, t.fields!)} isLoading={saving === t.id} data-testid={`save-${t.id}`}>حفظ</Button>

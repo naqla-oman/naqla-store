@@ -131,6 +131,8 @@ function build(c: ClientStore) {
   )
 
   return {
+    /** الهوية من «إعدادات المتجر»: لوحة/خط مختاران (يوجدان فقط إن خالفا الافتراضي) */
+    theme: ((c as any).theme ?? {}) as { palette?: string; font?: string },
     /** السجل التجاري والرقم الضريبي (إعدادات المتجر ← بيانات المتجر) */
     legal: ((c as any).legal ?? {}) as { cr?: string | null; vat?: string | null },
     slug: c.slug,

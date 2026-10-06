@@ -1,0 +1,49 @@
+/* لوحة نقلة الجاهزة «وردة الجبل» — أزياء نسائية وهدايا ومستحضرات (slug: ward-jabal) */
+:root {
+  --bg: #FBF5F4;
+  --surface: #FFFFFF;
+  --surface-2: #F7ECEB;
+  --ink: #2A1A20;
+  --ink-2: #6C4353;
+  --muted: #756169;
+  --accent: #8A3553;
+  --accent-2: #702B43;
+  --accent-soft: #F2E8EC;
+  --accent-ink: #FFFFFF;
+  --copper: #A4501F;
+  --copper-ink: #FFFFFF;
+  --copper-soft: #F4EBE6;
+  --line: #E4DCDF;
+  --footer: #2A1219;
+  --footer-ink: #F2EDEF;
+  --footer-muted: #AD9098;
+  --hero: #5E2238;
+  --hero-cta: var(--copper);
+  --hero-cta-ink: var(--copper-ink);
+  --r-lg: 22px;
+  --r-md: 16px;
+  --r-sm: 12px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #170F12;
+  --surface: #23171C;
+  --surface-2: #1D1317;
+  --ink: #F2EEEF;
+  --ink-2: #D7CCCF;
+  --muted: #AA929B;
+  --accent: #CA7794;
+  --accent-2: #D89CB1;
+  --accent-soft: #352229;
+  --accent-ink: #170F12;
+  --copper: #E29F78;
+  --copper-ink: #1B130E;
+  --copper-soft: #35261D;
+  --line: #3C2A30;
+  --footer: #0E090B;
+  --footer-ink: #F2EEEF;
+  --footer-muted: #A8949B;
+  --hero: #130B0E;
+  color-scheme: dark;
+}

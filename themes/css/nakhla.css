@@ -1,0 +1,49 @@
+/* لوحة نقلة الجاهزة «نخلة» — تمور وأغذية ومنتجات طبيعية (slug: nakhla) */
+:root {
+  --bg: #F6F4EC;
+  --surface: #FFFFFF;
+  --surface-2: #EEEBDD;
+  --ink: #1F2414;
+  --ink-2: #46522D;
+  --muted: #656C56;
+  --accent: #4C5B23;
+  --accent-2: #364119;
+  --accent-soft: #EFF2E8;
+  --accent-ink: #FFFFFF;
+  --copper: #9A3F24;
+  --copper-ink: #FFFFFF;
+  --copper-soft: #F4EAE6;
+  --line: #E2E4DC;
+  --footer: #1A200C;
+  --footer-ink: #F1F2ED;
+  --footer-muted: #A4AD90;
+  --hero: #2E3A14;
+  --hero-cta: var(--copper);
+  --hero-cta-ink: var(--copper-ink);
+  --r-lg: 20px;
+  --r-md: 14px;
+  --r-sm: 10px;
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  --bg: #15170F;
+  --surface: #202317;
+  --surface-2: #1A1D13;
+  --ink: #F1F2EE;
+  --ink-2: #D4D7CC;
+  --muted: #A3AA92;
+  --accent: #B2C973;
+  --accent-2: #C6D798;
+  --accent-soft: #303522;
+  --accent-ink: #15170F;
+  --copper: #E0927B;
+  --copper-ink: #1B110E;
+  --copper-soft: #35221D;
+  --line: #373C2A;
+  --footer: #0D0E09;
+  --footer-ink: #F1F2EE;
+  --footer-muted: #A3A894;
+  --hero: #11130B;
+  color-scheme: dark;
+}
