@@ -1,6 +1,13 @@
 "use client"
 
-import Image from "next/image"
+import Image, { getImageProps } from "next/image"
+
+/**
+ * M33: صور العارض الكبير والشريط عبر محسّن Next (srcSet بصيغة WebP/AVIF وبالمقاس) —
+ * كانت <img> بالرابط الأصلي فيُحمَّل كل أصل كاملاً حتى للمصغّرة 72px. getImageProps يُبقي <img> نفسه (التكبير والسحب).
+ */
+const big = (src: string, alt: string) => getImageProps({ src, alt, width: 1600, height: 2000, sizes: "(max-width: 900px) 100vw, 1200px", quality: 82 }).props
+const thumb = (src: string) => getImageProps({ src, alt: "", width: 144, height: 144, sizes: "72px", quality: 70 }).props
 import { HttpTypes } from "@medusajs/types"
 import Icon from "@modules/common/components/icon"
 import { useCallback, useEffect, useRef, useState } from "react"
@@ -110,8 +117,7 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
           <div className="stage" onPointerDown={onDown} onPointerUp={(e) => { if (!zoom) onUp(e) }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={list[shot].url}
-              alt={title}
+              {...big(list[shot].url!, title)}
               className={zoom ? "zoomed" : ""}
               onDoubleClick={() => setZoom((z) => !z)}
               draggable={false}
@@ -129,7 +135,7 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
               {list.map((img, i) => (
                 <button key={img.id} type="button" className={i === shot ? "on" : ""} aria-label={`الصورة ${i + 1}`} onClick={() => { setShot(i); setZoom(false) }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={img.url} alt="" />
+                  <img {...thumb(img.url!)} alt="" />
                 </button>
               ))}
             </div>
