@@ -122,10 +122,13 @@ const HEAD_SCRIPT = String.raw`
     // M32: بريد زبونات الهاتف الداخلي (968XXXXXXXX@phone.invalid) ← رقم الهاتف منسّقاً
     var PH = /^(?:\+?)968(\d{4})(\d{4})@phone\.invalid$/;
     var phoneOf = function (t) { var m = t.trim().match(PH); return m ? "+968 " + m[1] + " " + m[2] : null; };
-    if (node.nodeType === 3) { var ph = phoneOf(node.nodeValue); if (ph) { node.nodeValue = ph; return; } var v = TEXT[node.nodeValue.trim()]; if (v) node.nodeValue = v; return; }
+    // منخفضة: «ر․ع․ 15.300 OMR» (رمز Intl + رمز العملة من Medusa) ← «15.300 ر.ع» بصيغة المتجر
+    var OMR = /^(-?)\s*ر[․.]ع[․.]?\s*(-?[\d٠-٩.,]+)\s*OMR$/;
+    var moneyOf = function (t) { var m = t.trim().match(OMR); return m ? (m[1] || "") + m[2] + " ر.ع" : null; };
+    if (node.nodeType === 3) { var mo = moneyOf(node.nodeValue); if (mo) { node.nodeValue = mo; return; } var ph = phoneOf(node.nodeValue); if (ph) { node.nodeValue = ph; return; } var v = TEXT[node.nodeValue.trim()]; if (v) node.nodeValue = v; return; }
     if (node.nodeType !== 1) return;
     var it = document.createTreeWalker(node, 4), t;
-    while ((t = it.nextNode())) { var p2 = phoneOf(t.nodeValue); if (p2) { t.nodeValue = p2; continue; } var r = TEXT[t.nodeValue.trim()]; if (r) t.nodeValue = r; }
+    while ((t = it.nextNode())) { var m2 = moneyOf(t.nodeValue); if (m2) { t.nodeValue = m2; continue; } var p2 = phoneOf(t.nodeValue); if (p2) { t.nodeValue = p2; continue; } var r = TEXT[t.nodeValue.trim()]; if (r) t.nodeValue = r; }
   };
   var start = function () {
     swap(document.body);
