@@ -1,7 +1,10 @@
 import type { MetadataRoute } from "next"
 import { clientAsset, storeConfig } from "../store.config"
+import { ensureStoreSettings } from "@lib/data/store-settings"
 
-export default function manifest(): MetadataRoute.Manifest {
+// إعدادات المتجر (الاسم والأيقونات) تُطبَّق قبل البناء — مسار مستقل لا يمر بالتخطيط الجذري
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  await ensureStoreSettings()
   return {
     name: storeConfig.name,
     short_name: storeConfig.shortName,
