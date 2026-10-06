@@ -73,7 +73,30 @@ asyncio.run(main())`
   for (const [path, bb] of Object.entries(boxes)) ok(bb && bb.x >= 0 && bb.x + bb.width <= 390 && bb.width > 0, `المبدّل داخل الشاشة على 390px في ${path}`, bb ? `x=${Math.round(bb.x)} w=${Math.round(bb.width)}` : "غير موجود")
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
-const sections = { stage0 }
+async function stage1() {
+  console.log("\n— المرحلة 1: نصوص الواجهة —")
+  const t = tok()
+  settings({ languages: ["ar", "en"], defaultLanguage: "ar" }, t)
+  const strip = (h) => h.replace(/<script[\s\S]*?<\/script>/g, "")
+  const rawKeys = (h) => (strip(h).match(/\bs[0-9a-f]{6}\b/g) ?? []).length
+  // الواجهة العربية: لا مفاتيح خام، المخاطبة المؤنثة، الجمع العربي
+  const arHome = curl("/om"), arProd = curl("/om/products/printed-silk-scarf")
+  ok(arHome.code === 200 && rawKeys(arHome.html) === 0 && rawKeys(arProd.html) === 0, "العربية: لا مفاتيح خام في الرئيسية والمنتج")
+  ok(arProd.html.includes("أضيفي للمفضلة") && arProd.html.includes("إضافة للسلة"), "العربية: المخاطبة المؤنثة (ICU select) ونص الزر")
+  let en = curl("/om/en")
+  for (let i = 0; i < 14 && attrs(en.html).lang !== "en"; i++) { await sleep(5000); en = curl("/om/en") }
+  const AR_UI = ["إضافة للسلة", "سلة التسوق", "إتمام الطلب", "جميع الحقوق", "تتبّع طلبك", "حسابي", "دليل المقاسات", "ابحث في المتجر"]
+  const pages = { "/om/en": ["All rights reserved", "My account"], "/om/en/products/printed-silk-scarf": ["Add to cart", "Size guide", "Add to wishlist"], "/om/en/cart": ["Shopping cart"], "/om/en/store": ["All products", "Sort"], "/om/en/account": ["Sign in with your phone number"], "/om/en/track": ["Track your order"] }
+  for (const [path, must] of Object.entries(pages)) {
+    const r = curl(path); const b = strip(r.html)
+    const left = AR_UI.filter((x) => b.includes(x)), miss = must.filter((x) => !b.includes(x))
+    ok(r.code === 200 && attrs(r.html).lang === "en" && rawKeys(r.html) === 0 && !left.length && !miss.length, `إنجليزي: ${path}`, [left.length ? `بقي عربي: ${left}` : "", miss.length ? `ناقص: ${miss}` : "", `خام ${rawKeys(r.html)}`].filter(Boolean).join(" | "))
+  }
+  const en404 = curl("/om/en/products/no-such-product-xyz")
+  ok(en404.code === 404 && en404.html.includes("Page not found"), "404 إنجليزية مترجمة")
+  settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
+}
+const sections = { stage0, stage1 }
 for (const s of (process.argv[3] ? [process.argv[3]] : Object.keys(sections))) await sections[s]()
 console.log(`\n${failn ? "✖" : "✔"} ${pass} نجح، ${failn} فشل`)
 process.exit(failn ? 1 : 0)
