@@ -1,5 +1,5 @@
 import { spawn } from "node:child_process"
-import { cpSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import pg from "pg"
 import type { Driver, Log, StoreSpec } from "./types"
@@ -43,6 +43,29 @@ async function killPid(file: string) {
   rmSync(file, { force: true })
   await sleep(1500) // تحرير المنافذ
 }
+/**
+ * كل عمليات المتجر (بيئتها STORE=<slug>) — `medusa develop` يولّد خادماً خارج مجموعة العمليات
+ * فلا تصله إشارة المجموعة ويبقى يتيماً يحجز المنفذ والذاكرة. يُقرأ من /proc (Linux).
+ */
+function storePids(slug: string): number[] {
+  const out: number[] = []
+  for (const d of readdirSync("/proc").filter((x) => /^\d+$/.test(x))) {
+    const pid = Number(d)
+    if (pid === process.pid) continue
+    try { if (readFileSync(`/proc/${d}/environ`, "latin1").split("\0").includes(`STORE=${slug}`)) out.push(pid) } catch { /* انتهت أو بلا صلاحية */ }
+  }
+  return out
+}
+async function killStore(slug: string) {
+  await killPid(pidFile(slug))
+  for (const sig of ["SIGTERM", "SIGKILL"] as const) {
+    const left = storePids(slug)
+    if (!left.length) return
+    for (const pid of left) { try { process.kill(pid, sig) } catch { /* انتهت */ } }
+    await sleep(sig === "SIGTERM" ? 3000 : 1000)
+  }
+}
+
 function startDetached(args: string[], logFile: string, pid: string) {
   mkdirSync(join(STORES, "logs"), { recursive: true })
   const fd = openSync(logFile, "a")
@@ -91,7 +114,7 @@ export const local: Driver = {
     log(`بدأ التشغيل (pid ${readFileSync(pidFile(slug), "utf8")})`)
   },
 
-  async stop(slug, log) { await killPid(pidFile(slug)); log("أُوقف") },
+  async stop(slug, log) { await killStore(slug); log("أُوقف (مع عمليات المتجر الفرعية)") },
 
   async ready(slug, timeoutMs = 0) {
     const e = storeEnv(slug)
@@ -111,7 +134,7 @@ export const local: Driver = {
   },
 
   async pause(slug, name, log) {
-    await killPid(pidFile(slug))
+    await killStore(slug)
     startDetached(["scripts/maintenance.mjs", storeEnv(slug).STOREFRONT_PORT, name], join(STORES, "logs", `${slug}.maint.log`), pidFile(slug, "maint"))
     log("صفحة الصيانة تعمل على منفذ المتجر")
   },
@@ -143,7 +166,7 @@ export const local: Driver = {
   },
 
   async remove(slug, log) {
-    await killPid(pidFile(slug)); await killPid(pidFile(slug, "maint"))
+    await killStore(slug); await killPid(pidFile(slug, "maint"))
     const e = storeEnv(slug)
     const dest = join(ARCHIVE, `${slug}-${new Date().toISOString().replace(/[:.]/g, "-")}`); mkdirSync(dest, { recursive: true })
     for (const [src, name] of [[join(ROOT, "clients", slug), "client"], [join(STORES, `${slug}.env`), `${slug}.env`], [join(BACKEND, "static", slug), "static"]] as const) {
@@ -181,7 +204,7 @@ export const local: Driver = {
 
   /** تراجع إنشاء فاشل: إيقاف، حذف القاعدة، وإزالة المجلد والبيئة (بلا أرشفة — لم يُطلق بعد) */
   async rollback(slug, log) {
-    await killPid(pidFile(slug))
+    await killStore(slug)
     const e = storeEnv(slug)
     if (e.DATABASE_URL) {
       const u = new URL(e.DATABASE_URL); const db = u.pathname.slice(1); u.pathname = "/postgres"
