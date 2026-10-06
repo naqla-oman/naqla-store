@@ -15,7 +15,8 @@ type Props = {
   }>
 }
 
-export const PRODUCT_LIMIT = 12
+// منخفضة: ثابت محلي — صفحات Next لا تُصدّر إلا حقولها المعروفة (كان يُسقط البناء مع فحص الأنواع)
+const PRODUCT_LIMIT = 12
 
 export async function generateStaticParams() {
   const { collections } = await listCollections({

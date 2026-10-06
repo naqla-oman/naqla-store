@@ -66,11 +66,12 @@ const nextConfig = {
       fullUrl: true,
     },
   },
+  // منخفضة: البناء لا يتجاهل أخطاء ESLint وTypeScript (كان يمرّرها إلى الإنتاج)
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
     // ملف tsconfig لكل متجر يعمل جنباً إلى جنب (store:dev يُنشئه ويرث tsconfig.json)
     ...(process.env.NEXT_TSCONFIG ? { tsconfigPath: process.env.NEXT_TSCONFIG } : {}),
   },
