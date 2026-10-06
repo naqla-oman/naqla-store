@@ -701,5 +701,9 @@
       "oud-oils": 150,
       "bakhoor": 300
     }
+  },
+  "reservationHours": {
+    "whatsapp": 48,
+    "pickup": 72
   }
 }

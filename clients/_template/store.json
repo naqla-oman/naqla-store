@@ -394,5 +394,9 @@
   "shippingWeights": {
     "default": 500,
     "categories": {}
+  },
+  "reservationHours": {
+    "whatsapp": 48,
+    "pickup": 72
   }
 }
