@@ -160,7 +160,13 @@ function crucialFor(slug, template, name, palette) {
   }
 }
 
-const sections = { auth, fashion: crucialFor("t-fashion", "fashion", "بوتيك الاختبار", "ward-jabal"), perfume: crucialFor("t-perfume", "perfume", "عطور الاختبار", "lail-dhahab") }
+async function cleanup() {
+  for (const slug of ["t-fashion", "t-perfume"]) {
+    const [r] = await q(`select status from stores where slug=$1`, [slug])
+    if (r && r.status !== "deleted") { const d = await api("POST", `/api/stores/${slug}/delete`, { confirm: slug }); if (d.body.jobId) await waitJob(d.body.jobId, `تنظيف ${slug}`) }
+  }
+}
+const sections = { cleanup, auth, fashion: crucialFor("t-fashion", "fashion", "بوتيك الاختبار", "ward-jabal"), perfume: crucialFor("t-perfume", "perfume", "عطور الاختبار", "lail-dhahab") }
 const want = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(sections)
 for (const s of want) await sections[s]()
 await db.end()
