@@ -72,3 +72,7 @@ dump.rdb
 .private-files/
 apps/backend/private-files/
 deploy/.env
+
+# لوحة نقلة: بيانات الخادم (نسخ احتياطية وأرشيف المتاجر المحذوفة) — لا تُرفع إلى Git
+.backups/
+.archive/

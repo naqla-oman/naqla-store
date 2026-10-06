@@ -57,9 +57,12 @@ const env = {
 console.log(c.b(`\n▶ إعداد المتجر «${slug}» — القاعدة ${dbName}، الخلفية ${backendPort}، الواجهة ${storefrontPort}\n`))
 
 console.log(c.d("1/3 إنشاء قاعدة البيانات…"))
+// medusa db:create يكتب اسم القاعدة في apps/backend/.env.template (ملف متتبَّع) — يُحفظ ويُعاد كما كان
+const tplFile = join(BACKEND, ".env.template")
+const tplBefore = existsSync(tplFile) ? readFileSync(tplFile, "utf8") : null
 await run("npx", ["medusa", "db:create", "--db", dbName, "--no-interactive"], { cwd: BACKEND, env: { ...env, DATABASE_URL: base } }).catch((e) => {
   if (!/already exists/i.test(e.out ?? "")) fail(`تعذّر إنشاء القاعدة:\n${e.out ?? e.message}`)
-})
+}).finally(() => { if (tplBefore !== null) writeFileSync(tplFile, tplBefore) })
 
 console.log(c.d("2/3 الترحيلات + البذرة + الدفع + الضريبة + الصور + المستويات…"))
 const out = await run("npx", ["medusa", "db:migrate"], { cwd: BACKEND, env }).catch((e) => fail(`فشل الترحيل:\n${(e.out ?? e.message).slice(-3000)}`))
