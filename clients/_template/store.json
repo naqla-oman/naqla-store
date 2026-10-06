@@ -314,7 +314,9 @@
   "location": {
     "name": "المحل الرئيسي",
     "city": "مسقط",
-    "address": "مسقط"
+    "address": "مسقط",
+    "province": "om-ma",
+    "wilayat": "مسقط"
   },
   "shipping": [
     {

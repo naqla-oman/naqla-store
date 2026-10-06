@@ -493,7 +493,9 @@
   "location": {
     "name": "مشغل ليان — الخوير",
     "city": "مسقط",
-    "address": "الخوير، مجمع ليان"
+    "address": "الخوير، مجمع ليان",
+    "province": "om-ma",
+    "wilayat": "بوشر"
   },
   "shipping": [
     {

@@ -48,7 +48,7 @@ type ClientStore = {
   /** مدة الإرجاع بالأيام (تدخل في hasMerchantReturnPolicy للسيو) */
   returnDays?: number
   shipping: { code: string; name: string; amount: number; free_over?: number; provinces?: string[] }[]
-  location: { name: string; city: string; address: string }
+  location: { name: string; city: string; address: string; province?: string; wilayat?: string }
   fonts: { display: string; body: string; latin?: string }
   /** الشعار: wordmark = الكلمة كاملة في الملف (تُعرض وحدها)، وإلا علامة مربعة + الاسم نصاً */
   brand?: { logo?: string; logoDark?: string; logoOnDark?: string; wordmark?: boolean }

@@ -388,7 +388,9 @@
   "location": {
     "name": "محل عبق — مطرح",
     "city": "مسقط",
-    "address": "مطرح، سوق الظلام"
+    "address": "مطرح، سوق الظلام",
+    "province": "om-ma",
+    "wilayat": "مطرح"
   },
   "shipping": [
     {

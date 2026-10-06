@@ -26,6 +26,8 @@ export type DeliveryInput = {
   note: string
   gift: boolean
   giftMessage: string
+  /** منخفضة: استلام من المحل — لا عنوان مطلوب، ويُستخدم موقع المحل */
+  pickup?: boolean
 }
 
 const { checkout } = storeConfig
@@ -55,6 +57,11 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
   const name = input.name.trim().replace(/\s+/g, " ")
   if (name.split(" ").length < 2) return { ok: false, error: g("أدخلي اسمك الكامل", "أدخل اسمك الكامل") }
   if (!phoneRe.test(input.phone)) return { ok: false, error: "رقم الهاتف غير صحيح" }
+  const pickup = !!input.pickup && storeConfig.seo.shipping.some((s) => s.code === "pickup")
+  if (pickup) {
+    const loc = storeConfig.seo.location
+    input = { ...input, province: loc.province ?? input.province, city: loc.wilayat ?? loc.city, address: `استلام من ${loc.name}` }
+  }
   if (!checkout.governorates.some((g) => g.code === input.province)) return { ok: false, error: g("اختاري المحافظة", "اختر المحافظة") }
   if (!input.city.trim()) return { ok: false, error: g("أدخلي الولاية", "أدخل الولاية") }
   const email = input.email.trim().toLowerCase()
@@ -82,6 +89,7 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
         metadata: {
           ...(cart.metadata ?? {}),
           gift: input.gift,
+          pickup,
           gift_message: input.gift ? input.giftMessage.trim().slice(0, 200) : "",
           courier_note: input.note.trim().slice(0, 200),
         },

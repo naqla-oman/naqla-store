@@ -46,8 +46,10 @@ function validate(f: DeliveryInput): Errors {
   const e: Errors = {}
   if (f.name.trim().split(/\s+/).filter(Boolean).length < 2) e.name = g("أدخلي اسمك الكامل (الاسم والعائلة)", "أدخل اسمك الكامل (الاسم والعائلة)")
   if (!phoneRe.test(f.phone)) e.phone = "رقم عُماني من 8 أرقام يبدأ بـ 9 أو 7"
-  if (!f.province) e.province = g("اختاري المحافظة", "اختر المحافظة")
-  if (!f.city.trim()) e.city = g("اختاري الولاية", "اختر الولاية")
+  // منخفضة: الاستلام من المحل لا يطلب محافظة ولا ولاية
+  if (!f.pickup && !f.province) e.province = g("اختاري المحافظة", "اختر المحافظة")
+  if (f.pickup) { /* عنوان المحل يُملأ عند الحفظ */ }
+  else if (!f.city.trim()) e.city = g("اختاري الولاية", "اختر الولاية")
   else {
     const list = checkout.governorates.find((x) => x.code === f.province)?.wilayats ?? []
     if (list.length && !list.includes(f.city)) e.city = "الولاية لا تتبع المحافظة المختارة"
@@ -73,6 +75,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
     note: meta.courier_note ?? "",
     gift: !!meta.gift,
     giftMessage: meta.gift_message ?? "",
+    pickup: !!meta.pickup,
   })
   const [submitted, setSubmitted] = useState(false)
   const [busy, setBusy] = useState<string | null>(null)
@@ -123,9 +126,11 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
     if (step !== "payment" || methodValid || !sortedOptions.length || autoPicked.current) return
     autoPicked.current = true
     setBusy("ship")
-    chooseShipping(sortedOptions[0].id).then(() => {
+    // الاستلام من المحل ← خيار الاستلام؛ وإلا الأول (العادي)
+    const pick = (form.pickup && sortedOptions.find((o) => (o.type as any)?.code === "pickup")) || sortedOptions[0]
+    chooseShipping(pick.id).then(() => {
       setBusy(null)
-      track("add_shipping_info", { value: subtotal - discount, shipping_tier: (sortedOptions[0].type as any)?.code, items: trackItems })
+      track("add_shipping_info", { value: subtotal - discount, shipping_tier: (pick.type as any)?.code, items: trackItems })
       router.refresh()
     })
   }, [step, methodValid, sortedOptions, router])
@@ -333,6 +338,14 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                   <span className="ferr" id="ePhone">{showErr("phone")}</span>
                 </div>
               </div>
+              {/* منخفضة: استلام من المحل بلا عنوان */}
+              {storeConfig.seo.shipping.some((s) => s.code === "pickup") && (
+                <div className="seg2" role="radiogroup" aria-label="طريقة الاستلام" data-testid="pickup-toggle">
+                  <button type="button" role="radio" aria-checked={!form.pickup} className={!form.pickup ? "on" : ""} onClick={() => set("pickup", false)}>توصيل إلى عنواني</button>
+                  <button type="button" role="radio" aria-checked={!!form.pickup} className={form.pickup ? "on" : ""} onClick={() => set("pickup", true)}>استلام من {storeConfig.seo.location.name}</button>
+                </div>
+              )}
+              {!form.pickup && (
               <div className="f2">
                 <div className={`field ${showErr("province") ? "err" : ""}`}>
                   <label htmlFor="fGov">المحافظة</label>
@@ -373,11 +386,14 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                   <span className="ferr" id="eCity">{showErr("city")}</span>
                 </div>
               </div>
+              )}
+              {!form.pickup && (
               <div className={`field ${showErr("email") ? "err" : ""}`}>
                 <label htmlFor="fEmail">البريد الإلكتروني <span style={{ fontWeight: 400 }}>(اختياري)</span></label>
                 <input id="fEmail" type="email" inputMode="email" value={form.email} onChange={(e) => set("email", e.target.value)} placeholder="name@example.com" autoComplete="email" dir="ltr" style={{ textAlign: "start" }} aria-invalid={!!showErr("email")} aria-describedby="eEmail" />
                 <span className="ferr" id="eEmail">{showErr("email")}</span>
               </div>
+              )}
               <div className="field">
                 <label htmlFor="fAddr">العنوان التفصيلي</label>
                 <input id="fAddr" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="الحي، رقم المنزل، معلم قريب" autoComplete="street-address" />
