@@ -62,9 +62,13 @@ export default function Footer() {
             <span>طرق دفع آمنة ومتنوعة</span>
             <div className="logos">
               {/* M12: شعار ثواني فقط إن كان مفعّلاً */}
+              {/* eslint-disable-next-line @next/next/no-img-element -- شعار دفع صغير ثابت */}
               {c.checkout.payments.some((p) => p.key === "thawani") && <span><img src="/img/pay/thawani.png" alt="" /> ثواني</span>}
+              {/* eslint-disable-next-line @next/next/no-img-element -- شعار دفع صغير ثابت */}
               <span><img src="/img/pay/visa.svg" alt="Visa" /></span>
+              {/* eslint-disable-next-line @next/next/no-img-element -- شعار دفع صغير ثابت */}
               <span><img src="/img/pay/mastercard.svg" alt="Mastercard" /></span>
+              {/* eslint-disable-next-line @next/next/no-img-element -- شعار دفع صغير ثابت */}
               <span><img src="/img/pay/applepay.svg" alt="Apple Pay" /></span>
               <span><Icon name="cash" size={14} /> الدفع عند الاستلام</span>
             </div>

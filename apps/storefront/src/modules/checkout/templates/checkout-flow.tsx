@@ -133,7 +133,9 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
       track("add_shipping_info", { value: subtotal - discount, shipping_tier: (pick.type as any)?.code, items: trackItems })
       router.refresh()
     })
-  }, [step, methodValid, sortedOptions, router])
+    // trackItems للتتبع فقط (معرَّف بعد هذا التأثير)؛ autoPicked يمنع التكرار
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, methodValid, sortedOptions, router, form.pickup, discount, subtotal])
 
   // عناصر الطلب للتتبّع
   const trackItems = items.map((i) => ({ id: i.variant_id ?? i.id, name: i.product_title ?? i.title, price: i.unit_price, quantity: i.quantity, variant: i.variant_title ?? undefined }))
@@ -479,7 +481,14 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                     <span className="t">
                       <b>{p.title}</b><span>{p.desc}</span>
                       {"logos" in p && p.logos && (
-                        <span className="plogos">{p.logos.map((l) => <span key={l}><img src={`/img/pay/${l}`} alt="" /></span>)}</span>
+                        <span className="plogos">
+                          {p.logos.map((l) => (
+                            <span key={l}>
+                              {/* eslint-disable-next-line @next/next/no-img-element -- شعار دفع صغير ثابت */}
+                              <img src={`/img/pay/${l}`} alt="" />
+                            </span>
+                          ))}
+                        </span>
                       )}
                     </span>
                     <span className="mark" aria-hidden="true" />

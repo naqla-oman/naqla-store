@@ -1,7 +1,6 @@
 import { readFile, stat } from "node:fs/promises"
 import { extname, join, normalize, sep } from "node:path"
 import { NextRequest } from "next/server"
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { clientDir } = require("../../../../client")
 
 const TYPES: Record<string, string> = {

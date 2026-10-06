@@ -118,6 +118,7 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               {...big(list[shot].url!, title)}
+              alt={title}
               className={zoom ? "zoomed" : ""}
               onDoubleClick={() => setZoom((z) => !z)}
               draggable={false}

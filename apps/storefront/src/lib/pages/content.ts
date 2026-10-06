@@ -2,7 +2,6 @@ import "server-only"
 import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { storeConfig as c } from "../../store.config"
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 const { clientDir } = require("../../../client.js")
 
 /** H12: صفحة المتجر من clients/<slug>/pages/<page>.md أو المسودة العامة في clients/_template/pages */
