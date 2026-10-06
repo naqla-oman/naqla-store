@@ -1,0 +1,30 @@
+{
+  "name": "@naqla/console",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 7000",
+    "build": "next build",
+    "start": "next start -p 7000",
+    "lint": "next lint",
+    "worker": "tsx worker/index.ts",
+    "setup": "tsx scripts/setup.ts"
+  },
+  "dependencies": {
+    "next": "15.5.27",
+    "react": "19.0.5",
+    "react-dom": "19.0.5",
+    "pg": "8.20.0",
+    "qrcode": "1.5.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/pg": "^8.11.0",
+    "@types/qrcode": "^1.5.5",
+    "@types/react": "19.0.5",
+    "eslint": "8.57.1",
+    "eslint-config-next": "15.5.27",
+    "tsx": "^4.19.0",
+    "typescript": "^5.3.2"
+  }
+}

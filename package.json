@@ -17,7 +17,10 @@
     "storefront:dev": "turbo dev --filter=@naqla/storefront",
     "store:new": "node scripts/store-new.mjs",
     "store:setup": "node scripts/store-setup.mjs",
-    "store:dev": "node scripts/store-dev.mjs"
+    "store:dev": "node scripts/store-dev.mjs",
+    "console:setup": "pnpm --filter @naqla/console run setup",
+    "console:dev": "pnpm --filter @naqla/console run dev",
+    "console:worker": "pnpm --filter @naqla/console run worker"
   },
   "pnpm": {
     "overrides": {
@@ -36,6 +39,7 @@
     "@medusajs/eslint-plugin": "2.21.2",
     "eslint": "^9.39.4",
     "jiti": "^2.7.0",
+    "pg": "8.20.0",
     "prettier": "^3.2.5",
     "react": "18.3.1",
     "react-dom": "18.3.1",
