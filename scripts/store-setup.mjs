@@ -72,7 +72,9 @@ for (const line of out.split("\n").filter((l) => /checkout-setup|product-images|
 }
 
 console.log(c.d("3/3 مستخدم الأدمن…"))
-const adminEmail = prev.ADMIN_EMAIL || `admin@${slug}.local`
+// لوحة نقلة: بريد العميل للحساب المسؤول (يعيّن كلمة مروره برابط — لا كلمة مرور في أي رسالة)
+const emailArg = (() => { const i = process.argv.indexOf("--admin-email"); return i > 0 ? process.argv[i + 1] : null })()
+const adminEmail = emailArg || prev.ADMIN_EMAIL || `admin@${slug}.local`
 const adminPassword = prev.ADMIN_PASSWORD || randomBytes(9).toString("base64url")
 await run("npx", ["medusa", "user", "-e", adminEmail, "-p", adminPassword], { cwd: BACKEND, env }).catch((e) => {
   if (!/already exists|exists/i.test(e.out ?? "")) fail(`تعذّر إنشاء الأدمن:\n${e.out ?? e.message}`)

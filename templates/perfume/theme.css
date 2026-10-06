@@ -1,0 +1,51 @@
+/* __SHORT__ — «بحر مسقط». نهاري أولاً (الوضع الافتراضي light). */
+:root {
+  --bg: #F8FBFA;          /* رذاذ */
+  --surface: #FFFFFF;
+  --surface-2: #EAF3F1;
+  --ink: #1F3B3F;         /* أعماق */
+  --ink-2: #3E5A5D;
+  --muted: #56706F;
+  --accent: #2F6E70;      /* خليج: الأزرار والأسعار والروابط */
+  --accent-2: #245759;
+  --accent-soft: #E3EFEC;
+  --accent-ink: #FFFFFF;
+  --copper: #A94B35;      /* مرجان: التخفيضات فقط */
+  --copper-ink: #FFFFFF;
+  --copper-soft: #F6E3DD;
+  --line: #DCE8E5;
+  --footer: #1F3B3F;
+  --footer-ink: #E8F1EF;
+  --footer-muted: #9DB6B5;
+  --hero: #2F6E70;
+  --shadow: 0 12px 34px rgba(31, 59, 63, 0.08);
+  --shadow-sm: 0 4px 14px rgba(31, 59, 63, 0.06);
+  --r-lg: 16px;           /* ناعمة كالحصى البحري */
+  --r-md: 12px;
+  --r-sm: 8px;
+  --h-ctl: 44px;
+  --h-ctl-sm: 40px;
+  --h-ctl-lg: 52px;
+}
+:root[data-theme="dark"] {
+  --bg: #10272A;
+  --surface: #17343A;
+  --surface-2: #132E32;
+  --ink: #E8F1EF;
+  --ink-2: #C4D6D4;
+  --muted: #9DB6B5;
+  --accent: #7CC0BC;
+  --accent-2: #A3D6D2;
+  --accent-soft: #1F4247;
+  --accent-ink: #10272A;
+  --copper: #E08A70;
+  --copper-ink: #10272A;
+  --copper-soft: #3A2A26;
+  --line: #24464B;
+  --footer: #0B1E20;
+  --footer-ink: #E8F1EF;
+  --footer-muted: #9DB6B5;
+  --hero: #0B1E20;
+  --shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
+  --shadow-sm: 0 4px 14px rgba(0, 0, 0, 0.35);
+}
