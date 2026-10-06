@@ -1,7 +1,7 @@
 // pnpm store:setup <slug> — قاعدة بيانات جديدة + migrate + البذرة + الصور + مستخدم أدمن
 // يحفظ بيئة المتجر في .stores/<slug>.env (خارج Git) لتشغيله بـ pnpm store:dev <slug>
 import { randomBytes } from "node:crypto"
-import { existsSync, mkdirSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { BACKEND, CLIENTS, STORES, c, fail, listStoreEnvs, readEnv, run, slugArg, storeEnvFile } from "./lib.mjs"
 
@@ -20,6 +20,12 @@ const dbUrl = (() => { const u = new URL(base); u.pathname = `/${dbName}`; retur
 
 // المنافذ: محفوظة إن أُعدّ سابقاً، وإلا التالي غير المستخدم (9000/8000، 9001/8001…)
 const prev = readEnv(envFile)
+// منخفضة: الأرقام في store.json لاتينية (كالأسعار والأعداد المحسوبة) — تحذير إن عادت الأرقام الهندية
+{
+  const raw = readFileSync(join(CLIENTS, slug, "store.json"), "utf8")
+  const mixed = raw.match(/[٠-٩]/g)
+  if (mixed) console.log(c.y(`تنبيه: ${mixed.length} رقماً هندياً (٠-٩) في clients/${slug}/store.json — وحّديها لاتينية (0-9) كالأسعار`))
+}
 const taken = new Set(listStoreEnvs().filter((f) => f !== `${slug}.env`).map((f) => readEnv(join(STORES, f)).BACKEND_PORT))
 let i = 0
 while (taken.has(String(9000 + i))) i++

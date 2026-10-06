@@ -33,7 +33,7 @@
     "phone": "+968 9XXX XXXX",
     "email": "hello@example.om",
     "address": "مسقط",
-    "hours": "يومياً ١٠ص – ١٠م"
+    "hours": "يومياً 10ص – 10م"
   },
   "social": {
     "instagram": "https://instagram.com/",
@@ -284,11 +284,11 @@
     "perks": [
       {
         "icon": "truck",
-        "text": "توصيل خلال ٢٤–٤٨ ساعة"
+        "text": "توصيل خلال 24–48 ساعة"
       },
       {
         "icon": "refresh",
-        "text": "استبدال خلال ٧ أيام"
+        "text": "استبدال خلال 7 أيام"
       },
       {
         "icon": "shield",
@@ -299,7 +299,7 @@
         "text": "تغليف هدايا مجاني"
       }
     ],
-    "shippingReturns": "التوصيل داخل مسقط خلال ٢٤ ساعة ولبقية المحافظات خلال ٤٨ ساعة.",
+    "shippingReturns": "التوصيل داخل مسقط خلال 24 ساعة ولبقية المحافظات خلال 48 ساعة.",
     "availability": {
       "inStock": "متوفر في المحل",
       "outOfStock": "سنعيد توفيره قريباً"
