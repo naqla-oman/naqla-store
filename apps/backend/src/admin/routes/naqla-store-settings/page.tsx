@@ -223,8 +223,11 @@ const StoreSettingsPage = () => {
           <div style={{ fontSize: 12, color: c.muted }}>{String(draft.tagline ?? "")}</div>
           <div style={{ background: c.surface, border: `1px solid ${c.line}`, borderRadius: pal!.radius.md, padding: 10, marginTop: 10 }}>
             <div style={{ fontWeight: 600 }}>عباءة مطرزة بحواف ذهبية</div>
-            <span style={{ color: c.accent, fontWeight: 700 }}>24.500 ر.ع</span> <s style={{ color: c.muted, fontSize: 12 }}>29.000</s>
-            <span style={{ background: c.copper, color: c["copper-ink"], borderRadius: pal!.radius.sm, fontSize: 11, padding: "1px 6px", marginInlineStart: 6 }}>-16%</span>
+            <div style={{ display: "flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>
+              <bdi style={{ color: c.accent, fontWeight: 700 }}>24.500 ر.ع</bdi>
+              <s style={{ color: c.muted, fontSize: 12 }}><bdi>29.000</bdi></s>
+              <bdi dir="ltr" style={{ background: c.copper, color: c["copper-ink"], borderRadius: pal!.radius.sm, fontSize: 11, padding: "1px 6px" }}>-16%</bdi>
+            </div>
             <div style={{ background: c.accent, color: c["accent-ink"], borderRadius: pal!.radius.sm, textAlign: "center", padding: 8, marginTop: 8, fontWeight: 600 }}>أضف إلى السلة</div>
           </div>
           <div style={{ background: c.footer, color: c["footer-ink"], borderRadius: pal!.radius.sm, padding: 8, marginTop: 10, fontSize: 11 }}>© {String(draft.name ?? "")}</div>

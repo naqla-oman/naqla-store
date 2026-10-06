@@ -24,10 +24,12 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
       const spec = SCHEMA[key]
       if (!spec) throw new SettingsError(`المفتاح «${key}» غير قابل للتعديل من اللوحة`)
       const value = spec.check(raw)
+      // «غير موجود» و null سواء (حقل فارغ لمفتاح غير موجود في store.json لا يُحفظ)
+      const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
       const prev = getPath(before, key)
-      if (JSON.stringify(prev) === JSON.stringify(value)) continue
+      if (same(prev, value)) continue
       // القيمة المساوية للافتراضي تُحذف من overrides (يبقى store.json هو المصدر)
-      if (JSON.stringify(getPath(defaults, key)) === JSON.stringify(value)) unset(overrides, key)
+      if (same(getPath(defaults, key), value)) unset(overrides, key)
       else setPath(overrides, key, value)
       changes.push({ key, from: prev ?? null, to: value })
     }
