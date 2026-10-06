@@ -72,7 +72,7 @@ export default function Footer() {
               <span><img src="/img/pay/applepay.svg" alt="Apple Pay" /></span>
               <span><Icon name="cash" size={14} /> الدفع عند الاستلام</span>
             </div>
-            <span><Icon name="truck" size={14} className="me-1" /> توصيل لكل محافظات السلطنة خلال ٢٤–٤٨ ساعة</span>
+            <span><Icon name="truck" size={14} className="me-1" /> توصيل لكل محافظات السلطنة خلال 24–48 ساعة</span>
           </div>
           <div className="fbottom">
             <span>© {new Date().getFullYear()} {c.name} — جميع الحقوق محفوظة.</span>

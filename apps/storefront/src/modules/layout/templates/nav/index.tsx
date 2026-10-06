@@ -16,7 +16,8 @@ export default async function Nav() {
     <div className="sticky top-0 inset-x-0 z-50">
       <div className="announce hidden small:flex">
         {freeOver != null && <span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {freeOver} ر.ع</span>}
-        <span><Icon name="refresh" size={14} /> استبدال مجاني خلال ١٤ يوماً</span>
+        {/* منخفضة: مدة الاستبدال من إعداد العميل (كانت ١٤ ثابتة لكل العملاء) */}
+        {storeConfig.seo.returnDays > 0 && <span><Icon name="refresh" size={14} /> استبدال مجاني خلال {storeConfig.seo.returnDays} يوماً</span>}
         {storeConfig.welcomeCode && (
           <span><Icon name="gift" size={14} /> {storeConfig.welcomeCode.text} بكود {storeConfig.welcomeCode.code}</span>
         )}

@@ -48,7 +48,7 @@ export default function DeliveryEta() {
       <Icon name="truck" size={22} />
       <div>
         <b>{eta?.title ?? "توصيل لكل محافظات السلطنة"}</b>
-        <span>{eta?.sub ?? "خلال ٢٤–٤٨ ساعة"}</span>
+        <span>{eta?.sub ?? "خلال 24–48 ساعة"}</span>
       </div>
     </div>
   )
