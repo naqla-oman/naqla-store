@@ -46,6 +46,7 @@ export const get = (path, cookie) => fetch(`${BASE}${path}`, { headers: cookie ?
 async function auth() {
   console.log("\n— الدخول بـ TOTP —")
   await q(`update admins set totp_last_step=0 where email=$1`, [EMAIL])
+  await q(`delete from audit where action='login' and ok=false`) // القفل لكل حساب: نبدأ بلا محاولات فاشلة سابقة
   const noSession = await get("/")
   ok(noSession.status === 307 && /\/login$/.test(noSession.headers.get("location") ?? ""), "بلا جلسة ← /login")
   ok((await login({ password: "wrong-password" })).status === 401, "كلمة مرور خاطئة مرفوضة")
