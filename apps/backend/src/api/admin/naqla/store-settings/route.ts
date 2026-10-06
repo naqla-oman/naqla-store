@@ -30,7 +30,7 @@ export const POST = async (req: AuthenticatedMedusaRequest<{ values?: Record<str
     email = (data[0] as any)?.email ?? null
   } catch { /* السجل يكتفي بالمعرّف */ }
   try {
-    const { changes } = await svc.saveOverrides(values, { id: req.auth_context?.actor_id, email })
+    const { changes } = await svc.saveOverrides(values, { id: req.auth_context?.actor_id, email }, req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION))
     res.json({ ok: true, changes })
   } catch (e) {
     if (e instanceof SettingsError) throw new MedusaError(MedusaError.Types.INVALID_DATA, e.message)

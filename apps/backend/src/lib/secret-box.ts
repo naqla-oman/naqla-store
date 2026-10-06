@@ -1,3 +1,4 @@
+import { MedusaError } from "@medusajs/framework/utils"
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto"
 
 /**
@@ -6,7 +7,7 @@ import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:
  */
 const key = () => {
   const base = process.env.SETTINGS_ENCRYPTION_KEY || process.env.JWT_SECRET
-  if (!base || base.length < 32) throw new Error("مفتاح التشفير غير مضبوط (SETTINGS_ENCRYPTION_KEY أو JWT_SECRET)")
+  if (!base || base.length < 32) throw new MedusaError(MedusaError.Types.UNEXPECTED_STATE, "مفتاح التشفير غير مضبوط (SETTINGS_ENCRYPTION_KEY أو JWT_SECRET)")
   return createHash("sha256").update(`${base}:naqla-store-settings`).digest()
 }
 const b64 = (b: Buffer) => b.toString("base64url")

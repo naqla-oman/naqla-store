@@ -14,7 +14,7 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
   }
 
   /** حفظ تعديلات اللوحة: تحقق كل مفتاح (قائمة بيضاء) ← دمج ← قيود بين الحقول ← حفظ وسجل وإبطال */
-  async saveOverrides(patch: Record<string, unknown>, actor: Actor = {}) {
+  async saveOverrides(patch: Record<string, unknown>, actor: Actor = {}, pg?: any) {
     const row: any = await this.getRow()
     const overrides = structuredClone(row.overrides ?? {})
     const defaults = clientDefaults()
@@ -33,7 +33,7 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
     }
     if (!changes.length) return { changes }
     crossCheck(deepMerge(defaults, overrides))
-    await this.replaceJson(row.id, "overrides", overrides)
+    await this.replaceJson(pg, row.id, "overrides", overrides)
     await this.createStoreSettingsChanges({ actor_id: actor.id ?? null, actor_email: actor.email ?? null, changes: { items: changes } as any })
     setClientOverrides(overrides)
     queueRevalidate(["store-settings"])
@@ -42,11 +42,11 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
 
   /**
    * تحديث حقل JSON بالاستبدال لا الدمج: Medusa/MikroORM يدمج كائنات JSON عند التحديث،
-   * فحذف مفتاح (العودة للافتراضي) لا يُحفظ. null أولاً ثم القيمة الجديدة.
+   * فحذف مفتاح (العودة للافتراضي) لا يُحفظ — تحديث مباشر يستبدل الحقل كاملاً (العمود غير قابل لـ null).
    */
-  async replaceJson(id: string, field: "overrides" | "secrets", value: Record<string, unknown>) {
-    await this.updateStoreSettings({ id, [field]: null } as any)
-    await this.updateStoreSettings({ id, [field]: value } as any)
+  async replaceJson(pg: any, id: string, field: "overrides" | "secrets", value: Record<string, unknown>) {
+    if (!pg) throw new SettingsError("اتصال القاعدة مطلوب للحفظ")
+    await pg.raw(`update store_settings set ${field} = ?::jsonb, updated_at = now() where id = ?`, [JSON.stringify(value), id])
   }
 
   async history(limit = 20) {
