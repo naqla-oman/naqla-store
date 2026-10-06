@@ -15,6 +15,7 @@ import {
 } from "@medusajs/medusa/core-flows"
 import { client, feature } from "../lib/client"
 import { syncPaymentProviders } from "../lib/payment-providers"
+import { shippingPrices } from "../lib/shipping-prices"
 
 type Shipping = { code: string; name: string; desc: string; amount: number; free_over?: number; provinces?: string[] }
 type Promo = { code: string; type: "percentage" | "fixed"; value: number; description?: string; limit?: number }
@@ -70,10 +71,8 @@ export default async function checkout_setup({ container }: { container: MedusaC
           service_zone_id: zone.id,
           shipping_profile_id: current.shipping_profile_id,
           type: { label: sh.name, description: sh.desc, code: sh.code },
-          prices: [
-            { currency_code: S.currency, amount: sh.amount },
-            { region_id: region.id, amount: sh.amount },
-          ],
+          // منخفضة: مع قاعدة free_over (كانت تسقط عند النقل إلى منطقة المحافظات)
+          prices: shippingPrices(sh, S.currency, region.id),
           rules: [
             { attribute: "enabled_in_store", value: "true", operator: "eq" },
             { attribute: "is_return", value: "false", operator: "eq" },

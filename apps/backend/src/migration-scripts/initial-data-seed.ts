@@ -36,6 +36,7 @@ import {
 } from "@medusajs/medusa/core-flows";
 import { client, feature } from "../lib/client";
 import { weightFor } from "../lib/weights";
+import { shippingPrices } from "../lib/shipping-prices";
 
 export default async function initial_data_seed({ container }: { container: MedusaContainer }) {
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER);
@@ -156,14 +157,8 @@ export default async function initial_data_seed({ container }: { container: Medu
       service_zone_id: fulfillmentSet.service_zones[0].id,
       shipping_profile_id: shippingProfile.id,
       type: { label: sh.name, description: sh.desc, code: sh.code },
-      prices: [
-        { currency_code: cur, amount: sh.amount },
-        { region_id: region.id, amount: sh.amount },
-        // توصيل مجاني فوق حدّ معين
-        ...(sh.free_over
-          ? [{ region_id: region.id, amount: 0, rules: [{ attribute: "item_total", operator: "gte" as const, value: sh.free_over }] }]
-          : []),
-      ],
+      // توصيل مجاني فوق حدّ معين (مصدر واحد مع seed-02)
+      prices: shippingPrices(sh, cur, region.id),
       rules: baseRules,
     })),
   });
