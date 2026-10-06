@@ -188,7 +188,17 @@ async function cleanup() {
     if (r && r.status !== "deleted") { const d = await api("POST", `/api/stores/${slug}/delete`, { confirm: slug }); if (d.body.jobId) await waitJob(d.body.jobId, `تنظيف ${slug}`) }
   }
 }
-const sections = { cleanup, auth, fashion: crucialFor("t-fashion", "fashion", "بوتيك الاختبار", "ward-jabal"), perfume: crucialFor("t-perfume", "perfume", "عطور الاختبار", "lail-dhahab") }
+/** المستودع: main يجب أن يبقى امتداداً (fast-forward) لما على GitHub — b72fc8b آخر commit مرفوع */
+async function repo() {
+  console.log("\n— المستودع —")
+  const { execFileSync } = await import("node:child_process")
+  const root = new URL("..", import.meta.url).pathname
+  const git = (...a) => { try { return execFileSync("git", a, { cwd: root }).toString().trim() } catch { return null } }
+  ok(git("merge-base", "--is-ancestor", "b72fc8b", "main") !== null, "b72fc8b (آخر المرفوع إلى GitHub) أصل لـ main — الرفع fast-forward")
+  ok(git("merge-base", "--is-ancestor", "refs/remotes/origin/main", "main") !== null, "origin/main أصل لـ main")
+  ok(Number(git("rev-list", "--count", "main") ?? 0) > 300, "تاريخ main كامل", git("rev-list", "--count", "main"))
+}
+const sections = { repo, cleanup, auth, fashion: crucialFor("t-fashion", "fashion", "بوتيك الاختبار", "ward-jabal"), perfume: crucialFor("t-perfume", "perfume", "عطور الاختبار", "lail-dhahab") }
 const want = process.argv.slice(2).length ? process.argv.slice(2) : Object.keys(sections)
 for (const s of want) await sections[s]()
 await db.end()
