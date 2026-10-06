@@ -156,6 +156,9 @@ function crucialFor(slug, template, name, palette) {
     // النسخة الأخيرة لهذا التشغيل فقط (الرمز يُعاد استخدامه بين التشغيلات)
     const [fin] = await q(`select count(*) n from backups where store_slug=$1 and kind='final' and created_at > now() - interval '10 minutes'`, [slug])
     ok(after.status === "deleted" && dbs === 0 && !existsSync(`${ROOT}clients/${slug}`) && archived && Number(fin.n) === 1, "حُذف: القاعدة والمجلد أُزيلا، والأرشيف والنسخة الأخيرة موجودان")
+    // لا عمليات يتيمة للمتجر بعد الحذف (medusa develop كان يترك خادمه حياً على المنفذ)
+    const orphans = readdirSync("/proc").filter((d) => /^\d+$/.test(d)).filter((d) => { try { return readFileSync(`/proc/${d}/environ`, "latin1").split("\0").includes(`STORE=${slug}`) } catch { return false } })
+    ok(orphans.length === 0, "لا عمليات يتيمة للمتجر بعد الحذف", orphans.length ? `بقيت ${orphans.length}` : "")
     const audit = await q(`select action from audit where target=$1`, [slug])
     ok(["store.create", "store.pause", "store.resume", "store.backup", "store.restore", "store.delete"].every((x) => audit.some((a) => a.action === x)), "كل عملية في سجل العمليات")
   }
