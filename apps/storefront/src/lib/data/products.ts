@@ -111,6 +111,20 @@ export const listProductsWithSort = async ({
 
   // M22: «الأحدث» يُرتَّب ويُقسَّم في Medusa مباشرة (-created_at + limit/offset الحقيقيين) —
   // كان يجلب أول 100 تصاعدياً فتختفي أحدث المنتجات عند تجاوز 100
+  if (sortBy === "created_at" && !(queryParams as any)?.id && !(queryParams as any)?.collection_id) {
+    // منخفضة: المعرّفات من الخلفية بلا منتج الخدمة (صفحات كاملة وعدد صحيح)، ثم المنتجات بترتيبها
+    const cat = Array.isArray((queryParams as any)?.category_id) ? (queryParams as any).category_id[0] : (queryParams as any)?.category_id
+    const { ids, count } = await sdk.client.fetch<{ ids: string[]; count: number }>("/store/naqla/product-ids", {
+      query: { limit, offset: pageParam, ...(cat ? { category_id: cat } : {}) },
+      next: { tags: ["global:products"] },
+      cache: "force-cache",
+    })
+    if (!ids.length) return { response: { products: [], count }, nextPage: null, queryParams }
+    const { response } = await listProducts({ pageParam: 1, queryParams: { id: ids, limit: ids.length } as any, countryCode })
+    const rank = new Map(ids.map((id, i) => [id, i]))
+    const products = [...response.products].sort((x, y) => (rank.get(x.id) ?? 0) - (rank.get(y.id) ?? 0))
+    return { response: { products, count }, nextPage: count > pageParam + limit ? pageParam + limit : null, queryParams }
+  }
   if (sortBy === "created_at") {
     const { response } = await listProducts({
       pageParam: Math.max(page, 1),

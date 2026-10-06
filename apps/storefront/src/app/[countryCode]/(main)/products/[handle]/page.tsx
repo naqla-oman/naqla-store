@@ -93,6 +93,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     if (to) permanentRedirect(`/${params.countryCode}${to}`)
     notFound()
   }
+  // منخفضة: منتج الخدمة («تفصيل خاص») يُطلب من صفحة العباءة فقط — لا صفحة مستقلة ولا فهرسة
+  if ((product.metadata as any)?.service) notFound()
 
   const meta = (product.metadata ?? {}) as Record<string, any>
   const description = (meta.seo_description || product.description || product.title).slice(0, 160)
@@ -126,7 +128,8 @@ export default async function ProductPage(props: Props) {
   }).then(({ response }) => response.products[0])
 
   if (!pricedProduct) {
-    const to = await findRedirect(`/products/${params.handle}`)
+    const to = await findRedirect(`/products/${params.handle}
+  if ((pricedProduct.metadata as any)?.service) notFound()`)
     if (to) permanentRedirect(`/${params.countryCode}${to}`)
     notFound()
   }

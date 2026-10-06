@@ -61,9 +61,23 @@ function assertLength(metadata: any) {
   }
 }
 
+/** منخفضة: منتج الخدمة لا يُضاف منفرداً — فقط عبر صندوق التفصيل في صفحة منتج (metadata.tailoring.for_handle) */
+async function assertServiceItems(container: MedusaContainer, items: any[]) {
+  const ids = items.map((x) => x.variant_id).filter(Boolean)
+  if (!ids.length) return
+  const { data } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({ entity: "product_variant", fields: ["id", "product.metadata"], filters: { id: ids } })
+  const service = new Set((data as any[]).filter((v) => v.product?.metadata?.service).map((v) => v.id))
+  for (const it of items) {
+    if (service.has(it.variant_id) && !it.metadata?.tailoring?.for_handle) {
+      throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "التفصيل الخاص يُطلب من صفحة القطعة المراد تفصيلها")
+    }
+  }
+}
+
 addToCartWorkflow.hooks.validate(async ({ input }, { container }) => {
   const i = input as any
   for (const it of i.items ?? []) assertLength(it.metadata)
+  await assertServiceItems(container, i.items ?? [])
   await assertCartStock(container, i.cart_id ?? i.cart?.id, { add: (i.items ?? []).filter((x: any) => x.variant_id) })
 })
 
