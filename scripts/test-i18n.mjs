@@ -62,15 +62,17 @@ from playwright.async_api import async_playwright
 async def main():
     out = {}
     async with async_playwright() as p:
-        b = await p.chromium.launch(); c = await b.new_context(viewport={"width": 390, "height": 844}); m = await c.new_page(); m.set_default_timeout(120000)
-        for path in ("/om", "/om/en"):
-            await m.goto("${S}" + path, wait_until="domcontentloaded"); await m.wait_for_selector("[data-testid=lang-switch]")
-            bb = await m.locator("[data-testid=lang-switch]").first.bounding_box(); out[path] = bb
+        b = await p.chromium.launch()
+        for w in (390, 320):
+            c = await b.new_context(viewport={"width": w, "height": 844}); m = await c.new_page(); m.set_default_timeout(120000)
+            for path in ("/om", "/om/en"):
+                await m.goto("${S}" + path, wait_until="domcontentloaded"); await m.wait_for_selector("[data-testid=lang-switch]")
+                bb = await m.locator("[data-testid=lang-switch]").first.bounding_box(); out[f"{path}@{w}"] = {**bb, "w": w}
         await b.close()
     print(json.dumps(out))
 asyncio.run(main())`
   const boxes = JSON.parse(execFileSync("python3", ["-c", py], { timeout: 280000 }).toString().trim().split("\n").pop())
-  for (const [path, bb] of Object.entries(boxes)) ok(bb && bb.x >= 0 && bb.x + bb.width <= 390 && bb.width > 0, `المبدّل داخل الشاشة على 390px في ${path}`, bb ? `x=${Math.round(bb.x)} w=${Math.round(bb.width)}` : "غير موجود")
+  for (const [path, bb] of Object.entries(boxes)) ok(bb && bb.x >= 0 && bb.x + bb.width <= bb.w && bb.width > 0, `المبدّل داخل الشاشة في ${path}`, bb ? `x=${Math.round(bb.x)} w=${Math.round(bb.width)}` : "غير موجود")
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 async function stage1() {
@@ -96,6 +98,21 @@ async function stage1() {
   const enProd = strip(curl("/om/en/products/printed-silk-scarf").html), arProd2 = strip(curl("/om/products/printed-silk-scarf").html)
   ok(enProd.includes("OMR") && !enProd.includes("ر.ع"), "الإنجليزية: الأسعار بـ OMR بلا ر.ع", `OMR ${(enProd.match(/OMR/g) ?? []).length}، ر.ع ${(enProd.match(/ر\.ع/g) ?? []).length}`)
   ok(arProd2.includes("ر.ع"), "العربية: الأسعار بـ ر.ع (OMR يبقى في JSON-LD فقط)")
+  // البطاقات (الرئيسية والمتجر) والسلة المنسدلة بمنتج فيها — باللغتين
+  const cards = (h) => (strip(h).match(/<span class="price[^"]*"[^>]*>[\s\S]*?<\/span>|class="saveflag"[^>]*>[^<]*/g) ?? []).join(" ")
+  const pk = env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
+  const sapi = (m, p, b) => JSON.parse(execFileSync("curl", ["-s", "-m", "30", "-X", m, `${B}${p}`, "-H", "Content-Type: application/json", "-H", `x-publishable-api-key: ${pk}`, ...(b ? ["-d", JSON.stringify(b)] : [])]).toString())
+  const reg = sapi("GET", "/store/regions").regions[0].id
+  const v = sapi("GET", `/store/products?handle=printed-silk-scarf&region_id=${reg}&fields=*variants`).products[0].variants[0].id
+  const cartId = sapi("POST", "/store/carts", { region_id: reg }).cart.id
+  sapi("POST", `/store/carts/${cartId}/line-items`, { variant_id: v, quantity: 1 })
+  const jarText = readFileSync(jar, "utf8")
+  require_fs: { const { writeFileSync } = await import("node:fs"); writeFileSync(jar, jarText + `localhost\tFALSE\t/\tFALSE\t0\t_medusa_cart_id\t${cartId}\n`) }
+  for (const [path, unit, bad] of [["/om", "ر.ع", "OMR"], ["/om/store", "ر.ع", "OMR"], ["/om/en", "OMR", "ر.ع"], ["/om/en/store", "OMR", "ر.ع"]]) {
+    const h = curl(path).html, c = cards(h), dd = (strip(h).match(/data-testid="cart-subtotal"[^>]*>[^<]*/) ?? [""])[0]
+    ok(c.includes(unit) && !c.includes(bad) && dd.includes(unit) && !dd.includes(bad), `وحدة العملة في بطاقات ${path} والسلة المنسدلة`, `${(c.match(new RegExp(unit, "g")) ?? []).length} بطاقة بـ${unit}، ${(c.match(new RegExp(bad, "g")) ?? []).length} بـ${bad} | منسدلة: ${dd.replace(/.*>/, "").trim()}`)
+  }
+  sapi("DELETE", `/store/carts/${cartId}/line-items/${(sapi("GET", `/store/carts/${cartId}`).cart.items[0] ?? {}).id}`)
   const en404 = curl("/om/en/products/no-such-product-xyz")
   ok(en404.code === 404 && en404.html.includes("Page not found"), "404 إنجليزية مترجمة")
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)

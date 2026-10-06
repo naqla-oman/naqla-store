@@ -245,3 +245,5 @@ footer.site .langswitch { font-weight: 600; }
 
 /* الجوال: الرأس يتّسع للمبدّل — الزر المختصر 36px والهوامش 4px */
 @media (max-width: 519px) { .hdr .langbtn { width: 36px; min-width: 36px; padding: 0; } .hdr nav { gap: 6px; padding-inline: 10px; } }
+/* شاشات ضيقة جداً (≤359px): أزرار الرأس 40px وهوامش أصغر */
+@media (max-width: 359px) { .hdr .iconbtn { width: 40px; height: 40px; min-width: 40px; } .hdr .langbtn { width: 32px; min-width: 32px; } .hdr nav { gap: 4px; padding-inline: 8px; } }

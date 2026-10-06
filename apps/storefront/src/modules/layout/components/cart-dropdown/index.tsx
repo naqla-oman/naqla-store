@@ -17,6 +17,7 @@ import { usePathname } from "next/navigation"
 import Icon from "@modules/common/components/icon"
 import { Fragment, useEffect, useRef, useState } from "react"
 import { g } from "@lib/voice"
+import { useLocale } from "next-intl"
 import { useT } from "@/i18n/t"
 
 const CartDropdown = ({
@@ -25,6 +26,7 @@ const CartDropdown = ({
   cart?: HttpTypes.StoreCart | null
 }) => {
   const t = useT("cart")
+  const locale = useLocale()
   const [activeTimer, setActiveTimer] = useState<NodeJS.Timer | undefined>(
     undefined
   )
@@ -191,6 +193,7 @@ const CartDropdown = ({
                       {convertToLocale({
                         amount: subtotal,
                         currency_code: cartState.currency_code,
+                        locale,
                       })}
                     </span>
                   </div>

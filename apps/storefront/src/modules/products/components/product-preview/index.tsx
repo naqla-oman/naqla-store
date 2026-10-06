@@ -7,6 +7,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Icon from "@modules/common/components/icon"
 import WishButton from "@modules/common/components/wish-button"
 import { storeConfig } from "../../../../store.config"
+import { getLocale } from "next-intl/server"
 import { getT } from "@/i18n/t"
 
 export default async function ProductPreview({
@@ -21,8 +22,9 @@ export default async function ProductPreview({
   priority?: boolean
 }) {
   const t = await getT("product")
+  const locale = await getLocale()
   const TAG: Record<string, string> = { new: t("sc590a3"), bestsellers: t("se5a09c"), sale: t("s35b0c8") }
-  const { cheapestPrice } = getProductPrice({ product })
+  const { cheapestPrice } = getProductPrice({ locale, product })
   const meta = (product.metadata || {}) as Record<string, any>
   const price = cheapestPrice?.calculated_price_number ?? 0
   // M26: سعر قائمة أسعار «تخفيض» من Medusa أولاً (أداة التخفيضات في اللوحة)، ثم compare_at في البيانات
@@ -51,11 +53,11 @@ export default async function ProductPreview({
           {meta.sold_week >= 15 && <span className="ms-auto flex items-center gap-1"><Icon name="fire" size={12} /> {t("soldThisWeek", { count: meta.sold_week })}</span>}
         </div>
         <div className="pr">
-          <span className="price" data-testid="price">{convertToLocale({ amount: price, currency_code: cur })}</span>
+          <span className="price" data-testid="price">{convertToLocale({ amount: price, currency_code: cur, locale })}</span>
           {old && old > price && (
             <>
-              <span className="old">{convertToLocale({ amount: old, currency_code: cur })}</span>
-              <span className="save">{t("sc1aa3c")} {convertToLocale({ amount: old - price, currency_code: cur })}</span>
+              <span className="old">{convertToLocale({ amount: old, currency_code: cur, locale })}</span>
+              <span className="save">{t("sc1aa3c")} {convertToLocale({ amount: old - price, currency_code: cur, locale })}</span>
             </>
           )}
         </div>

@@ -6,7 +6,7 @@ type ConvertToLocaleParams = {
   currency_code: string
   minimumFractionDigits?: number
   maximumFractionDigits?: number
-  locale?: string
+  locale: string // إلزامي: تسمية العملة تتبع اللغة (ر.ع / OMR) — tsc يكشف أي مستدعٍ ناسٍ
 }
 
 /** يعرض المبالغ بالصيغة العُمانية: 28.500 ر.ع (أرقام لاتينية، ثلاث منازل) */
@@ -15,7 +15,7 @@ export const convertToLocale = ({
   currency_code,
   minimumFractionDigits,
   maximumFractionDigits,
-  locale = "en-US",
+  locale,
 }: ConvertToLocaleParams) => {
   if (!currency_code || isEmpty(currency_code)) return amount.toString()
   if (currency_code.toLowerCase() === storeConfig.currency) {
