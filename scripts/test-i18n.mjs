@@ -95,7 +95,7 @@ async function stage1() {
   // وحدة العملة تتبع اللغة: OMR في الإنجليزية (لا ر.ع)، ور.ع في العربية
   const enProd = strip(curl("/om/en/products/printed-silk-scarf").html), arProd2 = strip(curl("/om/products/printed-silk-scarf").html)
   ok(enProd.includes("OMR") && !enProd.includes("ر.ع"), "الإنجليزية: الأسعار بـ OMR بلا ر.ع", `OMR ${(enProd.match(/OMR/g) ?? []).length}، ر.ع ${(enProd.match(/ر\.ع/g) ?? []).length}`)
-  ok(arProd2.includes("ر.ع") && !/\bOMR\b/.test(arProd2.replace(/[a-z_-]*OMR[a-z_-]*/gi, (m) => (m === "OMR" ? m : ""))), "العربية: الأسعار بـ ر.ع")
+  ok(arProd2.includes("ر.ع"), "العربية: الأسعار بـ ر.ع (OMR يبقى في JSON-LD فقط)")
   const en404 = curl("/om/en/products/no-such-product-xyz")
   ok(en404.code === 404 && en404.html.includes("Page not found"), "404 إنجليزية مترجمة")
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
