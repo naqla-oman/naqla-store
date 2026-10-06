@@ -20,6 +20,7 @@ const rel = (v) => "./" + path.relative(__dirname, v).split(path.sep).join("/")
 const TURBO_ALIASES = {
   ...Object.fromEntries(Object.entries(ALIASES).map(([k, v]) => [k, rel(v)])),
   "@client/*": rel(CLIENT_DIR) + "/*",
+  "@naqla-themes/*": rel(path.join(__dirname, "../../themes")) + "/*",
 }
 
 /**
