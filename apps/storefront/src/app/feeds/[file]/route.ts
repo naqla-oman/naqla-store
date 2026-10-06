@@ -9,9 +9,11 @@ import { storeConfig } from "../../../store.config"
 export const revalidate = 3600
 
 const xml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+// منخفضة: خلية تبدأ بـ = + - @ أو Tab/CR تُفتح صيغةً في Excel — تُسبَق بـ ' (نص). الأرقام تبقى كما هي.
 const csvCell = (s: string | number) => {
-  const v = String(s ?? "")
-  return /[",\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
+  let v = String(s ?? "")
+  if (typeof s !== "number" && /^[=+\-@\t\r]/.test(v)) v = "'" + v
+  return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
 }
 
 function google(items: FeedItem[]) {

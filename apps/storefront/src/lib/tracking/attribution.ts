@@ -28,7 +28,8 @@ export async function orderAttribution() {
       ? {
           fbp: c.get("_fbp")?.value ?? null,
           fbc: c.get("_fbc")?.value ?? null,
-          ip: (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || null,
+          // منخفضة: آخر قيمة في X-Forwarded-For (يضيفها Caddy الموثوق) — الأولى يتحكم بها العميل
+          ip: (h.get("x-forwarded-for") ?? "").split(",").map((x) => x.trim()).filter(Boolean).pop() || null,
           ua: h.get("user-agent")?.slice(0, 400) ?? null,
         }
       : {}),
