@@ -16,7 +16,7 @@ const setStatus = (slug: string, status: string, extra: Record<string, unknown> 
 }
 const version = () => process.env.npm_package_version || "1.0.0"
 
-export const JOBS: Record<string, { title: string; steps: Step[]; rollback?: (c: Ctx) => Promise<void>; done?: (c: Ctx) => Promise<void> }> = {
+export const JOBS: Record<string, { title: string; steps: Step[]; rollback?: (c: Ctx) => Promise<unknown>; done?: (c: Ctx) => Promise<unknown> }> = {
   create: {
     title: "إنشاء متجر",
     steps: [
