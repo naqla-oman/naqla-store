@@ -186,6 +186,8 @@ export const storeConfig = {
     redeemPoints: c.loyalty.redeemPoints,
     redeemValue: c.loyalty.redeemValue,
     // نص الامتياز يُعرض فقط إن وُجد (أي إن كان مطبَّقاً فعلاً)، والمستويات تُطفأ بمفتاحها
+    /** كود عرض كل مستوى ← اسمه (لتسمية سطر الخصم «امتياز ماسية») */
+    tierPromoNames: Object.fromEntries(c.loyalty.tiers.filter((t) => (t as any).promoCode).map((t) => [String((t as any).promoCode).toUpperCase(), t.name])) as Record<string, string>,
     tierPerks: Object.fromEntries(c.loyalty.tiers.map((t) => [t.key, on("loyaltyTiers") ? t.perk ?? "" : t.min === 0 ? t.perk ?? "" : ""])) as Record<string, string>,
   },
 

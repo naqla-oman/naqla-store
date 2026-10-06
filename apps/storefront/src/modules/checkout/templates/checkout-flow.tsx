@@ -19,6 +19,7 @@ import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 import { tailoringNote } from "@lib/util/tailoring"
 import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
+import { discountLines } from "@lib/util/discounts"
 
 type Props = {
   cart: HttpTypes.StoreCart
@@ -251,19 +252,16 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
 
         <div style={{ marginTop: 14 }}>
           <div className="trow"><span>المجموع</span><span>{fmt(subtotal)}</span></div>
-          {discount > 0 && codes.map((c) => (
-            <div key={c} className="trow">
-              <span>خصم {c}<button type="button" className="rmcp" onClick={() => onRemoveCode(c)} disabled={busy === "code"}>إزالة</button></span>
-              <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {CUR}</span>
+          {/* منخفضة: سطر لكل عرض بمبلغه الفعلي — الكود (قابل للإزالة) منفصل عن امتياز المستوى */}
+          {discount > 0 && discountLines(cart.items, cart.promotions as any).map((d) => (
+            <div key={d.code} className="trow" data-testid={d.auto ? "auto-discount" : "discount-line"}>
+              <span>
+                {d.label}
+                {!d.auto && <button type="button" className="rmcp" onClick={() => onRemoveCode(d.code)} disabled={busy === "code"}>إزالة</button>}
+              </span>
+              <span className="off"><Signed sign="−" value={formatAmount(d.amount)} /> {CUR}</span>
             </div>
           ))}
-          {/* خصم تلقائي (امتياز مستوى مثل خصم التفصيل للماسية) بلا كود: سطر يشرح الفرق في الإجمالي */}
-          {discount > 0 && !codes.length && (
-            <div className="trow" data-testid="auto-discount">
-              <span>خصم امتياز عضويتك</span>
-              <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {CUR}</span>
-            </div>
-          )}
           <div className="trow"><span>التوصيل</span><span data-testid="sum-shipping">{shipping === null ? "في الخطوة التالية" : shipping === 0 && shipDiscount > 0 ? <>مجاني <span className="perktag">امتياز عضويتك</span></> : shipping === 0 ? "مجاني" : fmt(shipping)}</span></div>
           <div className="trow final"><span>الإجمالي</span><span>{fmt(total)}</span></div>
               {/* M15: الضريبة المضمَّنة في الإجمالي */}

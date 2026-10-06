@@ -12,6 +12,7 @@ import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 import { tailoringNote } from "@lib/util/tailoring"
 import { includedTax } from "@lib/util/tax"
+import { discountLines } from "@lib/util/discounts"
 
 type Props = {
   order: HttpTypes.StoreOrder
@@ -165,9 +166,10 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
             })}
             <div style={{ marginTop: 10 }}>
               <div className="kv"><span>المجموع</span><span className="num">{fmt(subtotal)}</span></div>
-              {itemDiscount > 0 && (
-                <div className="kv"><span>الخصم</span><span style={{ color: "var(--accent)" }}><Signed sign="−" value={formatAmount(itemDiscount)} /> {CUR}</span></div>
-              )}
+              {/* منخفضة: سطر لكل عرض بمبلغه (الكود منفصل عن امتياز المستوى) */}
+              {itemDiscount > 0 && discountLines(items, null).map((d) => (
+                <div key={d.code} className="kv" data-testid="discount-line"><span>{d.label}</span><span style={{ color: "var(--accent)" }}><Signed sign="−" value={formatAmount(d.amount)} /> {CUR}</span></div>
+              ))}
               <div className="kv"><span>التوصيل</span><span>{ship?.name} · {order.shipping_total ? fmt(order.shipping_total) : shipDiscount > 0 ? "مجاني — امتياز العضوية" : "مجاني"}</span></div>
               <div className="kv"><span>الدفع</span><span>{pay?.title ?? "—"}</span></div>
               <div className="kv"><span>العنوان</span><span>{pickup ? "استلام من المشغل" : `${governorateName(addr?.province)} — ${addr?.city ?? ""}`}</span></div>

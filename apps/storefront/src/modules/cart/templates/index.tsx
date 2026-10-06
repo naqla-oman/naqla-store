@@ -8,6 +8,7 @@ import { formatAmount } from "@lib/util/money"
 import CartLines from "./lines"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
+import { discountLines } from "@lib/util/discounts"
 
 /** صفحة السلة — الخطوة الأولى (مطابقة لسلة الديمو) */
 export default function CartTemplate({ cart, freeOver: threshold }: { cart: HttpTypes.StoreCart | null; freeOver?: number | null }) {
@@ -55,18 +56,13 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
             <h3>ملخص الطلب</h3>
             <div style={{ marginTop: 12 }}>
               <div className="trow"><span>المجموع</span><span>{formatAmount(subtotal)} {storeConfig.currencyLabel}</span></div>
-              {discount > 0 && (
-                <div className="trow">
-                  <span>
-                    {/* أكواد الزبونة فقط؛ العروض التلقائية (امتيازات المستوى) باسم عام */}
-                    {(() => {
-                      const codes = (cart.promotions ?? []).filter((p: any) => !p.is_automatic).map((p) => p.code).join("، ")
-                      return codes ? `الخصم ${codes}` : "خصم امتياز عضويتك"
-                    })()}
-                  </span>
-                  <span className="off"><Signed sign="−" value={formatAmount(discount)} /> {storeConfig.currencyLabel}</span>
+              {/* منخفضة: سطر لكل عرض بمبلغه (الكود منفصل عن امتياز المستوى) */}
+              {discount > 0 && discountLines(cart.items, cart.promotions as any).map((d) => (
+                <div key={d.code} className="trow" data-testid="discount-line">
+                  <span>{d.label}</span>
+                  <span className="off"><Signed sign="−" value={formatAmount(d.amount)} /> {storeConfig.currencyLabel}</span>
                 </div>
-              )}
+              ))}
               <div className="trow"><span>التوصيل</span><span>{left > 0 ? "حسب العنوان" : "مجاني"}</span></div>
               <div className="trow final"><span>الإجمالي</span><Money amount={subtotal - discount} className="" /></div>
             </div>
