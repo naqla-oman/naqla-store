@@ -14,6 +14,8 @@ async function main() {
   const { driver } = await import("../src/lib/provisioner")
   const say = (m: string) => console.log(`[worker ${new Date().toISOString().slice(11, 19)}] ${m}`)
   // مهام قُطعت (إعادة تشغيل المنفّذ) ← تُستأنف من خطوتها الحالية
+  // مهمة قُطعت عند «فحص الجاهزية»: عمليات المتجر ماتت مع المنفّذ ← تُعاد من خطوة التشغيل السابقة لا من الانتظار
+  await q(`update jobs set current = greatest(current - 1, 0) where status='running' and steps->current->>'key' = 'ready'`)
   const resumed = await q(`update jobs set status='queued', updated_at=now() where status='running' returning id`)
   if (resumed.length) say(`استئناف ${resumed.length} مهمة مقطوعة`)
   say(`يعمل بالسائق ${driver().name}`)
