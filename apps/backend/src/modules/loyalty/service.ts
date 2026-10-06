@@ -45,8 +45,11 @@ class LoyaltyModuleService extends MedusaService({ LoyaltyEntry }) {
   }
 
   async summary(customerId: string) {
-    const entries = await this.listLoyaltyEntries({ customer_id: customerId }, { order: { created_at: "DESC" }, take: 200 })
-    const sum = (f: (e: (typeof entries)[number]) => boolean) => entries.filter(f).reduce((s, e) => s + e.points, 0)
+    // منخفضة: المجاميع من كل القيود (أعمدة خفيفة فقط) — كانت من آخر 200 فتسقط النقاط القديمة من الرصيد والمستوى
+    const all = await this.listLoyaltyEntries({ customer_id: customerId }, { select: ["points", "status", "kind"], take: 1_000_000 })
+    // السجل المعروض للزبونة: الأحدث فقط
+    const entries = await this.listLoyaltyEntries({ customer_id: customerId }, { order: { created_at: "DESC" }, take: 50 })
+    const sum = (f: (e: (typeof all)[number]) => boolean) => all.filter(f).reduce((s, e) => s + Number(e.points), 0)
     const available = Math.max(0, sum((e) => e.status === "available"))
     const pending = sum((e) => e.kind === "earn" && e.status === "pending")
     // المستوى من مجموع النقاط المؤكَّدة (بعد التوصيل) — لا تنقصه الاستبدالات ولا تدخله المعلّقة
