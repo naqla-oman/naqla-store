@@ -7,9 +7,7 @@ import LocalizedClientLink from "@modules/common/components/localized-client-lin
 import Icon from "@modules/common/components/icon"
 import WishButton from "@modules/common/components/wish-button"
 import { storeConfig } from "../../../../store.config"
-import { g } from "@lib/voice"
-
-const TAG: Record<string, string> = { new: "جديد", bestsellers: "الأكثر مبيعاً", sale: "خصم" }
+import { getT } from "@/i18n/t"
 
 export default async function ProductPreview({
   product,
@@ -22,6 +20,8 @@ export default async function ProductPreview({
   /** منخفضة (LCP): أول بطاقتين في القائمة تُحمَّلان بأولوية — أولاهما أكبر عنصر على الجوال */
   priority?: boolean
 }) {
+  const t = await getT("product")
+  const TAG: Record<string, string> = { new: t("sc590a3"), bestsellers: t("se5a09c"), sale: t("s35b0c8") }
   const { cheapestPrice } = getProductPrice({ product })
   const meta = (product.metadata || {}) as Record<string, any>
   const price = cheapestPrice?.calculated_price_number ?? 0
@@ -48,14 +48,14 @@ export default async function ProductPreview({
         <div className="meta">
           {storeConfig.features.reviews && meta.rating && <span className="st"><Icon name="star" size={12} /> {meta.rating}</span>}
           {storeConfig.features.reviews && meta.reviews && <span>({meta.reviews})</span>}
-          {meta.sold_week >= 15 && <span className="ms-auto flex items-center gap-1"><Icon name="fire" size={12} /> {g("اشترتها", "اشتراها", "طُلب")} {meta.sold_week} هذا الأسبوع</span>}
+          {meta.sold_week >= 15 && <span className="ms-auto flex items-center gap-1"><Icon name="fire" size={12} /> {t("s021671")} {meta.sold_week} هذا الأسبوع</span>}
         </div>
         <div className="pr">
           <span className="price" data-testid="price">{convertToLocale({ amount: price, currency_code: cur })}</span>
           {old && old > price && (
             <>
               <span className="old">{convertToLocale({ amount: old, currency_code: cur })}</span>
-              <span className="save">{g("وفّري", "وفّر")} {convertToLocale({ amount: old - price, currency_code: cur })}</span>
+              <span className="save">{t("sc1aa3c")} {convertToLocale({ amount: old - price, currency_code: cur })}</span>
             </>
           )}
         </div>

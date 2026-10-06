@@ -13,6 +13,7 @@ import ProductInfo from "@modules/products/templates/product-info"
 import TailoringSlot from "@modules/products/components/tailoring/slot"
 import { variantPricing } from "@modules/products/lib/variants"
 import ProductActionsWrapper from "./product-actions-wrapper"
+import { useT } from "@/i18n/t"
 
 type ProductTemplateProps = {
   product: HttpTypes.StoreProduct
@@ -21,9 +22,9 @@ type ProductTemplateProps = {
   images: HttpTypes.StoreProductImage[]
 }
 
-const TAG: Record<string, string> = { new: "جديد", bestsellers: "الأكثر مبيعاً" }
-
 const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, images }) => {
+  const t = useT("product")
+  const TAG: Record<string, string> = { new: t("sc590a3"), bestsellers: t("se5a09c") }
   if (!product || !product.id) return notFound()
 
   const category = product.categories?.[0]
@@ -34,8 +35,8 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, imag
 
   return (
     <div className="wrap" data-testid="product-container">
-      <nav className="crumbs" aria-label="مسار التصفح">
-        <LocalizedClientLink href="/">الرئيسية</LocalizedClientLink>
+      <nav className="crumbs" aria-label={t("s1e22a1")}>
+        <LocalizedClientLink href="/">{t("s3aa857")}</LocalizedClientLink>
         <Icon name="chevL" size={12} />
         {category && (
           <>

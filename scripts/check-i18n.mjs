@@ -11,6 +11,7 @@ for (const f of files) {
   lines.forEach((l, i) => {
     // تُستثنى التعليقات والتعابير النمطية (مثل /ة$/) — ليست نصوص واجهة
     const code = l.replace(/\/\/.*$/, "").replace(/\/\*.*?\*\//g, "").replace(/\/(?:\\.|[^\/\n])+\/[gimsuy]*/g, "")
+    if (l.includes("i18n-ok")) return // سطر مُعلَّم: ليس نص واجهة (صرف عربي، بيانات)
     if (AR.test(code) && !/^\s*\*|^\s*\/\*/.test(l)) hits.push(`${f.replace(SF, "")}:${i + 1}: ${l.trim().slice(0, 90)}`)
   })
 }

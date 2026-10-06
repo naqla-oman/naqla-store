@@ -12,7 +12,7 @@ import { buildMatrix, Selection, variantPricing } from "@modules/products/lib/va
 import { useParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { storeConfig } from "../../../../store.config"
-import { g } from "@lib/voice"
+import { useCurrencyLabel, useT } from "@/i18n/t"
 
 type Props = {
   product: HttpTypes.StoreProduct
@@ -25,6 +25,8 @@ const waLink = (text: string) =>
   `https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(text)}`
 
 export default function ProductActions({ product, disabled }: Props) {
+  const t = useT("product")
+  const CUR = useCurrencyLabel()
   const countryCode = useParams().countryCode as string
   const m = useMemo(() => buildMatrix(product), [product])
   const category = product.categories?.[0]?.handle ?? ""
@@ -96,8 +98,8 @@ export default function ProductActions({ product, disabled }: Props) {
 
   const selectionText = [
     ...m.defs.filter((d) => d.values.length > 1 || m.defs.length > 1).map((d) => (sel[d.key] ? `${d.title} ${sel[d.key]}` : null)),
-    wantsLength && len ? `الطول ${len} سم` : null,
-  ].filter(Boolean).join("، ")
+    wantsLength && len ? t("lengthCm", { len }) : null,
+  ].filter(Boolean).join(t("s8a78cc"))
 
   // view_item مرة لكل منتج (يتجدد السعر مع المتغيّر المختار عند الإضافة)
   useEffect(() => {
@@ -113,7 +115,7 @@ export default function ProductActions({ product, disabled }: Props) {
     const lmin = Number((cfg.lengthField as any).min ?? 120)
     const lmax = Number((cfg.lengthField as any).max ?? 200)
     if (wantsLength && len && (Number(len) < lmin || Number(len) > lmax)) {
-      setToast({ ok: false, msg: `الطول يجب أن يكون بين ${lmin} و${lmax} سم` })
+      setToast({ ok: false, msg: t("lengthRange", { lmin, lmax }) })
       document.getElementById("lenIn")?.focus()
       return
     }
@@ -131,9 +133,9 @@ export default function ProductActions({ product, disabled }: Props) {
         return
       }
       track("add_to_cart", { value: price * qty, items: [itemOf(product, variant, price, qty)] })
-      setToast({ ok: true, msg: `أُضيفت إلى السلة${selectionText ? ` — ${selectionText}` : ""}` })
+      setToast({ ok: true, msg: `${t("addedToCart")}${selectionText ? ` — ${selectionText}` : ""}` })
     } catch (e: any) {
-      setToast({ ok: false, msg: e?.message?.includes("inventory") ? "الكمية المطلوبة غير متوفرة حالياً" : g("تعذّرت الإضافة للسلة، حاولي مرة أخرى", "تعذّرت الإضافة للسلة، حاول مرة أخرى") })
+      setToast({ ok: false, msg: e?.message?.includes("inventory") ? t("s68650b") : t("sf1d17a") })
     } finally {
       setAdding(false)
     }
@@ -142,15 +144,15 @@ export default function ProductActions({ product, disabled }: Props) {
   // الرابط يُقرأ بعد التحميل فقط (pageUrl) حتى تتطابق نسخة الخادم مع المتصفح
   const waOrder = () =>
     waLink(
-      `مرحباً ${storeConfig.shortName}، أرغب بطلب:\n${product.title}\n${selectionText}\nالكمية: ${qty}\nالسعر: ${formatAmount(price * qty)} ${storeConfig.currencyLabel}${pageUrl ? `\n${pageUrl}` : ""}`
+      t("waOrder", { store: storeConfig.shortName, title: product.title, selection: selectionText, qty, price: `${formatAmount(price * qty)} ${CUR}` }) + (pageUrl ? `\n${pageUrl}` : "")
     )
   const waNotify = () =>
-    waLink(`مرحباً ${storeConfig.shortName}، أرجو إعلامي عند توفر ${product.title} (${selectionText}).`)
+    waLink(t("waNotify", { store: storeConfig.shortName, title: product.title, selection: selectionText }))
   const waAtelier = (kind: "custom" | "fitting") =>
     waLink(
       kind === "custom"
-        ? `مرحباً ${storeConfig.shortName}، أرغب بتفصيل ${product.title} على مقاسي.`
-        : `مرحباً ${storeConfig.shortName}، أرغب بحجز موعد قياس في المشغل لـ ${product.title}.`
+        ? t("waTailor", { store: storeConfig.shortName, title: product.title })
+        : t("waFitting", { store: storeConfig.shortName, title: product.title })
     )
 
   return (
@@ -160,20 +162,20 @@ export default function ProductActions({ product, disabled }: Props) {
         {old && (
           <>
             <span className="old num">{formatAmount(old)}</span>
-            <span className="saveflag">وفّري {formatAmount(old - price)} {storeConfig.currencyLabel}</span>
+            <span className="saveflag">{t("save", { amount: `${formatAmount(old - price)} ${CUR}` })}</span>
           </>
         )}
         <span className="vat">
-          السعر شامل ضريبة القيمة المضافة
-          {sold >= 5 && <span className="hot"><Icon name="fire" size={12} /> {g("اشترتها", "اشتراها", "طُلب")} {sold} {g("زبونة", "عميلاً", "مرة")} هذا الأسبوع</span>}
+          {t("scdc880")}
+          {sold >= 5 && <span className="hot"><Icon name="fire" size={12} /> {t("s021671")} {sold} {t("s8425ba")} هذا الأسبوع</span>}
         </span>
       </div>
 
       {cfg.bnpl.enabled && price > 0 && (
         <div className="bnpl">
           <div className="tx">
-            <strong>{cfg.bnpl.installments} دفعات × {formatAmount(price / cfg.bnpl.installments)} {storeConfig.currencyLabel}</strong>
-            بلا فوائد أو رسوم
+            <strong>{t("installments", { n: cfg.bnpl.installments, amount: `${formatAmount(price / cfg.bnpl.installments)} ${CUR}` })}</strong>
+            {t("s8274ca")}
           </div>
         </div>
       )}
@@ -188,14 +190,14 @@ export default function ProductActions({ product, disabled }: Props) {
               <div className="label">
                 <span>
                   {d.title}: <b>{sel[d.key]}</b>
-                  {d.key === m.defs[m.defs.length - 1].key && lowStock && <span className="lowstock"> · بقي {left} فقط</span>}
+                  {d.key === m.defs[m.defs.length - 1].key && lowStock && <span className="lowstock"> · {t("onlyLeft", { n: left })}</span>}
                 </span>
                 {d.key === guideKey && (
                   <a
                     href="#size-guide"
                     onClick={() => { const g = document.getElementById("size-guide") as HTMLDetailsElement | null; if (g) g.open = true }}
                   >
-                    <Icon name="ruler" size={13} /> دليل المقاسات
+                    <Icon name="ruler" size={13} /> {t("sizeGuide")}
                   </a>
                 )}
               </div>
@@ -214,7 +216,7 @@ export default function ProductActions({ product, disabled }: Props) {
                           role="radio"
                           aria-checked={on}
                           aria-label={v}
-                          title={st === 0 ? `${v} — نفد` : v}
+                          title={st === 0 ? t("soldOutV", { v }) : v}
                           className={`dot ${on ? "on" : ""} ${st === 0 ? "out" : ""}`}
                           onClick={() => pick(d.key, v)}
                           disabled={disabled}
@@ -231,7 +233,7 @@ export default function ProductActions({ product, disabled }: Props) {
                         role="radio"
                         aria-checked={on}
                         className={`size ${on ? "on" : ""} ${st === 0 ? "out" : st <= cfg.lowStockAt ? "low" : ""}`}
-                        title={st === 0 ? g("نفد — اطلبي إشعاراً عند التوفر", "نفد — اطلب إشعاراً عند التوفر") : st <= cfg.lowStockAt ? `بقي ${st} فقط` : undefined}
+                        title={st === 0 ? t("sbda1b9") : st <= cfg.lowStockAt ? t("onlyLeft", { n: st }) : undefined}
                         onClick={() => pick(d.key, v)}
                         disabled={disabled}
                       >
@@ -246,12 +248,12 @@ export default function ProductActions({ product, disabled }: Props) {
         })}
 
         {variant && left === 0 && (
-          <div className="notice warn"><Icon name="bell" size={15} /> هذا الاختيار نفد حالياً — نخبرك فور توفره</div>
+          <div className="notice warn"><Icon name="bell" size={15} /> {t("s374125")}</div>
         )}
 
         {wantsLength && (
           <>
-            <div className="label"><label htmlFor="lenIn">طولك بالسنتيمتر (اختياري)</label></div>
+            <div className="label"><label htmlFor="lenIn">{t("s9aecaf")}</label></div>
             <div className="lenfield">
               <input
                 id="lenIn"
@@ -260,7 +262,7 @@ export default function ProductActions({ product, disabled }: Props) {
                 min={Number((cfg.lengthField as any).min ?? 120)}
                 max={Number((cfg.lengthField as any).max ?? 200)}
                 aria-invalid={!!len && (Number(len) < Number((cfg.lengthField as any).min ?? 120) || Number(len) > Number((cfg.lengthField as any).max ?? 200))}
-                placeholder="مثال: 160"
+                placeholder={t("s1608e0")}
                 value={len}
                 onChange={(e) => setLen(e.target.value.replace(/\D/g, "").slice(0, 3))}
               />
@@ -270,18 +272,18 @@ export default function ProductActions({ product, disabled }: Props) {
         )}
 
         <div className="buyrow" ref={buyRef}>
-          <div className="qty" aria-label="الكمية">
-            <button type="button" aria-label="إنقاص" onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1}><Icon name="minus" /></button>
+          <div className="qty" aria-label={t("s510165")}>
+            <button type="button" aria-label={t("scc05a0")} onClick={() => setQty((q) => Math.max(1, q - 1))} disabled={qty <= 1}><Icon name="minus" /></button>
             <b className="num" aria-live="polite">{qty}</b>
-            <button type="button" aria-label="زيادة" onClick={() => setQty((q) => Math.min(q + 1, Math.max(1, left)))} disabled={!canBuy || qty >= left}><Icon name="plus" /></button>
+            <button type="button" aria-label={t("s6a8330")} onClick={() => setQty((q) => Math.min(q + 1, Math.max(1, left)))} disabled={!canBuy || qty >= left}><Icon name="plus" /></button>
           </div>
           {variant && left === 0 ? (
             <a className="btn copper block" href={waNotify()} target="_blank" rel="noopener noreferrer">
-              <Icon name="bell" size={17} /> {g("أعلميني عند التوفر", "أعلمني عند التوفر", "أعلموني عند التوفر")}
+              <Icon name="bell" size={17} /> {t("s3a961d")}
             </a>
           ) : (
             <button type="button" className="btn block" onClick={handleAdd} disabled={!canBuy || adding} data-testid="add-product-button">
-              <Icon name="bag" size={17} /> {adding ? "جارٍ الإضافة…" : "إضافة للسلة"}
+              <Icon name="bag" size={17} /> {adding ? t("s6bfc32") : t("s8ed342")}
               {!adding && price > 0 && <span className="bp num"> · {formatAmount(price * qty)} {storeConfig.currencyLabel}</span>}
             </button>
           )}
@@ -289,19 +291,19 @@ export default function ProductActions({ product, disabled }: Props) {
 
         {canBuy && storeConfig.features.whatsappOrder && (
           <a className="btn wa block warow" href={waOrder()} target="_blank" rel="noopener noreferrer">
-            <Icon name="whatsapp" size={18} /> {g("اطلبي عبر واتساب", "اطلب عبر واتساب")}
+            <Icon name="whatsapp" size={18} /> {t("saa3776")}
           </a>
         )}
 
         <div className="stockrow">
           <span><i className={left > 0 ? "" : "off"} />{left > 0 ? cfg.availability.inStock : cfg.availability.outOfStock}</span>
-          <span><Icon name="shield" size={13} /> دفع آمن · استبدال 14 يوماً</span>
+          <span><Icon name="shield" size={13} /> {t("s65df19")}</span>
         </div>
       </div>
 
       {cfg.atelier.categories.includes(category) && (
         <div className="atelier">
-          <a className="pill" href={waAtelier("fitting")} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> {g("احجزي قياساً في المشغل", "احجز قياساً في المشغل")}</a>
+          <a className="pill" href={waAtelier("fitting")} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> {t("s4ba6f3")}</a>
         </div>
       )}
 
@@ -311,7 +313,7 @@ export default function ProductActions({ product, disabled }: Props) {
           <Money amount={price * qty} />
         </div>
         <button type="button" className="btn" onClick={handleAdd} disabled={!canBuy || adding} tabIndex={showSticky ? 0 : -1}>
-          <Icon name="bag" size={16} /> {variant && left === 0 ? "غير متوفر" : "إضافة للسلة"}
+          <Icon name="bag" size={16} /> {variant && left === 0 ? t("s5883c3") : t("s8ed342")}
         </button>
       </div>
 
@@ -319,7 +321,7 @@ export default function ProductActions({ product, disabled }: Props) {
         {toast && (
           <span className={toast.ok ? "" : "err"}>
             <Icon name={toast.ok ? "check" : "x"} size={16} /> {toast.msg}
-            {toast.ok && <LocalizedClientLink href="/cart" className="tlink">عرض السلة</LocalizedClientLink>}
+            {toast.ok && <LocalizedClientLink href="/cart" className="tlink">{t("s8fc546")}</LocalizedClientLink>}
           </span>
         )}
       </div>

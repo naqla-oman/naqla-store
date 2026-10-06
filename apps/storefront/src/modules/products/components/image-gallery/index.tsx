@@ -11,7 +11,7 @@ const thumb = (src: string) => getImageProps({ src, alt: "", width: 144, height:
 import { HttpTypes } from "@medusajs/types"
 import Icon from "@modules/common/components/icon"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { g } from "@lib/voice"
+import { useT } from "@/i18n/t"
 
 type Props = {
   images: HttpTypes.StoreProductImage[]
@@ -23,6 +23,7 @@ type Props = {
 
 /** معرض المنتج: صورة رئيسية (سحب على الجوال) + مصغّرات + عارض بملء الشاشة مع تكبير */
 export default function ImageGallery({ images, title, badge, alt }: Props) {
+  const t = useT("product")
   const base = alt || title
   const list = images.length ? images : []
   const [shot, setShot] = useState(0)
@@ -65,7 +66,7 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
           className="main"
           role="button"
           tabIndex={0}
-          aria-label="عرض الصورة بحجم كامل"
+          aria-label={t("s328e82")}
           onPointerDown={onDown}
           onPointerUp={onUp}
           onClick={() => { if (!moved.current) setOpen(true) }}
@@ -76,7 +77,7 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
               <Image
                 key={`${img.id ?? img.url}-${i}`}
                 src={img.url}
-                alt={i === 0 ? base : `${base} — صورة ${i + 1}`}
+                alt={i === 0 ? base : t("imageN", { base, n: i + 1 })}
                 fill
                 priority={i === 0}
                 sizes="(max-width: 900px) 100vw, 50vw"
@@ -87,17 +88,17 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
           </div>
           {badge}
           {n > 1 && <div className="dots" aria-hidden="true">{list.map((img, i) => <i key={`${img.id ?? img.url}-${i}`} className={i === shot ? "on" : ""} />)}</div>}
-          <span className="zoomhint"><Icon name="zoom" size={13} /> {g("اضغطي للتكبير", "اضغط للتكبير")}</span>
+          <span className="zoomhint"><Icon name="zoom" size={13} /> {t("s068e54")}</span>
         </div>
         {n > 1 && (
-          <div className="thumbs" role="tablist" aria-label="صور المنتج">
+          <div className="thumbs" role="tablist" aria-label={t("s1baeb3")}>
             {list.map((img, i) => (
               <button
                 key={`${img.id ?? img.url}-${i}`}
                 type="button"
                 role="tab"
                 aria-selected={i === shot}
-                aria-label={`الصورة ${i + 1}`}
+                aria-label={t("imageIndex", { n: i + 1 })}
                 className={i === shot ? "on" : ""}
                 onClick={() => setShot(i)}
               >
@@ -112,7 +113,7 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
         <div className="lightbox" role="dialog" aria-modal="true" aria-label={title}>
           <div className="top">
             <span>{title} <span className="num">({shot + 1}/{n})</span></span>
-            <button type="button" className="iconbtn" aria-label="إغلاق" onClick={() => setOpen(false)} autoFocus><Icon name="x" /></button>
+            <button type="button" className="iconbtn" aria-label={t("s9932cc")} onClick={() => setOpen(false)} autoFocus><Icon name="x" /></button>
           </div>
           <div className="stage" onPointerDown={onDown} onPointerUp={(e) => { if (!zoom) onUp(e) }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -125,16 +126,16 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
             />
             {n > 1 && (
               <>
-                <button type="button" className="nav prev" aria-label="السابق" onClick={() => go(-1)}><Icon name="chevR" /></button>
-                <button type="button" className="nav next" aria-label="التالي" onClick={() => go(1)}><Icon name="chevL" /></button>
+                <button type="button" className="nav prev" aria-label={t("s650bd5")} onClick={() => go(-1)}><Icon name="chevR" /></button>
+                <button type="button" className="nav next" aria-label={t("s8435af")} onClick={() => go(1)}><Icon name="chevL" /></button>
               </>
             )}
           </div>
-          <div className="hint">{g("اضغطي مرتين للتكبير · اسحبي للتنقل", "اضغط مرتين للتكبير · اسحب للتنقل")}</div>
+          <div className="hint">{t("sd75e7d")}</div>
           {n > 1 && (
             <div className="strip">
               {list.map((img, i) => (
-                <button key={`${img.id ?? img.url}-${i}`} type="button" className={i === shot ? "on" : ""} aria-label={`الصورة ${i + 1}`} onClick={() => { setShot(i); setZoom(false) }}>
+                <button key={`${img.id ?? img.url}-${i}`} type="button" className={i === shot ? "on" : ""} aria-label={t("imageIndex", { n: i + 1 })} onClick={() => { setShot(i); setZoom(false) }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img {...thumb(img.url!)} alt="" />
                 </button>

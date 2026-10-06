@@ -12,6 +12,7 @@ import { getBaseURL } from "@lib/util/env"
 import { storeConfig } from "@/store.config"
 import { getFreeShippingOver } from "@lib/data/shipping-threshold"
 import { langPrefix } from "@/i18n/config"
+import { getT } from "@/i18n/t"
 
 type Props = {
   params: Promise<{ countryCode: string; handle: string; lang: string }>
@@ -113,6 +114,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function ProductPage(props: Props) {
+  const t = await getT("product")
   const params = await props.params
   const region = await getRegion(params.countryCode)
   const searchParams = await props.searchParams
@@ -169,7 +171,7 @@ export default async function ProductPage(props: Props) {
       type="application/ld+json"
       dangerouslySetInnerHTML={jsonLdScript(
         breadcrumbs([
-          { name: "الرئيسية", path: `/${params.countryCode}${langPrefix(params.lang)}` },
+          { name: t("s3aa857"), path: `/${params.countryCode}${langPrefix(params.lang)}` },
           ...(pricedProduct.categories?.[0]
             ? [{ name: pricedProduct.categories[0].name, path: `/${params.countryCode}${langPrefix(params.lang)}/categories/${pricedProduct.categories[0].handle}` }]
             : []),

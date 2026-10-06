@@ -1,9 +1,11 @@
 import { listProducts } from "@lib/data/products"
 import { HttpTypes } from "@medusajs/types"
 import ProductPreview from "../product-preview"
+import { getT } from "@/i18n/t"
 
 /** «قد يعجبك أيضاً»: من نفس القسم */
 export default async function RelatedProducts({ product, region }: { product: HttpTypes.StoreProduct; region: HttpTypes.StoreRegion }) {
+  const t = await getT("product")
   const categoryId = product.categories?.[0]?.id
   if (!categoryId) return null
 
@@ -16,7 +18,7 @@ export default async function RelatedProducts({ product, region }: { product: Ht
 
   return (
     <section>
-      <div className="sechead"><div><h2>قد يعجبك أيضاً</h2><p>من {product.categories?.[0]?.name}</p></div></div>
+      <div className="sechead"><div><h2>{t("scea111")}</h2><p>من {product.categories?.[0]?.name}</p></div></div>
       <div className="pgrid">
         {products.map((p) => <ProductPreview key={p.id} product={p} region={region} />)}
       </div>

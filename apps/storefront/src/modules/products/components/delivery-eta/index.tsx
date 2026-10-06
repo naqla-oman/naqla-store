@@ -3,9 +3,9 @@
 import Icon from "@modules/common/components/icon"
 import { useEffect, useState } from "react"
 import { storeConfig } from "../../../../store.config"
-import { g } from "@lib/voice"
+import { useLocale } from "next-intl"
+import { useT } from "@/i18n/t"
 
-const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
 const { timezone, cityLabel, othersLabel } = storeConfig.product.delivery
 
 /** الوقت الحالي بتوقيت المتجر (مسقط) بغض النظر عن منطقة جهاز الزبونة */
@@ -22,33 +22,38 @@ function storeNow() {
   return { day: wd, h: Number(get("hour")), m: Number(get("minute")) }
 }
 
-function compute() {
+/** اسم اليوم حسب اللغة (الفهرس 0 = الأحد) */
+const dayName = (locale: string, idx: number) => new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en", { weekday: "long" }).format(new Date(2026, 0, 4 + ((idx % 7) + 7) % 7))
+type T = (k: string, v?: Record<string, string | number>) => string
+function compute(t: T, locale: string) {
   const { day, h, m } = storeNow()
   const left = storeConfig.cutoffHour * 60 - (h * 60 + m)
   if (left > 0) {
     return {
-      title: `${g("اطلبي", "اطلب")} خلال ${Math.floor(left / 60)} س و ${left % 60} د`,
-      sub: `تصلك غداً ${DAYS[(day + 1) % 7]} ${cityLabel} · ${othersLabel}`,
+      title: t("withinHours", { h: Math.floor(left / 60), m: left % 60 }),
+      sub: t("tomorrow", { day: dayName(locale, day + 1), city: cityLabel, others: othersLabel }),
     }
   }
-  return { title: "تصلك بعد غد", sub: `${DAYS[(day + 2) % 7]} ${cityLabel} · ${othersLabel}` }
+  return { title: t("s9928e2"), sub: `${dayName(locale, day + 2)} ${cityLabel} · ${othersLabel}` }
 }
 
 export default function DeliveryEta() {
+  const t = useT("product")
+  const locale = useLocale()
   const [eta, setEta] = useState<ReturnType<typeof compute> | null>(null)
 
   useEffect(() => {
-    setEta(compute())
-    const t = setInterval(() => setEta(compute()), 30_000)
-    return () => clearInterval(t)
+    setEta(compute(t, locale))
+    const timer = setInterval(() => setEta(compute(t, locale)), 30_000)
+    return () => clearInterval(timer)
   }, [])
 
   return (
     <div className="eta" aria-live="polite">
       <Icon name="truck" size={22} />
       <div>
-        <b>{eta?.title ?? "توصيل لكل محافظات السلطنة"}</b>
-        <span>{eta?.sub ?? "خلال 24–48 ساعة"}</span>
+        <b>{eta?.title ?? t("sef2b91")}</b>
+        <span>{eta?.sub ?? t("s94ba41")}</span>
       </div>
     </div>
   )

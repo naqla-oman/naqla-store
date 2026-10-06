@@ -1,11 +1,13 @@
 import { HttpTypes } from "@medusajs/types"
 import Icon from "@modules/common/components/icon"
 import { storeConfig } from "../../../../store.config"
+import { useT } from "@/i18n/t"
 
 const cfg = storeConfig.product
 
 /** المزايا + أقسام قابلة للطي: التفاصيل، دليل المقاسات، الشحن والإرجاع */
 export default function ProductDetails({ product }: { product: HttpTypes.StoreProduct }) {
+  const t = useT("product")
   const category = product.categories?.[0]?.handle ?? ""
   const guide = cfg.sizeGuides[category]
 
@@ -18,15 +20,15 @@ export default function ProductDetails({ product }: { product: HttpTypes.StorePr
       </div>
       <div className="acc">
         <details open>
-          <summary>التفاصيل والخامة <Icon name="chevD" size={18} /></summary>
+          <summary>{t("sb29cfa")} <Icon name="chevD" size={18} /></summary>
           <div className="body">
             {product.description} {cfg.craftNote}
-            {product.material && <p className="mt-2">الخامة: {product.material}</p>}
+            {product.material && <p className="mt-2">{t("material", { material: product.material })}</p>}
           </div>
         </details>
         {guide && (
           <details id="size-guide">
-            <summary>دليل المقاسات <Icon name="chevD" size={18} /></summary>
+            <summary>{t("s7cde0a")} <Icon name="chevD" size={18} /></summary>
             <div className="body">
               <div className="tablewrap">
                 <table>
@@ -38,7 +40,7 @@ export default function ProductDetails({ product }: { product: HttpTypes.StorePr
           </details>
         )}
         <details>
-          <summary>الشحن والإرجاع <Icon name="chevD" size={18} /></summary>
+          <summary>{t("sfc860f")} <Icon name="chevD" size={18} /></summary>
           <div className="body">{cfg.shippingReturns}</div>
         </details>
       </div>

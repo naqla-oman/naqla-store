@@ -2,9 +2,11 @@
 
 import Icon from "@modules/common/components/icon"
 import { useState } from "react"
+import { useT } from "@/i18n/t"
 
 /** مشاركة المنتج: قائمة المشاركة على الجوال، ونسخ الرابط على الحاسوب */
 export default function ShareButton({ title }: { title: string }) {
+  const t = useT("product")
   const [copied, setCopied] = useState(false)
 
   const share = async () => {
@@ -23,7 +25,7 @@ export default function ShareButton({ title }: { title: string }) {
   }
 
   return (
-    <button type="button" className="iconbtn share" onClick={share} aria-label={copied ? "تم نسخ الرابط" : "مشاركة"} title={copied ? "تم نسخ الرابط" : "مشاركة"}>
+    <button type="button" className="iconbtn share" onClick={share} aria-label={copied ? t("s005a34") : t("s81a50c")} title={copied ? t("s005a34") : t("s81a50c")}>
       <Icon name={copied ? "check" : "share"} size={18} />
     </button>
   )

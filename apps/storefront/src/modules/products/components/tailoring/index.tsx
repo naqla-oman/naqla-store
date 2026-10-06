@@ -3,13 +3,13 @@
 import { track } from "@lib/tracking/events"
 import { addToCart } from "@lib/data/cart"
 import { formatAmount } from "@lib/util/money"
-import { g } from "@lib/voice"
 import { HttpTypes } from "@medusajs/types"
 import Icon from "@modules/common/components/icon"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import { useParams } from "next/navigation"
 import { FormEvent, useState } from "react"
 import { storeConfig } from "../../../../store.config"
+import { useT } from "@/i18n/t"
 
 type Props = {
   /** القطعة التي يُطلب تفصيلها */
@@ -26,6 +26,7 @@ const CUR = storeConfig.currencyLabel
  * ثم إضافة الخدمة للسلة ببياناتها في metadata.tailoring (تظهر في السلة والطلب ولوحة التحكم).
  */
 export default function Tailoring({ product, service }: Props) {
+  const t = useT("product")
   const { countryCode } = useParams() as { countryCode: string }
   const category = product.categories?.[0]?.handle ?? ""
   const offered = T.services.filter((s) => s.categories.includes(category))
@@ -53,7 +54,7 @@ export default function Tailoring({ product, service }: Props) {
   const submit = async (e: FormEvent) => {
     e.preventDefault()
     if (!valid) {
-      setMsg({ ok: false, t: g("أدخلي كل المقاسات بالسنتيمتر أو اختاري «تواصلوا معي»", "أدخل كل المقاسات بالسنتيمتر أو اختر «تواصلوا معي»") })
+      setMsg({ ok: false, t: t("sd302fb") })
       return
     }
     setBusy(true)
@@ -77,10 +78,10 @@ export default function Tailoring({ product, service }: Props) {
         return
       }
       track("add_to_cart", { value: price, items: [{ id: chosen.v!.id, name: chosen.s.title, price, quantity: 1, category: chosen.s.title }] })
-      setMsg({ ok: true, t: `أُضيف «${chosen.s.title}» إلى السلة` })
+      setMsg({ ok: true, t: t("addedNamed", { title: chosen.s.title }) })
       setM({})
     } catch {
-      setMsg({ ok: false, t: g("تعذّرت الإضافة، حاولي مرة أخرى", "تعذّرت الإضافة، حاول مرة أخرى") })
+      setMsg({ ok: false, t: t("sa6b3ce") })
     } finally {
       setBusy(false)
     }
@@ -89,12 +90,12 @@ export default function Tailoring({ product, service }: Props) {
   return (
     <div className="tailor" data-testid="tailoring">
       <button type="button" className={`pill ${open ? "on" : ""}`} aria-expanded={open} onClick={() => setOpen((o) => !o)} data-testid="tailoring-toggle">
-        <Icon name="scissors" size={14} /> تفصيل على مقاسك
+        <Icon name="scissors" size={14} /> {t("tailorToSize")}
       </button>
       {open && (
         <form className="tailor-panel" onSubmit={submit} noValidate>
           <div className="label"><span>{T.title}</span></div>
-          <div className="tailor-opts" role="radiogroup" aria-label="الخدمة">
+          <div className="tailor-opts" role="radiogroup" aria-label={t("sb764bb")}>
             {variants.map(({ s, v }) => (
               <button key={s.key} type="button" role="radio" aria-checked={s.key === chosen.s.key} className={`payopt ${s.key === chosen.s.key ? "on" : ""}`} onClick={() => setKey(s.key)} data-testid={`tailor-${s.key}`}>
                 <span className="t"><b>{s.title}</b></span>
@@ -107,7 +108,7 @@ export default function Tailoring({ product, service }: Props) {
           <div className="tailor-m">
             {T.measurements.map((d) => (
               <div key={d.key} className="field">
-                <label htmlFor={`tm-${d.key}`}>{d.label} (سم)</label>
+                <label htmlFor={`tm-${d.key}`}>{d.label} {t("cmUnit")}</label>
                 <input id={`tm-${d.key}`} type="number" inputMode="numeric" min={10} max={250} value={m[d.key] ?? ""} disabled={contact}
                   onChange={(e) => setM((x) => ({ ...x, [d.key]: e.target.value.replace(/\D/g, "").slice(0, 3) }))} />
               </div>
@@ -115,23 +116,19 @@ export default function Tailoring({ product, service }: Props) {
           </div>
           <label className="tailor-contact">
             <input type="checkbox" checked={contact} onChange={(e) => setContact(e.target.checked)} data-testid="tailor-contact" />
-            تواصلوا معي لأخذ المقاسات
+            {t("s1ce33a")}
           </label>
 
           {disc && (
-            <div className="guest copper"><Icon name="sparkle" size={14} /> {g(
-              `للعضوات ال${disc.name.replace(/ة$/, "ات")}`,
-              `للأعضاء ال${disc.name.replace(/ية$/, "يين")}`,
-              `لأصحاب العضوية ال${disc.name}`
-            )}: خصم {disc.tailoringDiscount}٪ على التفصيل تلقائياً في السلة</div>
+            <div className="guest copper"><Icon name="sparkle" size={14} /> {t("tierTailoring", { tier: disc.name, tierF: disc.name.replace(/ة$/, "ات"), tierM: disc.name.replace(/ية$/, "ين"), pct: disc.tailoringDiscount })}</div> // i18n-ok: لواحق صرف عربية لاسم المستوى
           )}
           {msg && (
             <div className={msg.ok ? "okmsg" : "ferr-inline"} role="status">
-              {msg.t}{msg.ok && <> — <LocalizedClientLink href="/cart" style={{ textDecoration: "underline" }}>عرض السلة</LocalizedClientLink></>}
+              {msg.t}{msg.ok && <> — <LocalizedClientLink href="/cart" style={{ textDecoration: "underline" }}>{t("s8fc546")}</LocalizedClientLink></>}
             </div>
           )}
           <button type="submit" className="btn block" disabled={busy} style={{ marginTop: 12 }} data-testid="tailor-add">
-            <Icon name="scissors" size={16} /> {busy ? "جارٍ الإضافة…" : `إضافة ${chosen.s.title} للسلة · ${formatAmount(price)} ${CUR}`}
+            <Icon name="scissors" size={16} /> {busy ? t("s6bfc32") : t("addNamed", { title: chosen.s.title, price: `${formatAmount(price)} ${CUR}` })}
           </button>
         </form>
       )}
