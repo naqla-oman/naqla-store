@@ -6,6 +6,7 @@ import body from "@client-font-body"
 import latin from "@client-font-latin"
 import { clientAsset, storeConfig } from "../store.config"
 import { ensureStoreSettings } from "@lib/data/store-settings"
+import StoreSettingsBoot from "@modules/common/components/store-settings-boot"
 import "styles/globals.css"
 // ألوان العميل (نهاري/ليلي) من clients/<STORE>/theme.css
 import "@client/theme.css"
@@ -60,7 +61,7 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: boot }} />
       </head>
       <body>
-        <main className="relative">{props.children}</main>
+        <main className="relative"><StoreSettingsBoot settings={settings}>{props.children}</StoreSettingsBoot></main>
       </body>
     </html>
   )

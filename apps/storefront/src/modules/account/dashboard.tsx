@@ -17,7 +17,9 @@ type Props = {
   orders: HttpTypes.StoreOrder[]
 }
 
-const { loyalty: L, checkout, currencyLabel: CUR, features: F } = storeConfig
+const { loyalty: L, checkout, currencyLabel: CUR } = storeConfig
+// الميزات تُقرأ عند الرسم (تتغير من «إعدادات المتجر»)
+const F = new Proxy({} as typeof storeConfig.features, { get: (_t, k) => (storeConfig.features as any)[k] })
 const dateFmt = new Intl.DateTimeFormat("ar-OM", { day: "numeric", month: "long", timeZone: storeConfig.product.delivery.timezone })
 const STATUS: Record<string, string> = { pending: "معلّقة حتى التوصيل", available: "متاحة", canceled: "ملغاة" }
 
