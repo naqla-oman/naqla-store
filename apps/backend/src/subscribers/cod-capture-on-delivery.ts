@@ -2,6 +2,7 @@ import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { capturePaymentWorkflow } from "@medusajs/medusa/core-flows"
 import { orderOfFulfillment } from "../lib/order-notifications"
+import { isFullyDelivered } from "../lib/delivery"
 
 /**
  * M16: الدفع عند الاستلام يُحصَّل تلقائياً عند التسليم — المندوب استلم المبلغ.
@@ -11,6 +12,8 @@ export default async function codCaptureOnDelivery({ event: { data }, container 
   const logger = container.resolve(ContainerRegistrationKeys.LOGGER)
   const found = await orderOfFulfillment(container, data.id)
   if (!found) return
+  // منخفضة: التحصيل حين يكتمل التسليم (المندوب يستلم المبلغ كاملاً مع آخر قطعة)
+  if (!(await isFullyDelivered(container, found.orderId))) return
   const { data: rows } = await container.resolve(ContainerRegistrationKeys.QUERY).graph({
     entity: "order",
     fields: ["id", "display_id", "payment_collections.payments.id", "payment_collections.payments.provider_id", "payment_collections.payments.amount", "payment_collections.payments.captured_at", "payment_collections.payments.canceled_at", "payment_collections.payments.captures.amount"],

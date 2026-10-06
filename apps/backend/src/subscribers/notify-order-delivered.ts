@@ -1,11 +1,13 @@
 import type { SubscriberArgs, SubscriberConfig } from "@medusajs/framework"
 import { notifyOrder, orderOfFulfillment } from "../lib/order-notifications"
+import { isFullyDelivered } from "../lib/delivery"
 
 /** واتساب: تم التوصيل */
 export default async function notifyDelivered({ event: { data }, container }: SubscriberArgs<{ id: string; no_notification?: boolean }>) {
   if (data.no_notification) return
   const found = await orderOfFulfillment(container, data.id)
   if (!found) return
+  if (!(await isFullyDelivered(container, found.orderId))) return // منخفضة: «تم تسليم طلبك» حين يكتمل فقط
   await notifyOrder(container, found.orderId, "order_delivered", data.id)
 }
 
