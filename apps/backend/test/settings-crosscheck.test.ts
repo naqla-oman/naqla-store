@@ -1,5 +1,5 @@
 // ملاحظات التحقق المستقل: crossCheck يرفض المخالفات الجديدة فقط، وnull للوحة/الخط = الافتراضي
-// STORE=layan THAWANI_SECRET_KEY= THAWANI_PUBLISHABLE_KEY= npx tsx test/settings-crosscheck.test.ts
+// STORE=<slug> THAWANI_SECRET_KEY= THAWANI_PUBLISHABLE_KEY= npx tsx test/settings-crosscheck.test.ts
 import assert from "node:assert/strict"
 import { clientDefaults, deepMerge } from "../src/lib/client"
 import { SCHEMA, crossCheck } from "../src/lib/store-settings-schema"
