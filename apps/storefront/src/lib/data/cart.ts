@@ -15,6 +15,7 @@ import {
 } from "./cookies"
 import { getRegion } from "./regions"
 import { getLocale } from "@lib/data/locale-actions"
+import { getT, useT } from "@/i18n/t"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -121,11 +122,12 @@ export async function updateCart(data: HttpTypes.StoreUpdateCart) {
 export type CartResult = { ok: true } | { ok: false; code: "out_of_stock" | "invalid" | "error"; message: string }
 
 function cartFail(e: unknown): CartResult {
+  const t = useT("cartActions")
   const msg = String((e as any)?.message ?? "")
-  if (/inventory|stock|غير متوفرة|المخزون|تتوفر/i.test(msg)) return { ok: false, code: "out_of_stock", message: "الكمية المطلوبة غير متوفرة حالياً" }
+  if (/inventory|stock|غير متوفرة|المخزون|تتوفر/i.test(msg)) return { ok: false, code: "out_of_stock", message: t("s68650b") }
   // رسائل خادمنا العربية الواضحة (الطول، قفل الدفع…) تُعرض كما هي
   if (/[\u0600-\u06FF]/.test(msg)) return { ok: false, code: "invalid", message: msg.slice(0, 160) }
-  return { ok: false, code: "error", message: "تعذّر تحديث السلة، حاول مرة أخرى" }
+  return { ok: false, code: "error", message: t("sb6ef29") }
 }
 
 export async function addToCart({
@@ -140,11 +142,12 @@ export async function addToCart({
   /** بيانات إضافية للسطر، مثل طول العباءة المطلوب */
   metadata?: Record<string, unknown>
 }): Promise<CartResult> {
-  if (!variantId) return { ok: false, code: "invalid", message: "اختر المقاس أو اللون أولاً" }
+  const t = await getT("cartActions")
+  if (!variantId) return { ok: false, code: "invalid", message: t("s453da2") }
 
   const cart = await getOrSetCart(countryCode)
 
-  if (!cart) return { ok: false, code: "error", message: "تعذّر إنشاء السلة، حاول مرة أخرى" }
+  if (!cart) return { ok: false, code: "error", message: t("sde85b8") }
 
   const headers = {
     ...(await getAuthHeaders()),
@@ -179,11 +182,12 @@ export async function updateLineItem({
   lineId: string
   quantity: number
 }): Promise<CartResult> {
-  if (!lineId) return { ok: false, code: "invalid", message: "السطر غير موجود" }
+  const t = await getT("cartActions")
+  if (!lineId) return { ok: false, code: "invalid", message: t("s26dd53") }
 
   const cartId = await getCartId()
 
-  if (!cartId) return { ok: false, code: "error", message: "السلة غير موجودة" }
+  if (!cartId) return { ok: false, code: "error", message: t("s09e7fa") }
 
   const headers = {
     ...(await getAuthHeaders()),

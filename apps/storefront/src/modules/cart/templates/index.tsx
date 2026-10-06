@@ -9,9 +9,11 @@ import CartLines from "./lines"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 import { discountLines } from "@lib/util/discounts"
+import { useT } from "@/i18n/t"
 
 /** صفحة السلة — الخطوة الأولى (مطابقة لسلة الديمو) */
 export default function CartTemplate({ cart, freeOver: threshold }: { cart: HttpTypes.StoreCart | null; freeOver?: number | null }) {
+  const t = useT("cart")
   const items = cart?.items ?? []
   const count = items.reduce((s, i) => s + i.quantity, 0)
 
@@ -21,8 +23,8 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
         <Steps current={0} />
         <div className="empty">
           <Icon name="bag" size={46} />
-          <p>سلتك فارغة بعد</p>
-          <LocalizedClientLink href="/store" className="btn">{g("ابدئي التسوق", "ابدأ التسوق")}</LocalizedClientLink>
+          <p>{t("s51f5b1")}</p>
+          <LocalizedClientLink href="/store" className="btn">{t("s43552d")}</LocalizedClientLink>
         </div>
       </div>
     )
@@ -37,14 +39,14 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
   return (
     <div className="wrap has-costicky">
       <Steps current={0} />
-      <h1 className="pagehead">سلة التسوق <span className="muted" style={{ fontSize: 14, fontWeight: 400 }}>({count})</span></h1>
+      <h1 className="pagehead">{t("sacf86f")} <span className="muted" style={{ fontSize: 14, fontWeight: 400 }}>({count})</span></h1>
       <div className="cartpage">
         <div className="panelbox">
           <div className="shipbar">
             {left > 0 ? (
-              <>{g("أضيفي", "أضف")} <b>{formatAmount(left)} {storeConfig.currencyLabel}</b> {g("لتحصلي على توصيل مجاني", "لتحصل على توصيل مجاني")}</>
+              <>{t("s4fdfdb")} <b>{formatAmount(left)} {storeConfig.currencyLabel}</b> {t("s7ba5ef")}</>
             ) : (
-              <><Icon name="check" size={14} /> {g("حصلتِ على التوصيل المجاني", "حصلت على التوصيل المجاني", "طلبك مؤهّل للتوصيل المجاني")}</>
+              <><Icon name="check" size={14} /> {t("s2fc9ba")}</>
             )}
             <div className="bar"><i style={{ width: `${Math.min(100, ((subtotal - discount) / freeOver) * 100)}%` }} /></div>
           </div>
@@ -53,9 +55,9 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
 
         <aside className="sumcol">
           <div className="panelbox">
-            <h3>ملخص الطلب</h3>
+            <h3>{t("seeea12")}</h3>
             <div style={{ marginTop: 12 }}>
-              <div className="trow"><span>المجموع</span><span>{formatAmount(subtotal)} {storeConfig.currencyLabel}</span></div>
+              <div className="trow"><span>{t("s7512af")}</span><span>{formatAmount(subtotal)} {storeConfig.currencyLabel}</span></div>
               {/* منخفضة: سطر لكل عرض بمبلغه (الكود منفصل عن امتياز المستوى) */}
               {discount > 0 && discountLines(cart.items, cart.promotions as any).map((d) => (
                 <div key={d.code} className="trow" data-testid="discount-line">
@@ -63,24 +65,24 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
                   <span className="off"><Signed sign="−" value={formatAmount(d.amount)} /> {storeConfig.currencyLabel}</span>
                 </div>
               ))}
-              <div className="trow"><span>التوصيل</span><span>{left > 0 ? "حسب العنوان" : "مجاني"}</span></div>
-              <div className="trow final"><span>الإجمالي</span><Money amount={subtotal - discount} className="" /></div>
+              <div className="trow"><span>{t("s30ecbc")}</span><span>{left > 0 ? "حسب العنوان" : t("s5abc46")}</span></div>
+              <div className="trow final"><span>{t("s88fc73")}</span><Money amount={subtotal - discount} className="" /></div>
             </div>
             <LocalizedClientLink href="/checkout" className="btn block lg" data-testid="checkout-button">
-              إتمام الطلب <Icon name="arrowL" size={18} />
+              {t("se4d013")} <Icon name="arrowL" size={18} />
             </LocalizedClientLink>
             <div className="trustrow">
-              <span><Icon name="lock" size={12} /> دفع آمن</span>
-              <span><Icon name="refresh" size={12} /> استبدال 14 يوماً</span>
-              <span><Icon name="truck" size={12} /> لكل المحافظات</span>
+              <span><Icon name="lock" size={12} /> {t("sc2af64")}</span>
+              <span><Icon name="refresh" size={12} /> {t("sab4bcb")}</span>
+              <span><Icon name="truck" size={12} /> {t("s113808")}</span>
             </div>
           </div>
         </aside>
       </div>
 
       <div className="costicky">
-        <div className="tot"><small>الإجمالي قبل التوصيل</small><b>{formatAmount(subtotal - discount)} {storeConfig.currencyLabel}</b></div>
-        <LocalizedClientLink href="/checkout" className="btn">إتمام الطلب <Icon name="arrowL" size={15} /></LocalizedClientLink>
+        <div className="tot"><small>{t("sc58c52")}</small><b>{formatAmount(subtotal - discount)} {storeConfig.currencyLabel}</b></div>
+        <LocalizedClientLink href="/checkout" className="btn">{t("se4d013")} <Icon name="arrowL" size={15} /></LocalizedClientLink>
       </div>
     </div>
   )

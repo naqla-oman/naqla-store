@@ -8,10 +8,14 @@ import { Metadata } from "next"
 import { redirect } from "next/navigation"
 import { getShippingConfig } from "@lib/data/shipping-threshold"
 import { langPrefix } from "@/i18n/config"
+import { getT } from "@/i18n/t"
 
-export const metadata: Metadata = {
-  title: "إتمام الطلب",
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("checkout")
+  return {
+  title: t("se4d013"),
   robots: { index: false },
+}
 }
 
 type Props = {

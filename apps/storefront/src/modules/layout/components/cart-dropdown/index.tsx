@@ -17,12 +17,14 @@ import { usePathname } from "next/navigation"
 import Icon from "@modules/common/components/icon"
 import { Fragment, useEffect, useRef, useState } from "react"
 import { g } from "@lib/voice"
+import { useT } from "@/i18n/t"
 
 const CartDropdown = ({
   cart: cartState,
 }: {
   cart?: HttpTypes.StoreCart | null
 }) => {
+  const t = useT("cart")
   const [activeTimer, setActiveTimer] = useState<NodeJS.Timer | undefined>(
     undefined
   )
@@ -83,7 +85,7 @@ const CartDropdown = ({
       <Popover className="relative h-full">
         {/* M28: عنصر عادي — القائمة تُفتح بالمرور (حالة cartDropdownOpen)؛ PopoverButton كـ div كان يحمل aria-expanded غير المسموح */}
         <div className="h-full flex items-center">
-          <LocalizedClientLink className="iconbtn" href="/cart" data-testid="nav-cart-link" aria-label={`السلة (${totalItems})`}>
+          <LocalizedClientLink className="iconbtn" href="/cart" data-testid="nav-cart-link" aria-label={t("cartAria", { n: totalItems })}>
             <Icon name="bag" />
             {totalItems > 0 && <span className="badge">{totalItems}</span>}
           </LocalizedClientLink>
@@ -104,7 +106,7 @@ const CartDropdown = ({
             data-testid="nav-cart-dropdown"
           >
             <div className="p-4 flex items-center justify-center">
-              <h3 className="font-display text-lg font-bold">سلة التسوق</h3>
+              <h3 className="font-display text-lg font-bold">{t("sacf86f")}</h3>
             </div>
             {cartState && cartState.items?.length ? (
               <>
@@ -152,7 +154,7 @@ const CartDropdown = ({
                                   data-testid="cart-item-quantity"
                                   data-value={item.quantity}
                                 >
-                                  الكمية: {item.quantity}
+                                  {t("sea028b")} {item.quantity}
                                 </span>
                               </div>
                               <div className="flex justify-end">
@@ -169,7 +171,7 @@ const CartDropdown = ({
                             className="mt-1"
                             data-testid="cart-item-remove-button"
                           >
-                            إزالة
+                            {t("seed790")}
                           </DeleteButton>
                         </div>
                       </div>
@@ -178,8 +180,8 @@ const CartDropdown = ({
                 <div className="p-4 flex flex-col gap-y-4 text-small-regular">
                   <div className="flex items-center justify-between">
                     <span className="text-ui-fg-base font-semibold">
-                      المجموع{" "}
-                      <span className="font-normal text-muted text-xs">(شامل الضريبة)</span>
+                      {t("s7512af")}{" "}
+                      <span className="font-normal text-muted text-xs">{t("s453f5c")}</span>
                     </span>
                     <span
                       className="text-large-semi"
@@ -198,7 +200,7 @@ const CartDropdown = ({
                       size="large"
                       data-testid="go-to-cart-button"
                     >
-                      إتمام الطلب
+                      {t("se4d013")}
                     </Button>
                   </LocalizedClientLink>
                 </div>
@@ -209,12 +211,12 @@ const CartDropdown = ({
                   <div className="bg-gray-900 text-small-regular flex items-center justify-center w-6 h-6 rounded-full text-white">
                     <span>0</span>
                   </div>
-                  <span>سلتك فارغة بعد</span>
+                  <span>{t("s51f5b1")}</span>
                   <div>
                     <LocalizedClientLink href="/store">
                       <>
-                        <span className="sr-only">{g("ابدئي التسوق", "ابدأ التسوق")}</span>
-                        <Button onClick={close}>{g("ابدئي التسوق", "ابدأ التسوق")}</Button>
+                        <span className="sr-only">{t("s43552d")}</span>
+                        <Button onClick={close}>{t("s43552d")}</Button>
                       </>
                     </LocalizedClientLink>
                   </div>

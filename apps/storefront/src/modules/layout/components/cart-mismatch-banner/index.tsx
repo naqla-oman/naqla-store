@@ -5,27 +5,30 @@ import { ExclamationCircleSolid } from "@medusajs/icons"
 import { StoreCart, StoreCustomer } from "@medusajs/types"
 import { Button } from "@medusajs/ui"
 import { useState } from "react"
+import { useT } from "@/i18n/t"
 
 function CartMismatchBanner(props: {
   customer: StoreCustomer
   cart: StoreCart
 }) {
+  const t = useT("cart")
   const { customer, cart } = props
   const [isPending, setIsPending] = useState(false)
-  const [actionText, setActionText] = useState("حاول نقل السلة مجدداً")
+  const [actionText, setActionText] = useState(t("sfba94f"))
 
   if (!customer || !!cart.customer_id) {
     return
   }
 
   const handleSubmit = async () => {
+    const t = useT("cart")
     try {
       setIsPending(true)
-      setActionText("جارٍ النقل…")
+      setActionText(t("s2cc657"))
 
       await transferCart()
     } catch {
-      setActionText("حاول نقل السلة مجدداً")
+      setActionText(t("sfba94f"))
       setIsPending(false)
     }
   }
@@ -35,7 +38,7 @@ function CartMismatchBanner(props: {
       <div className="flex flex-col small:flex-row small:gap-2 gap-1 items-center">
         <span className="flex items-center gap-1">
           <ExclamationCircleSolid className="inline" />
-          تعذّر نقل سلتك إلى حسابك
+          {t("s8580bc")}
         </span>
 
         <span>·</span>

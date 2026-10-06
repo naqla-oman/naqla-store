@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation"
 import { useState, useTransition } from "react"
 import { g } from "@lib/voice"
 import { tailoringNote } from "@lib/util/tailoring"
+import { useT } from "@/i18n/t"
 
 const maxQty = (i: HttpTypes.StoreCartLineItem) => {
   const v = i.variant
@@ -19,6 +20,7 @@ const maxQty = (i: HttpTypes.StoreCartLineItem) => {
 
 /** أسطر السلة مع تعديل الكمية والإزالة */
 export default function CartLines({ items }: { items: HttpTypes.StoreCartLineItem[] }) {
+  const t = useT("cart")
   const router = useRouter()
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -32,12 +34,12 @@ export default function CartLines({ items }: { items: HttpTypes.StoreCartLineIte
         const r = (await fn()) as { ok?: boolean; message?: string } | undefined
         // M25: رسالة الخادم (الكمية غير متوفرة…) تصل في الإنتاج
         if (r && r.ok === false) {
-          setError(r.message ?? g("تعذّر تحديث السلة، حاولي مرة أخرى", "تعذّر تحديث السلة، حاول مرة أخرى"))
+          setError(r.message ?? t("s29df70"))
           return
         }
         router.refresh()
       } catch {
-        setError(g("تعذّر تحديث السلة، حاولي مرة أخرى", "تعذّر تحديث السلة، حاول مرة أخرى"))
+        setError(t("s29df70"))
       } finally {
         setBusy(null)
       }
@@ -63,14 +65,14 @@ export default function CartLines({ items }: { items: HttpTypes.StoreCartLineIte
                 <div className="opt">{i.variant_title?.replace(" / ", " · ")}{len ? ` · طول ${len} سم` : ""}</div>
                 {tailoringNote(i.metadata) && <div className="opt tnote" data-testid="tailoring-note">{tailoringNote(i.metadata)}</div>}
                 <div className="row">
-                  <div className="qty" aria-label="الكمية">
-                    <button type="button" aria-label="إنقاص" disabled={i.quantity <= 1} onClick={() => run(i.id, () => updateLineItem({ lineId: i.id, quantity: i.quantity - 1 }))}><Icon name="minus" /></button>
+                  <div className="qty" aria-label={t("s510165")}>
+                    <button type="button" aria-label={t("scc05a0")} disabled={i.quantity <= 1} onClick={() => run(i.id, () => updateLineItem({ lineId: i.id, quantity: i.quantity - 1 }))}><Icon name="minus" /></button>
                     <b className="num">{i.quantity}</b>
-                    <button type="button" aria-label="زيادة" disabled={i.quantity >= max} onClick={() => run(i.id, () => updateLineItem({ lineId: i.id, quantity: i.quantity + 1 }))}><Icon name="plus" /></button>
+                    <button type="button" aria-label={t("s6a8330")} disabled={i.quantity >= max} onClick={() => run(i.id, () => updateLineItem({ lineId: i.id, quantity: i.quantity + 1 }))}><Icon name="plus" /></button>
                   </div>
                   <Money amount={i.unit_price * i.quantity} />
                 </div>
-                <button type="button" className="rm" onClick={() => run(i.id, () => deleteLineItem(i.id))}><Icon name="trash" size={13} /> إزالة</button>
+                <button type="button" className="rm" onClick={() => run(i.id, () => deleteLineItem(i.id))}><Icon name="trash" size={13} /> {t("seed790")}</button>
               </div>
             </div>
           )

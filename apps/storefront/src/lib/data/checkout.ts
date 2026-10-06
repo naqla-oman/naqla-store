@@ -9,6 +9,7 @@ import { storeConfig } from "../../store.config"
 import { orderAttribution } from "../tracking/attribution"
 import { g } from "@lib/voice"
 import { products as nProducts } from "@lib/util/plural"
+import { getT } from "@/i18n/t"
 
 /**
  * إجراءات خطوات الدفع. كل إجراء يعيد { ok, error } بدل رمي استثناء،
@@ -54,18 +55,19 @@ const cartIdOrFail = async () => {
 
 /** الخطوة 2: حفظ بيانات التوصيل (يتحقق من الحقول على الخادم أيضاً) */
 export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> {
+  const t = await getT("checkoutActions")
   const name = input.name.trim().replace(/\s+/g, " ")
-  if (name.split(" ").length < 2) return { ok: false, error: g("أدخلي اسمك الكامل", "أدخل اسمك الكامل") }
-  if (!phoneRe.test(input.phone)) return { ok: false, error: "رقم الهاتف غير صحيح" }
+  if (name.split(" ").length < 2) return { ok: false, error: t("sfe3242") }
+  if (!phoneRe.test(input.phone)) return { ok: false, error: t("sc4fdec") }
   const pickup = !!input.pickup && storeConfig.seo.shipping.some((s) => s.code === "pickup")
   if (pickup) {
     const loc = storeConfig.seo.location
-    input = { ...input, province: loc.province ?? input.province, city: loc.wilayat ?? loc.city, address: `استلام من ${loc.name}` }
+    input = { ...input, province: loc.province ?? input.province, city: loc.wilayat ?? loc.city, address: t("pickupFrom", { place: loc.name }) }
   }
-  if (!checkout.governorates.some((g) => g.code === input.province)) return { ok: false, error: g("اختاري المحافظة", "اختر المحافظة") }
-  if (!input.city.trim()) return { ok: false, error: g("أدخلي الولاية", "أدخل الولاية") }
+  if (!checkout.governorates.some((g) => g.code === input.province)) return { ok: false, error: t("se494ea") }
+  if (!input.city.trim()) return { ok: false, error: t("sb11c49") }
   const email = input.email.trim().toLowerCase()
-  if (email && !emailRe.test(email)) return { ok: false, error: "البريد الإلكتروني غير صحيح" }
+  if (email && !emailRe.test(email)) return { ok: false, error: t("s445e75") }
 
   try {
     const id = await cartIdOrFail()
@@ -107,19 +109,20 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
     await refresh()
     return { ok: true }
   } catch (e) {
-    return fail(e, g("تعذّر حفظ العنوان، حاولي مرة أخرى", "تعذّر حفظ العنوان، حاول مرة أخرى"))
+    return fail(e, t("s53de24"))
   }
 }
 
 /** اختيار طريقة التوصيل */
 export async function chooseShipping(optionId: string): Promise<ActionResult> {
+  const t = await getT("checkoutActions")
   try {
     const id = await cartIdOrFail()
     await sdk.store.cart.addShippingMethod(id, { option_id: optionId }, {}, await getAuthHeaders())
     await refresh()
     return { ok: true }
   } catch (e) {
-    return fail(e, "طريقة التوصيل هذه غير متاحة لعنوانك")
+    return fail(e, t("s3e0791"))
   }
 }
 
@@ -136,8 +139,9 @@ async function refreshShipping(cartId: string) {
 
 /** تطبيق كود خصم: نتحقق أن Medusa قبله فعلاً (يتجاهل الأكواد غير الصالحة بصمت) */
 export async function applyCode(raw: string): Promise<ActionResult> {
+  const t = await getT("checkoutActions")
   const code = raw.trim().toUpperCase()
-  if (!code) return { ok: false, error: g("أدخلي كود الخصم", "أدخل كود الخصم") }
+  if (!code) return { ok: false, error: t("s16b77e") }
   try {
     const id = await cartIdOrFail()
     const { cart } = await sdk.store.cart.update(
@@ -149,13 +153,14 @@ export async function applyCode(raw: string): Promise<ActionResult> {
     await refreshShipping(id)
     await refresh()
     const applied = cart.promotions?.some((p) => p.code?.toUpperCase() === code)
-    return applied ? { ok: true } : { ok: false, error: "الكود غير صالح أو منتهي" }
+    return applied ? { ok: true } : { ok: false, error: t("s39732d") }
   } catch (e) {
-    return fail(e, "الكود غير صالح أو منتهي")
+    return fail(e, t("s39732d"))
   }
 }
 
 export async function removeCode(code: string): Promise<ActionResult> {
+  const t = await getT("checkoutActions")
   try {
     const id = await cartIdOrFail()
     await sdk.client.fetch(`/store/carts/${id}/promotions`, {
@@ -167,7 +172,7 @@ export async function removeCode(code: string): Promise<ActionResult> {
     await refresh()
     return { ok: true }
   } catch (e) {
-    return fail(e, "تعذّرت إزالة الكود")
+    return fail(e, t("s071b4b"))
   }
 }
 
@@ -179,8 +184,9 @@ export type PlaceResult = { orderId: string; displayId: number; redirectUrl?: st
  * - ثواني: جلسة دفع تعيد رابط صفحة ثواني؛ الإتمام بعد العودة في /checkout/thawani
  */
 export async function placeOrderWith(providerId: string, countryCode: string): Promise<ActionResult<PlaceResult>> {
+  const t = await getT("checkoutActions")
   const pay = checkout.payments.find((p) => p.id === providerId)
-  if (!pay) return { ok: false, error: g("اختاري طريقة الدفع", "اختر طريقة الدفع") }
+  if (!pay) return { ok: false, error: t("sf18fa8") }
 
   try {
     const id = await cartIdOrFail()
@@ -190,8 +196,8 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
       { fields: "*items,*shipping_methods,+metadata,*region,+total" },
       headers
     )
-    if (!cart.items?.length) return { ok: false, error: "سلتك فارغة" }
-    if (!cart.shipping_methods?.length) return { ok: false, error: g("اختاري طريقة التوصيل", "اختر طريقة التوصيل") }
+    if (!cart.items?.length) return { ok: false, error: t("sdd1f5a") }
+    if (!cart.shipping_methods?.length) return { ok: false, error: t("se87ef1") }
 
     // Store API لا يوسّع shipping_option داخل طرق التوصيل، فنقرأ نوعه من خيارات السلة
     const optionId = cart.shipping_methods[0].shipping_option_id
@@ -237,19 +243,19 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
       const session = payment_collection.payment_sessions?.find((s) => s.provider_id === providerId)
       const url = session?.data?.checkout_url as string | undefined
       await refresh()
-      if (!url) return { ok: false, error: g("تعذّر فتح صفحة ثواني، اختاري طريقة دفع أخرى", "تعذّر فتح صفحة ثواني، اختر طريقة دفع أخرى") }
+      if (!url) return { ok: false, error: t("s9ca6db") }
       // H2: قفل السلة قبل التحويل — تعديلها أثناء الدفع كان يحذف الجلسة فيُخصم المبلغ بلا طلب
       const locked = await sdk.client
         .fetch(`/store/carts/${id}/payment-lock`, { method: "POST", headers, body: { session_id: session?.data?.session_id } })
         .then(() => true)
         .catch(() => false)
-      if (!locked) return { ok: false, error: g("تعذّر تجهيز الدفع، حاولي مجدداً", "تعذّر تجهيز الدفع، حاول مجدداً") }
+      if (!locked) return { ok: false, error: t("s786e20") }
       return { ok: true, data: { orderId: "", displayId: 0, redirectUrl: url } }
     }
 
     const res = await sdk.store.cart.complete(id, {}, headers)
     if (res.type !== "order") {
-      return { ok: false, error: (res as any).error?.message ? g("تعذّر تأكيد الطلب، راجعي البيانات وحاولي مجدداً", "تعذّر تأكيد الطلب، راجع البيانات وحاول مجدداً") : "تعذّر تأكيد الطلب" }
+      return { ok: false, error: (res as any).error?.message ? t("sd7482e") : t("sae70b8") }
     }
     await removeCartId()
     await refresh()
@@ -257,8 +263,8 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
     return { ok: true, data: { orderId: res.order.id, displayId: res.order.display_id ?? 0 } }
   } catch (e) {
     const msg = String((e as any)?.message ?? "")
-    if (/inventory|stock/i.test(msg)) return { ok: false, error: "بعض المنتجات لم تعد متوفرة بالكمية المطلوبة" }
-    return fail(e, g("تعذّر تأكيد الطلب، حاولي مرة أخرى", "تعذّر تأكيد الطلب، حاول مرة أخرى"))
+    if (/inventory|stock/i.test(msg)) return { ok: false, error: t("s6935ad") }
+    return fail(e, t("s2d258f"))
   }
 }
 
