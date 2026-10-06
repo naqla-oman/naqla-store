@@ -16,7 +16,7 @@ export default function LangSwitch({ languages, className = "", compact = false 
   const href = `/${countryCode}${langPrefix(target)}${rest === "/" ? "" : rest}${q ? `?${q}` : ""}`
   return (
     <Link href={href} hrefLang={target} lang={target} className={`langswitch ${className}`} data-testid="lang-switch" prefetch={false}>
-      {compact ? (target === "en" ? "EN" : "ع") : target === "en" ? "English" : "العربية"}
+      {compact ? (target === "en" ? "EN" : "ع" /* i18n-ok: تسمية اللغة الهدف بلغتها */) : target === "en" ? "English" : "العربية" /* i18n-ok */}
     </Link>
   )
 }

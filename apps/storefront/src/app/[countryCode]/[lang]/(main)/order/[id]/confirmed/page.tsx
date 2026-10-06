@@ -2,15 +2,19 @@ import { retrieveConfirmedOrder } from "@lib/data/orders"
 import OrderCompletedTemplate from "@modules/order/templates/order-completed-template"
 import { Metadata } from "next"
 import { notFound } from "next/navigation"
+import { getT } from "@/i18n/t"
 
 type Props = {
   params: Promise<{ id: string }>
   searchParams: Promise<{ via?: string }>
 }
 
-export const metadata: Metadata = {
-  title: "تم استلام طلبك",
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("order")
+  return {
+  title: t("s9996b4"),
   robots: { index: false },
+}
 }
 
 export default async function OrderConfirmedPage(props: Props) {

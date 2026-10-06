@@ -8,13 +8,14 @@ import { storeConfig } from "@/store.config"
  */
 type Vals = Record<string, string | number | Date | undefined>
 export const voiceVal = () => ({ voice: storeConfig.voice === "f" ? "f" : storeConfig.voice === "m" ? "m" : "other" })
+// مفتاح يحوي نقطة = مسار كامل من الجذر (common.…) حتى من مترجم بمساحة اسم — تستخدمه الأدوات المشتركة
 export function useT(ns?: string) {
-  const t = useTranslations(ns)
-  return (key: string, vals?: Vals) => t(key, { ...voiceVal(), ...vals })
+  const t = useTranslations(ns), root = useTranslations()
+  return (key: string, vals?: Vals) => (ns && key.includes(".") ? root : t)(key, { ...voiceVal(), ...vals })
 }
 export async function getT(ns?: string) {
-  const t = await getTranslations(ns)
-  return (key: string, vals?: Vals) => t(key, { ...voiceVal(), ...vals })
+  const t = await getTranslations(ns), root = await getTranslations()
+  return (key: string, vals?: Vals) => (ns && key.includes(".") ? root : t)(key, { ...voiceVal(), ...vals })
 }
 
 /** تسمية العملة حسب اللغة: ر.ع للعربية، ورمز ISO (OMR) للإنجليزية */

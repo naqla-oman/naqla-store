@@ -1,8 +1,12 @@
 import TrackOrder from "@modules/account/track-order"
 import { retrieveCustomer } from "@lib/data/customer"
 import { Metadata } from "next"
+import { getT } from "@/i18n/t"
 
-export const metadata: Metadata = { title: "تتبّع طلبك", robots: { index: false } }
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getT("tracking")
+  return { title: t("s9241c5"), robots: { index: false } }
+}
 
 export default async function TrackPage(props: { searchParams: Promise<{ no?: string; phone?: string }> }) {
   const { no, phone } = await props.searchParams

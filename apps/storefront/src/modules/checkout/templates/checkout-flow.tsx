@@ -20,6 +20,7 @@ import { tailoringNote } from "@lib/util/tailoring"
 import { pieces as nPieces } from "@lib/util/plural"
 import { discountLines } from "@lib/util/discounts"
 import { langPrefix } from "@/i18n/config"
+import { useLocale } from "next-intl"
 import { useCurrencyLabel, useT } from "@/i18n/t"
 
 type Props = {
@@ -62,6 +63,7 @@ function validate(f: DeliveryInput, t: T): Errors {
 export default function CheckoutFlow({ cart, shippingOptions, providers, countryCode, step, error, customer, enabledGovernorates }: Props) {
   const t = useT("checkout")
   const CUR = useCurrencyLabel()
+  const locale = useLocale()
   const fmt = (n: number) => `${formatAmount(n)} ${CUR}`
   const govOptions = checkout.governorates.filter((x) => !enabledGovernorates || enabledGovernorates.includes(x.code))
   const router = useRouter()
@@ -211,7 +213,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
     if (r.data?.redirectUrl) { window.location.href = r.data.redirectUrl; return }
     if (waWin && r.data) {
       waWin.location.href = waUrl(
-        orderMessage({
+        orderMessage(t, CUR, {
           number: orderNumber(r.data.displayId),
           items: items.map((i) => ({ title: i.product_title ?? i.title, variant: i.variant_title, qty: i.quantity, length: (i.metadata as any)?.length_cm })),
           total,
@@ -242,7 +244,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               <div className="n">
                 <div>{i.product_title}</div>
                 <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? t("lengthNote", { len }) : ""}</div>
-                {tailoringNote(i.metadata) && <div className="q tnote">{tailoringNote(i.metadata)}</div>}
+                {tailoringNote(i.metadata, t) && <div className="q tnote">{tailoringNote(i.metadata, t)}</div>}
               </div>
               <span className="price num" style={{ fontSize: 13.5 }}>{formatAmount(i.unit_price * i.quantity)}</span>
             </div>
@@ -264,7 +266,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
         <div style={{ marginTop: 14 }}>
           <div className="trow"><span>{t("s7512af")}</span><span>{fmt(subtotal)}</span></div>
           {/* منخفضة: سطر لكل عرض بمبلغه الفعلي — الكود (قابل للإزالة) منفصل عن امتياز المستوى */}
-          {discount > 0 && discountLines(cart.items, cart.promotions as any).map((d) => (
+          {discount > 0 && discountLines(t, cart.items, cart.promotions as any).map((d) => (
             <div key={d.code} className="trow" data-testid={d.auto ? "auto-discount" : "discount-line"}>
               <span>
                 {d.label}
@@ -283,7 +285,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
         </div>
 
         {step === "payment" && methodValid && (
-          <div className="etasum"><Icon name="truck" size={15} /> {deliveryEta(shipCode, form.province)}</div>
+          <div className="etasum"><Icon name="truck" size={15} /> {deliveryEta(t, locale, shipCode, form.province)}</div>
         )}
         {form.gift && (
           <div className="guest copper"><Icon name="gift" size={15} /> {t("sf84e5a")}</div>
@@ -463,7 +465,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                   return (
                     <button key={o.id} type="button" role="radio" aria-checked={on} className={`payopt ${on ? "on" : ""}`} onClick={() => onShip(o.id)} disabled={busy === "ship"}>
                       <span className="ic"><Icon name={checkout.shipping[c]?.icon ?? "truck"} /></span>
-                      <span className="t"><b>{o.name}</b><span>{c === "standard" ? deliveryEta(c, form.province) : (o.type as any)?.description}</span></span>
+                      <span className="t"><b>{o.name}</b><span>{c === "standard" ? deliveryEta(t, locale, c, form.province) : (o.type as any)?.description}</span></span>
                       <span className={`pr ${o.amount === 0 || perkPromo ? "free" : ""}`}>
                         {o.amount === 0 ? t("free") : perkPromo ? <><s className="old">{formatAmount(o.amount ?? 0)}</s> {t("s5abc46")}</> : fmt(o.amount ?? 0)}
                       </span>

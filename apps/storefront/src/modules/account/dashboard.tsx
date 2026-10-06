@@ -153,7 +153,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
                   <div style={{ marginInlineStart: 8 }}>
                     <b><bdi dir="ltr">{n}</bdi></b>
                     <div className="muted" style={{ fontSize: 12 }}>
-                      {dateFmt.format(new Date(o.created_at as any))} · {nPieces((o.items ?? []).reduce((s, i) => s + i.quantity, 0))} · {formatAmount(o.total)} {CUR}
+                      {dateFmt.format(new Date(o.created_at as any))} · {nPieces(t, (o.items ?? []).reduce((s, i) => s + i.quantity, 0))} · {formatAmount(o.total)} {CUR}
                     </div>
                   </div>
                   <span className={`st ${st.c}`}>{st.t}</span>
@@ -164,7 +164,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
 
           <div className="rowlinks">
             <LocalizedClientLink href="/track" className="rowlink"><span className="ic"><Icon name="truck" /></span><div>{t("s94d17e")}<span className="sub">{t("scc57e6")}</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
-            <LocalizedClientLink href="/account/wishlist" className="rowlink"><span className="ic"><Icon name="heart" /></span><div>{t("s501839")}<span className="sub">{nProducts(((customer.metadata as any)?.wishlist ?? []).length)}</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
+            <LocalizedClientLink href="/account/wishlist" className="rowlink"><span className="ic"><Icon name="heart" /></span><div>{t("s501839")}<span className="sub">{nProducts(t, ((customer.metadata as any)?.wishlist ?? []).length)}</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
             <a href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="rowlink"><span className="ic"><Icon name="whatsapp" /></span><div>{t("s0f8e37")}<span className="sub">{storeConfig.contact.hours}</span></div><span className="chev"><Icon name="chevL" /></span></a>
           </div>
 

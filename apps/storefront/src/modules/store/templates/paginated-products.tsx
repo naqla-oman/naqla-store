@@ -7,6 +7,7 @@ import { getRegion } from "@lib/data/regions"
 import ProductPreview from "@modules/products/components/product-preview"
 import { Pagination } from "@modules/store/components/pagination"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { getT } from "@/i18n/t"
 
 const PRODUCT_LIMIT = 12
 
@@ -37,6 +38,7 @@ export default async function PaginatedProducts({
   productsIds?: string[]
   countryCode: string
 }) {
+  const t = await getT("store")
   const queryParams: PaginatedProductsParams = {
     limit: 12,
   }
@@ -57,8 +59,8 @@ export default async function PaginatedProducts({
       return (
         <div className="empty-search" data-testid="search-empty">
           <ListEvent listName="search" items={[]} searchTerm={q.trim()} />
-          <p className="es-title">لم نجد نتائج لـ «{q.trim()}»</p>
-          <p className="es-hint">{g("جرّبي كلمة أقصر أو تصفّحي الأقسام:", "جرّب كلمة أقصر أو تصفّح الأقسام:")}</p>
+          <p className="es-title">{t("noResults", { q: q.trim() })}</p>
+          <p className="es-hint">{t("sb85556")}</p>
           <div className="catchips">
             {found.categories.map((c) => (
               <LocalizedClientLink key={c.handle} href={`/categories/${c.handle}`} className="catchip">{c.name}</LocalizedClientLink>

@@ -10,6 +10,7 @@ import { StoreRegion } from "@medusajs/types"
 import CategoryTemplate from "@modules/categories/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { langPrefix } from "@/i18n/config"
+import { getT } from "@/i18n/t"
 
 type Props = {
   params: Promise<{ category: string[]; countryCode: string; lang: string }>
@@ -66,6 +67,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 }
 
 export default async function CategoryPage(props: Props) {
+  const t = await getT("store")
   const searchParams = await props.searchParams
   const params = await props.params
   const { sortBy, page } = searchParams
@@ -84,7 +86,7 @@ export default async function CategoryPage(props: Props) {
         type="application/ld+json"
         dangerouslySetInnerHTML={jsonLdScript(
           breadcrumbs([
-            { name: "الرئيسية", path: `/${params.countryCode}${langPrefix(params.lang)}` },
+            { name: t("s3aa857"), path: `/${params.countryCode}${langPrefix(params.lang)}` },
             { name: productCategory.name, path: `/${params.countryCode}${langPrefix(params.lang)}/categories/${productCategory.handle}` },
           ])
         )}

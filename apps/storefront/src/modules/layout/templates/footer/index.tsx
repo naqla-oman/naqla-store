@@ -7,24 +7,28 @@ import Decor from "@modules/common/components/decor"
 import { storeConfig as c } from "../../../../store.config"
 import { g } from "@lib/voice"
 import LangSwitch from "@modules/layout/components/lang-switch"
+import { useT } from "@/i18n/t"
 
-const COLS = [
-  { title: g("تسوّقي", "تسوّق"), links: c.nav.map((n) => ({ label: n.label, href: n.href })) },
-  { title: "خدمة العملاء", links: [
-    { label: "تتبّع طلبك", href: "/track" },
-    { label: "سياسة الاستبدال والإرجاع", href: "/pages/returns" },
-    ...(c.features.sizeGuide ? [{ label: "دليل المقاسات", href: "/pages/size-guide" }] : []),
-    { label: "الأسئلة الشائعة", href: "/pages/faq" },
+type T = (k: string, v?: Record<string, string | number>) => string
+const colsOf = (t: T) => [
+  { title: t("s82d4b8"), links: c.nav.map((n) => ({ label: n.label, href: n.href })) },
+  { title: t("sbf40d0"), links: [
+    { label: t("s9241c5"), href: "/track" },
+    { label: t("sebc58d"), href: "/pages/returns" },
+    ...(c.features.sizeGuide ? [{ label: t("s7cde0a"), href: "/pages/size-guide" }] : []),
+    { label: t("s53036f"), href: "/pages/faq" },
   ] },
-  { title: `عن ${c.shortName}`, links: [
-    { label: "قصتنا", href: "/pages/about" },
-    { label: "فروعنا", href: "/pages/stores" },
-    ...(c.features.loyalty ? [{ label: "برنامج الولاء", href: "/account" }] : []),
-    ...(c.features.gift ? [{ label: "بطاقات الهدايا", href: "/store?q=هدية" }] : []),
+  { title: t("about", { store: c.shortName }), links: [
+    { label: t("sbfb6c2"), href: "/pages/about" },
+    { label: t("s66088a"), href: "/pages/stores" },
+    ...(c.features.loyalty ? [{ label: t("sd6c6c1"), href: "/account" }] : []),
+    ...(c.features.gift ? [{ label: t("s836c27"), href: "/store?q=هدية" /* i18n-ok: استعلام بحث في الكتالوج */ }] : []),
   ] },
 ]
 
 export default function Footer() {
+  const t = useT("layout")
+  const COLS = colsOf(t)
   return (
     <>
       <footer className="site">
@@ -53,41 +57,41 @@ export default function Footer() {
               </div>
             ))}
             <div className="fcontact">
-              <h4>{g("تواصلي معنا", "تواصل معنا")}</h4>
+              <h4>{t("s34a9aa")}</h4>
               <div><Icon name="pin" size={16} /><span><b>{c.contact.address}</b>{c.contact.hours}</span></div>
               <div><Icon name="phone" size={16} /><span><b dir="ltr">{c.contact.phone}</b>{c.contact.email}</span></div>
-              <a href={`https://wa.me/${c.contact.whatsapp}`} target="_blank" rel="noreferrer" className="btn wa sm mt-2"><Icon name="whatsapp" size={16} /> راسلينا على واتساب</a>
+              <a href={`https://wa.me/${c.contact.whatsapp}`} target="_blank" rel="noreferrer" className="btn wa sm mt-2"><Icon name="whatsapp" size={16} /> {t("sc50746")}</a>
             </div>
           </div>
           <div className="fpay">
-            <span>طرق دفع آمنة ومتنوعة</span>
+            <span>{t("s4f6838")}</span>
             <div className="logos">
               {/* M12: شعار ثواني فقط إن كان مفعّلاً */}
               {/* eslint-disable-next-line @next/next/no-img-element -- شعار دفع صغير ثابت */}
-              {c.checkout.payments.some((p) => p.key === "thawani") && <span><img src="/img/pay/thawani.png" alt="" /> ثواني</span>}
+              {c.checkout.payments.some((p) => p.key === "thawani") && <span><img src="/img/pay/thawani.png" alt="" /> {t("s748343")}</span>}
               {/* eslint-disable-next-line @next/next/no-img-element -- شعار دفع صغير ثابت */}
               <span><img src="/img/pay/visa.svg" alt="Visa" /></span>
               {/* eslint-disable-next-line @next/next/no-img-element -- شعار دفع صغير ثابت */}
               <span><img src="/img/pay/mastercard.svg" alt="Mastercard" /></span>
               {/* eslint-disable-next-line @next/next/no-img-element -- شعار دفع صغير ثابت */}
               <span><img src="/img/pay/applepay.svg" alt="Apple Pay" /></span>
-              <span><Icon name="cash" size={14} /> الدفع عند الاستلام</span>
+              <span><Icon name="cash" size={14} /> {t("sa4fca7")}</span>
             </div>
-            <span><Icon name="truck" size={14} className="me-1" /> توصيل لكل محافظات السلطنة خلال 24–48 ساعة</span>
+            <span><Icon name="truck" size={14} className="me-1" /> {t("s94f8ec")}</span>
           </div>
           <div className="fbottom">
             <LangSwitch languages={c.languages} />
-            <span>© {new Date().getFullYear()} {c.name} — جميع الحقوق محفوظة.</span>
+            <span>© {new Date().getFullYear()} {c.name} — {t("rights")}</span>
             {(c.legal.cr || c.legal.vat) && (
               <span data-testid="footer-legal">
-                {c.legal.cr && <>السجل التجاري: <bdi>{c.legal.cr}</bdi></>}
+                {c.legal.cr && <>{t("sf87d3e")} <bdi>{c.legal.cr}</bdi></>}
                 {c.legal.cr && c.legal.vat && " · "}
-                {c.legal.vat && <>الرقم الضريبي: <bdi>{c.legal.vat}</bdi></>}
+                {c.legal.vat && <>{t("s7f8e5a")} <bdi>{c.legal.vat}</bdi></>}
               </span>
             )}
             <PrivacyLink />
-            <span className="flex gap-4"><LocalizedClientLink href="/pages/terms">الشروط والأحكام</LocalizedClientLink><LocalizedClientLink href="/pages/privacy">سياسة الخصوصية</LocalizedClientLink></span>
-            <span>صُنع بشغف بواسطة <a href={c.builtBy.url} target="_blank" rel="noreferrer"><b>{c.builtBy.name}</b></a></span>
+            <span className="flex gap-4"><LocalizedClientLink href="/pages/terms">{t("s862d75")}</LocalizedClientLink><LocalizedClientLink href="/pages/privacy">{t("se43dd2")}</LocalizedClientLink></span>
+            <span>{t("s107b8c")} <a href={c.builtBy.url} target="_blank" rel="noreferrer"><b>{c.builtBy.name}</b></a></span>
           </div>
         </div>
         <Decor className="wrap" />

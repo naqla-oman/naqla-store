@@ -229,7 +229,7 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
           pay.key === "thawani"
             ? {
                 cart_id: id,
-                title: `${storeConfig.name} — ${nProducts(cart.items.length)}`,
+                title: `${storeConfig.name} — ${nProducts(t, cart.items.length)}`,
                 success_url: `${base}/checkout/thawani?cart_id=${id}`,
                 cancel_url: `${base}/checkout?step=payment&error=thawani_cancelled`,
               }

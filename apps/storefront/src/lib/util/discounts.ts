@@ -9,7 +9,8 @@ export type DiscountLine = { code: string; label: string; amount: number; auto: 
 
 const tierCodes = () => new Map(Object.entries((storeConfig.loyalty as any).tierPromoNames ?? {}) as [string, string][])
 
-export function discountLines(items: any[] | null | undefined, promotions?: { code?: string | null; is_automatic?: boolean | null }[] | null): DiscountLine[] {
+type T = (key: string, vals?: Record<string, string | number>) => string
+export function discountLines(t: T, items: any[] | null | undefined, promotions?: { code?: string | null; is_automatic?: boolean | null }[] | null): DiscountLine[] {
   const sums = new Map<string, number>()
   for (const it of items ?? []) for (const a of it.adjustments ?? []) {
     if (!a?.code) continue
@@ -22,7 +23,7 @@ export function discountLines(items: any[] | null | undefined, promotions?: { co
     .map(([code, amount]) => {
       const up = code.toUpperCase()
       const auto = autoByPromo.has(up) || tiers.has(up)
-      return { code, amount, auto, label: auto ? `امتياز ${tiers.get(up) ?? "عضويتك"}` : `خصم ${code}` }
+      return { code, amount, auto, label: auto ? t("common.tierPerk", { tier: tiers.get(up) ?? t("common.yourMembership") }) : t("common.codeDiscount", { code }) }
     })
     .sort((a, b) => Number(a.auto) - Number(b.auto))
 }

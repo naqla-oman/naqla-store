@@ -8,21 +8,25 @@ import Icon from "@modules/common/components/icon"
 import { LogoMark } from "@modules/common/components/brand"
 import { storeConfig } from "../../../../store.config"
 import { langPrefix } from "@/i18n/config"
+import { useT } from "@/i18n/t"
 
-const EXTRA = [
-  { label: "تتبّع طلبك", href: "/account/orders", icon: "truck" },
-  { label: "حسابي", href: "/account", icon: "user" },
-  { label: "المفضلة", href: "/account/wishlist", icon: "heart" },
+type T = (k: string, v?: Record<string, string | number>) => string
+const extraOf = (t: T) => [
+  { label: t("s9241c5"), href: "/account/orders", icon: "truck" },
+  { label: t("sc0f526"), href: "/account", icon: "user" },
+  { label: t("s501839"), href: "/account/wishlist", icon: "heart" },
 ]
 
 const SideMenu = () => {
+  const t = useT("layout")
+  const EXTRA = extraOf(t)
   const router = useRouter()
   const { countryCode, lang } = useParams() as { countryCode: string; lang: string }
   return (
     <Popover className="h-full flex">
       {({ open, close }) => (
         <>
-          <PopoverButton className="iconbtn" aria-label="القائمة" data-testid="nav-menu-button">
+          <PopoverButton className="iconbtn" aria-label={t("s426510")} data-testid="nav-menu-button">
             <Icon name="menu" />
           </PopoverButton>
           {open && <div className="fixed inset-0 z-[50] bg-black/40" onClick={close} />}
@@ -40,7 +44,7 @@ const SideMenu = () => {
               <div className="flex items-center gap-3 p-4 border-b border-line">
                 <LogoMark className="w-9 h-9" />
                 <b className="font-display text-lg">{storeConfig.shortName}</b>
-                <button onClick={close} className="iconbtn ms-auto" aria-label="إغلاق"><Icon name="x" /></button>
+                <button onClick={close} className="iconbtn ms-auto" aria-label={t("s9932cc")}><Icon name="x" /></button>
               </div>
               {/* H9: بحث في القائمة الجانبية (الجوال) */}
               <form
@@ -54,7 +58,7 @@ const SideMenu = () => {
                 }}
               >
                 <Icon name="search" size={18} />
-                <input type="search" name="q" placeholder="ابحث في المتجر…" aria-label="بحث في المتجر" enterKeyHint="search" data-testid="menu-search" />
+                <input type="search" name="q" placeholder={t("sd9d4bc")} aria-label={t("s45511c")} enterKeyHint="search" data-testid="menu-search" />
               </form>
               <ul className="p-3 flex flex-col gap-1 overflow-y-auto">
                 {storeConfig.nav.map((n) => (
@@ -81,7 +85,7 @@ const SideMenu = () => {
               </ul>
               <div className="mt-auto p-4 border-t border-line">
                 <a href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noreferrer" className="btn wa block">
-                  <Icon name="whatsapp" size={18} /> راسلينا على واتساب
+                  <Icon name="whatsapp" size={18} /> {t("waUs")}
                 </a>
               </div>
             </PopoverPanel>

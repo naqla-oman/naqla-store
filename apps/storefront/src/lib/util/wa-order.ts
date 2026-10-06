@@ -13,15 +13,15 @@ export type WaOrder = {
 }
 
 /** رسالة واتساب الجاهزة لتأكيد طلب مسجّل في المتجر */
-export function orderMessage(o: WaOrder) {
-  const cur = storeConfig.currencyLabel
+type T = (key: string, vals?: Record<string, string | number>) => string
+export function orderMessage(t: T, cur: string, o: WaOrder) {
   return [
-    `مرحباً ${storeConfig.shortName}، أرغب بتأكيد طلبي رقم ${o.number}:`,
-    ...o.items.map((i) => `• ${i.title}${i.variant ? ` — ${i.variant.replace(" / ", " · ")}` : ""}${i.length ? ` · طول ${i.length} سم` : ""} × ${i.qty}`),
-    `الإجمالي: ${formatAmount(o.total)} ${cur}`,
-    o.shipping ? `التوصيل: ${o.shipping}${o.place ? ` — ${o.place}` : ""}` : "",
-    o.gift ? `هدية${o.giftMessage ? ` — رسالة البطاقة: ${o.giftMessage}` : ""}` : "",
-    o.name ? `الاسم: ${o.name}` : "",
+    t("common.waConfirm", { store: storeConfig.shortName, number: o.number }),
+    ...o.items.map((i) => `• ${i.title}${i.variant ? ` — ${i.variant.replace(" / ", " · ")}` : ""}${i.length ? ` · ${t("common.lengthCm", { len: i.length })}` : ""} × ${i.qty}`),
+    t("common.totalLine", { total: `${formatAmount(o.total)} ${cur}` }),
+    o.shipping ? t("common.shippingLine", { shipping: o.shipping }) + (o.place ? ` — ${o.place}` : "") : "",
+    o.gift ? t("common.giftWord") + (o.giftMessage ? ` — ${t("common.cardMessage", { msg: o.giftMessage })}` : "") : "",
+    o.name ? t("common.nameLine", { name: o.name }) : "",
   ]
     .filter(Boolean)
     .join("\n")

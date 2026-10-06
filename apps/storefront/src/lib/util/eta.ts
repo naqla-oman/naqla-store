@@ -1,6 +1,8 @@
 import { storeConfig } from "../../store.config"
 
-const DAYS = ["الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"]
+type T = (key: string, vals?: Record<string, string | number>) => string
+/** اسم اليوم حسب اللغة (الفهرس 0 = الأحد) */
+const dayName = (locale: string, idx: number) => new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en", { weekday: "long" }).format(new Date(2026, 0, 4 + ((idx % 7) + 7) % 7))
 
 /** اليوم والساعة الآن بتوقيت المتجر (مسقط) */
 export function storeClock(now = new Date()) {
@@ -15,13 +17,13 @@ export function storeClock(now = new Date()) {
 }
 
 /** نص موعد الوصول حسب نوع التوصيل (type.code في Medusa) والمحافظة */
-export function deliveryEta(code: string | undefined | null, province?: string | null, now = new Date()) {
+export function deliveryEta(t: T, locale: string, code: string | undefined | null, province?: string | null, now = new Date()) {
   const cfg = storeConfig.checkout.shipping[code ?? ""]
   if (cfg && cfg.eta !== "standard") return cfg.eta
   const { day, hour } = storeClock(now)
   const add = hour < storeConfig.cutoffHour ? 1 : 2
   const inCapital = province === storeConfig.checkout.governorates[0].code
-  return `يصلك ${DAYS[(day + add) % 7]} — ${inCapital ? "داخل مسقط" : "خلال 24–48 ساعة"}`
+  return t("common.arrives", { day: dayName(locale, day + add), where: inCapital ? t("common.inCapital") : t("common.within48") })
 }
 
 export const governorateName = (code?: string | null) =>

@@ -59,7 +59,7 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
             <div style={{ marginTop: 12 }}>
               <div className="trow"><span>{t("s7512af")}</span><span>{formatAmount(subtotal)} {storeConfig.currencyLabel}</span></div>
               {/* منخفضة: سطر لكل عرض بمبلغه (الكود منفصل عن امتياز المستوى) */}
-              {discount > 0 && discountLines(cart.items, cart.promotions as any).map((d) => (
+              {discount > 0 && discountLines(t, cart.items, cart.promotions as any).map((d) => (
                 <div key={d.code} className="trow" data-testid="discount-line">
                   <span>{d.label}</span>
                   <span className="off"><Signed sign="−" value={formatAmount(d.amount)} /> {storeConfig.currencyLabel}</span>

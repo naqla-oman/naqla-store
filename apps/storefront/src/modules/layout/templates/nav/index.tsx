@@ -9,8 +9,10 @@ import HeaderSearch from "@modules/layout/components/header-search"
 import { storeConfig } from "../../../../store.config"
 import { getFreeShippingOver } from "@lib/data/shipping-threshold"
 import LangSwitch from "@modules/layout/components/lang-switch"
+import { getT } from "@/i18n/t"
 
 export default async function Nav() {
+  const t = await getT("layout")
   // M19: الحد من قاعدة Medusa الفعلية (null = لا توصيل مجاني ← لا يظهر الشريط)
   const freeOver = await getFreeShippingOver()
   return (
@@ -25,7 +27,7 @@ export default async function Nav() {
       </div>
       {freeOver != null && <div className="announce small:hidden"><span><Icon name="truck" size={14} /> توصيل مجاني للطلبات فوق {freeOver} ر.ع</span></div>}
       <header className="hdr">
-        <nav className="wrap flex items-center gap-3 h-[66px]" aria-label="الرئيسي">
+        <nav className="wrap flex items-center gap-3 h-[66px]" aria-label={t("s31d46b")}>
           <div className="small:hidden"><SideMenu /></div>
           <Brand />
           <div className="hidden small:flex items-center gap-0.5 ms-2 whitespace-nowrap">
@@ -41,12 +43,12 @@ export default async function Nav() {
           </div>
           <HeaderSearch className="!hidden small:!flex ms-auto" />
           <div className="flex items-center gap-2 ms-auto small:ms-0">
-            <LocalizedClientLink href="/store?focus=search" className="iconbtn small:!hidden" aria-label="بحث"><Icon name="search" /></LocalizedClientLink>
+            <LocalizedClientLink href="/store?focus=search" className="iconbtn small:!hidden" aria-label={t("sab79fc")}><Icon name="search" /></LocalizedClientLink>
             <ThemeToggle />
             <LangSwitch languages={storeConfig.languages} className="iconbtn langbtn" compact />
-            <LocalizedClientLink href="/account/wishlist" className="iconbtn !hidden small:!grid" aria-label="المفضلة"><Icon name="heart" /></LocalizedClientLink>
-            <LocalizedClientLink href="/account" className="iconbtn !hidden small:!grid" aria-label="حسابي" data-testid="nav-account-link"><Icon name="user" /></LocalizedClientLink>
-            <Suspense fallback={<LocalizedClientLink className="iconbtn" href="/cart" aria-label="السلة"><Icon name="bag" /></LocalizedClientLink>}>
+            <LocalizedClientLink href="/account/wishlist" className="iconbtn !hidden small:!grid" aria-label={t("s501839")}><Icon name="heart" /></LocalizedClientLink>
+            <LocalizedClientLink href="/account" className="iconbtn !hidden small:!grid" aria-label={t("sc0f526")} data-testid="nav-account-link"><Icon name="user" /></LocalizedClientLink>
+            <Suspense fallback={<LocalizedClientLink className="iconbtn" href="/cart" aria-label={t("s0c93af")}><Icon name="bag" /></LocalizedClientLink>}>
               <CartButton />
             </Suspense>
           </div>

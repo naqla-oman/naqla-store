@@ -4,8 +4,10 @@ import { useState } from "react"
 import Icon from "@modules/common/components/icon"
 import { storeConfig } from "../../../../store.config"
 import { langPrefix } from "@/i18n/config"
+import { useT } from "@/i18n/t"
 
 export default function HeaderSearch({ className = "" }: { className?: string }) {
+  const t = useT("layout")
   const [q, setQ] = useState("")
   const router = useRouter()
   const { countryCode, lang } = useParams<{ countryCode: string; lang: string }>()
@@ -20,10 +22,10 @@ export default function HeaderSearch({ className = "" }: { className?: string })
         value={q}
         onChange={(e) => setQ(e.target.value)}
         placeholder={storeConfig.searchPlaceholder}
-        aria-label="بحث"
+        aria-label={t("sab79fc")}
         autoComplete="off"
       />
-      <button type="submit" aria-label="بحث"><Icon name="search" size={18} /></button>
+      <button type="submit" aria-label={t("sab79fc")}><Icon name="search" size={18} /></button>
     </form>
   )
 }

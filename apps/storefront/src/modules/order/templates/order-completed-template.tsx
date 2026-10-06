@@ -13,6 +13,8 @@ import { g } from "@lib/voice"
 import { tailoringNote } from "@lib/util/tailoring"
 import { includedTax } from "@lib/util/tax"
 import { discountLines } from "@lib/util/discounts"
+import { useLocale } from "next-intl"
+import { useCurrencyLabel, useT } from "@/i18n/t"
 
 type Props = {
   order: HttpTypes.StoreOrder
@@ -20,12 +22,15 @@ type Props = {
   via?: string
 }
 
-const { checkout, currencyLabel: CUR } = storeConfig
-const fmt = (n: number) => `${formatAmount(n)} ${CUR}`
+const { checkout } = storeConfig
 const CONFETTI = ["var(--accent)", "var(--copper)", "#e8d5b5", "#9fd4c0"]
 
 /** صفحة النجاح — مطابقة لصفحة التأكيد في الديمو */
 export default function OrderCompletedTemplate({ order, extras, via }: Props) {
+  const t = useT("order")
+  const locale = useLocale()
+  const CUR = useCurrencyLabel()
+  const fmt = (n: number) => `${formatAmount(n)} ${CUR}`
   const number = orderNumber(order.display_id)
   const addr = order.shipping_address
   const shipCode: string | undefined = extras.shipping_code
@@ -43,12 +48,12 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(order.created_at ?? Date.now()))
-  const eta = deliveryEta(shipCode, addr?.province)
+  const eta = deliveryEta(t, locale, shipCode, addr?.province)
   const phone = addr?.phone?.replace(checkout.phone.prefix, "")
   const name = [addr?.first_name, addr?.last_name].filter(Boolean).join(" ")
 
   const waLink = waUrl(
-    orderMessage({
+    orderMessage(t, CUR, {
       number,
       items: items.map((i) => ({ title: i.product_title ?? i.title, variant: i.variant_title, qty: i.quantity, length: (i.metadata as any)?.length_cm })),
       total: order.total,
@@ -76,8 +81,8 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
             ))}
           </div>
           <div className="ring"><Icon name="check" size={40} /></div>
-          <h1>تم استلام طلبك!</h1>
-          <p>شكراً لتسوقك من {storeConfig.shortName} — سنتواصل معك على واتساب لتأكيد الطلب</p>
+          <h1>{t("s414e71")}</h1>
+          <p>{t("thanksWa", { store: storeConfig.shortName })}</p>
           {phone && (
             <div className="phonechip">
               <Icon name="whatsapp" size={15} />
@@ -85,12 +90,12 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
             </div>
           )}
           <div className="ordrow">
-            <div className="ordernum" data-testid="order-number">رقم الطلب: <bdi dir="ltr">{number}</bdi></div>
+            <div className="ordernum" data-testid="order-number">{t("sf65cd3")} <bdi dir="ltr">{number}</bdi></div>
             <CopyButton text={number} />
           </div>
           {isWa && (
             <a className="btn wa lg" href={waLink} target="_blank" rel="noopener noreferrer" style={{ marginTop: 12 }} data-testid="wa-send">
-              <Icon name="whatsapp" size={18} /> إرسال الطلب على واتساب
+              <Icon name="whatsapp" size={18} /> {t("sendOnWa")}
             </a>
           )}
         </div>
@@ -103,17 +108,17 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
                 <Signed className="big" sign="+" value={extras._points.points} />
                 <small>
                   {extras._points.status === "available"
-                    ? "نقطة ولاء أُضيفت لرصيدك المتاح"
-                    : "نقطة ولاء معلّقة حتى التوصيل — تُتاح للاستبدال عند استلام طلبك"}
+                    ? t("sf985e1")
+                    : t("sbf6d3d")}
                 </small>
               </div>
             ) : (
               <div>
                 <Signed className="big" sign="+" value={extras._points.points} />
                 <small>
-                  نقطة ولاء {g("بانتظارك", "بانتظارك", "في انتظارك")} —{" "}
-                  <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{g("ادخلي برقمك", "ادخل برقمك")}</LocalizedClientLink>
-                  {" "}لتُضاف لحسابك مع هذا الطلب
+                  {t("s4517ad")} {t("s723688")} —{" "}
+                  <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{t("s33c19c")}</LocalizedClientLink>
+                  {" "}{t("pointsToAccount")}
                 </small>
               </div>
             )}
@@ -122,34 +127,34 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
 
         <div className="succgrid">
           <div className="panelbox">
-            <h3>ماذا يحدث الآن؟</h3>
+            <h3>{t("sb7aaf8")}</h3>
             <ul className="tl">
               <li className="done">
                 <i><Icon name="check" size={13} /></i>
-                <div><b>تم استلام الطلب</b><span>{isWa ? "بانتظار رسالتك على واتساب لتأكيده" : "وصلنا طلبك وبدأنا بمراجعته"}</span></div>
+                <div><b>{t("s5a2478")}</b><span>{isWa ? t("s697aa5") : t("sce6a73")}</span></div>
                 <small>{placedAt}</small>
               </li>
               <li className="now">
                 <i><Icon name="scissors" size={13} /></i>
-                <div><b>قيد التجهيز في المشغل</b><span>كيّ وتغليف{extras.gift ? " هدية" : ""} وفحص نهائي للقطعة</span></div>
-                <small>خلال ساعات</small>
+                <div><b>{t("s4b3fe2")}</b><span>كيّ وتغليف{extras.gift ? t("s527426") : ""} وفحص نهائي للقطعة</span></div>
+                <small>{t("s9cb7fa")}</small>
               </li>
               <li>
                 <i><Icon name="truck" size={13} /></i>
                 <div>
-                  <b>{pickup ? "جاهز للاستلام" : "في الطريق إليك"}</b>
-                  <span>{pickup ? "نرسل لك رسالة عند الجاهزية" : "نرسل اسم المندوب ورقمه عند الانطلاق"}</span>
+                  <b>{pickup ? t("sff4351") : t("se99455")}</b>
+                  <span>{pickup ? t("s30a88f") : t("s2a5a85")}</span>
                 </div>
               </li>
               <li>
                 <i><Icon name="home" size={13} /></i>
-                <div><b>{eta}</b><span>{pickup ? storeConfig.contact.address : "سيتصل المندوب قبل الوصول"}</span></div>
+                <div><b>{eta}</b><span>{pickup ? storeConfig.contact.address : t("sbab52e")}</span></div>
               </li>
             </ul>
           </div>
 
           <div className="panelbox">
-            <h3>تفاصيل الطلب</h3>
+            <h3>{t("sc7f2ce")}</h3>
             {items.map((i) => {
               const len = (i.metadata as any)?.length_cm
               return (
@@ -158,37 +163,37 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
                   <div>
                     {i.product_title}
                     <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? ` · طول ${len} سم` : ""}</div>
-                    {tailoringNote(i.metadata) && <div className="q tnote">{tailoringNote(i.metadata)}</div>}
+                    {tailoringNote(i.metadata, t) && <div className="q tnote">{tailoringNote(i.metadata, t)}</div>}
                   </div>
                   <span className="pr">{formatAmount(i.unit_price * i.quantity)}</span>
                 </div>
               )
             })}
             <div style={{ marginTop: 10 }}>
-              <div className="kv"><span>المجموع</span><span className="num">{fmt(subtotal)}</span></div>
+              <div className="kv"><span>{t("s7512af")}</span><span className="num">{fmt(subtotal)}</span></div>
               {/* منخفضة: سطر لكل عرض بمبلغه (الكود منفصل عن امتياز المستوى) */}
-              {itemDiscount > 0 && discountLines(items, null).map((d) => (
+              {itemDiscount > 0 && discountLines(t, items, null).map((d) => (
                 <div key={d.code} className="kv" data-testid="discount-line"><span>{d.label}</span><span style={{ color: "var(--accent)" }}><Signed sign="−" value={formatAmount(d.amount)} /> {CUR}</span></div>
               ))}
-              <div className="kv"><span>التوصيل</span><span>{ship?.name} · {order.shipping_total ? fmt(order.shipping_total) : shipDiscount > 0 ? "مجاني — امتياز العضوية" : "مجاني"}</span></div>
-              <div className="kv"><span>الدفع</span><span>{pay?.title ?? "—"}</span></div>
-              <div className="kv"><span>العنوان</span><span>{pickup ? "استلام من المشغل" : `${governorateName(addr?.province)} — ${addr?.city ?? ""}`}</span></div>
+              <div className="kv"><span>{t("s30ecbc")}</span><span>{ship?.name} · {order.shipping_total ? fmt(order.shipping_total) : shipDiscount > 0 ? t("sdf761f") : t("s5abc46")}</span></div>
+              <div className="kv"><span>{t("s4ee631")}</span><span>{pay?.title ?? "—"}</span></div>
+              <div className="kv"><span>{t("s6dc658")}</span><span>{pickup ? t("sd4cab2") : `${governorateName(addr?.province)} — ${addr?.city ?? ""}`}</span></div>
               {extras.gift && (
-                <div className="kv"><span>هدية</span><span>{extras.gift_message ? `«${extras.gift_message}»` : "تغليف هدية"}</span></div>
+                <div className="kv"><span>{t("s8a9ce8")}</span><span>{extras.gift_message ? `«${extras.gift_message}»` : t("sa25e32")}</span></div>
               )}
-              <div className="kv"><span><b style={{ color: "var(--ink)" }}>الإجمالي</b></span><span><b className="num">{fmt(order.total)}</b></span></div>
+              <div className="kv"><span><b style={{ color: "var(--ink)" }}>{t("s88fc73")}</b></span><span><b className="num">{fmt(order.total)}</b></span></div>
             {(() => {
-              const t = includedTax(Number(order.total), (order as any).tax_total)
-              return t.rate > 0 ? <div className="kv taxnote" data-testid="tax-line"><span>منها ضريبة القيمة المضافة {t.rate}٪</span><span className="num">{fmt(t.amount)}</span></div> : null
+              const tax = includedTax(Number(order.total), (order as any).tax_total)
+              return tax.rate > 0 ? <div className="kv taxnote" data-testid="tax-line"><span>{t("taxIncluded", { rate: tax.rate })}</span><span className="num">{fmt(tax.amount)}</span></div> : null
             })()}
             </div>
           </div>
         </div>
 
         <div className="succacts">
-          <LocalizedClientLink href="/store" className="btn">متابعة التسوق</LocalizedClientLink>
+          <LocalizedClientLink href="/store" className="btn">{t("s279044")}</LocalizedClientLink>
           <a className="btn ghost" href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer">
-            <Icon name="whatsapp" size={16} /> {g("تواصلي معنا", "تواصل معنا")}
+            <Icon name="whatsapp" size={16} /> {t("s34a9aa")}
           </a>
         </div>
       </div>
