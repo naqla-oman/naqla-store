@@ -4,6 +4,7 @@ import { securityHeaders } from './security-headers'
 import { clientIp, rateLimit } from '../lib/rate-limit'
 import { blockLockedCart } from '../lib/cart-lock'
 import { revalidateAfter } from '../lib/revalidate'
+import { validatePricePrecision } from '../lib/price-precision'
 import { canonicalizeAddress } from '../workflows/hooks/cart-address'
 
 // The product index declares filterable `status` and `sales_channel_ids`, so
@@ -19,6 +20,10 @@ export default defineMiddlewares({
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/line-items/:line_id', middlewares: [blockLockedCart] },
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/promotions', middlewares: [blockLockedCart] },
     { method: ['POST'], matcher: '/store/carts/:id/shipping-methods', middlewares: [blockLockedCart] },
+    // منخفضة: دقة أسعار المنتجات وقوائم الأسعار حسب العملة
+    { method: ['POST'], matcher: '/admin/products*', middlewares: [validatePricePrecision] },
+    { method: ['POST'], matcher: '/admin/price-lists*', middlewares: [validatePricePrecision] },
+    { method: ['POST'], matcher: '/admin/shipping-options*', middlewares: [validatePricePrecision] },
     // M26: قوائم الأسعار (تخفيضات اللوحة) لا تُطلق أحداثاً تصل للمشترك ← إبطال المنتجات بعد كل تعديل ناجح
     { method: ['POST', 'DELETE'], matcher: '/admin/price-lists*', middlewares: [revalidateAfter(['products'])] },
     // H5: حدود المعدل (Redis عند توفره)
