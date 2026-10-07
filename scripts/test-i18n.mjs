@@ -19,6 +19,15 @@ const storeJson = JSON.parse(readFileSync(new URL(`../clients/${slug}/store.json
 const enJson = JSON.parse(readFileSync(new URL(`../clients/${slug}/locales/en.json`, import.meta.url), "utf8"))
 // أول منتج له ترجمة إنجليزية (بلا منتج الخدمة) — الاختبار يعمل على أي متجر
 const HANDLE = Object.keys(enJson.products).find((h) => h !== storeJson.tailoring?.handle)
+// المتاح من متغيّرات HANDLE (المخزون − المحجوز). طلبات الاختبار تحجز المخزون فيتغيّر المتغيّر المختار افتراضياً في
+// صفحة المنتج فتفشل arSnapshot؛ لذلك تُلغى بعد فحوصها (الإلغاء يحرّر الحجز) ويُتحقق أن المتاح عاد كما كان.
+const stockOf = () => JSON.stringify(Object.fromEntries(sapi("GET", `/store/products?handle=${HANDLE}&fields=*variants,+variants.inventory_quantity`).products[0].variants.map((v) => [v.id, v.inventory_quantity ?? null])))
+const cancelTestOrders = async (t, ids, before) => {
+  const st = ids.map((id) => aapi("POST", `/admin/orders/${id}/cancel`, t).order?.status ?? "?")
+  let now = stockOf()
+  for (let i = 0; i < 10 && now !== before; i++) { await sleep(1000); now = stockOf() }
+  ok(st.every((x) => x === "canceled") && now === before, "طلبات الاختبار أُلغيت والمخزون المتاح عاد كما كان", `${st.join(",")} ${now === before ? "" : `${before} ← ${now}`}`)
+}
 const VOICE_ADD_FAV = storeJson.voice === "f" ? "أضيفي للمفضلة" : "أضف للمفضلة"
 
 async function stage0() {
@@ -195,6 +204,7 @@ async function stage2() {
   ok(sAr.ids?.includes(prodAr.id), `البحث بالعربية «${arWord}» يجد المنتج`, `${sAr.ids?.length ?? 0} نتيجة`)
   // 5) شراء كامل بالإنجليزية (متصفح): السلة ← الدفع ← التأكيد؛ الطلب يحمل locale=en-US
   curl("/om/en/checkout?step=address") // تسخين تجميع صفحة الدفع في وضع التطوير
+  const stockBefore = stockOf()
   const govAr = storeJson.checkout.governorates[0], govEn = enJson.store.checkout?.governorates?.[0]
   const py = PY_HEAD + `
 async def main():
@@ -283,6 +293,7 @@ asyncio.run(main())`
   // 7) الطلب العربي يحمل ar-SA
   const cartAr = sapi("POST", "/store/carts", { region_id: reg, locale: "ar-SA" }).cart
   ok(cartAr.locale === "ar-SA", "السلة العربية تحمل locale=ar-SA", cartAr.locale)
+  await cancelTestOrders(t, [orderId], stockBefore)
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 
@@ -427,6 +438,7 @@ asyncio.run(main())`
   const payments = (b) => aapi(b ? "POST" : "GET", "/admin/naqla/store-settings/payments", t, b)
   const prevPhones = payments().merchantPhones ?? []
   payments({ merchantPhones: ["96890000009"] })
+  const stockBefore = stockOf()
   let enOrder, arOrder
   try { enOrder = await placeOrder("en-US", "Hind"); arOrder = await placeOrder("ar-SA", "") } finally { payments({ merchantPhones: prevPhones }) }
   ok(JSON.stringify(payments().merchantPhones ?? []) === JSON.stringify(prevPhones), "أرقام التاجر أُعيدت كما كانت", JSON.stringify(prevPhones))
@@ -438,6 +450,7 @@ asyncio.run(main())`
   ok(pAr.startsWith("مرحباً بك،") && pAr.includes("ر.ع") && !pAr.includes("عزيزتنا"), "إشعار الطلب العربي بلا اسم: «مرحباً بك» (لا «عزيزتنا»)", pAr.slice(0, 60))
   const mEn = nEn.find((n) => n.template === "merchant_new_order")
   ok(mEn?.to === "+96890000009" && /^طلب جديد/.test(mEn.data?.preview ?? "") && mEn.data?.lang !== "en", "تنبيه التاجر لطلب إنجليزي يبقى عربياً (merchant_new_order)", (mEn?.data?.preview ?? "لم يُرسل تنبيه").slice(0, 50))
+  await cancelTestOrders(t, [enOrder.id, arOrder.id], stockBefore)
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 
@@ -450,7 +463,9 @@ async function arSnapshot() {
   writeFileSync(jar, "") // جرّة كوكي نظيفة: لا سلة من اختبارات سابقة
   let h = curl("/om")
   for (let i = 0; i < 14 && attrs(h.html).switch; i++) { await sleep(5000); h = curl("/om") }
-  // المخزون يتغيّر مع مشتريات الاختبار: مؤشرات «بقي # فقط» تُستثنى من المقارنة
+  // المخزون يتغيّر مع مشتريات الاختبار: مؤشرات «بقي # فقط» تُستثنى من المقارنة، وطلبات stage2/stage4 تُلغى بعد فحوصها
+  // فيعود المتاح ويبقى المتغيّر الافتراضي في صفحة المنتج كما هو. طلب يدوي غير ملغى قد ينفد به المتغيّر الأول فيتغيّر
+  // الاختيار الافتراضي (اللون/المقاس الظاهر) — أثر بيانات لا كود: ألغِ الطلب أو أعِد store:setup ثم قارن.
   const norm = (html) => visibleText(html).replace(/[0-9٠-٩.,:]+/g, "#").replace(/بقي # فقط/g, "").replace(/\s+/g, " ").trim()
   const pages = ["/om", "/om/store", `/om/products/${HANDLE}`, "/om/cart", "/om/account", "/om/track"]
   const snap = Object.fromEntries(pages.map((p) => [p, norm(curl(p).html)]))
@@ -462,9 +477,14 @@ async function arSnapshot() {
   }
   const prev = JSON.parse(readFileSync(file, "utf8"))
   for (const p of pages) {
+    // ذاكرة الواجهة بعد تغيير الإعدادات في المراحل السابقة قد تعيد نسخة انتقالية (ترتيب كلمات مختلف): ننتظر استقرارها
+    for (let i = 0; i < 4 && prev[p] !== snap[p]; i++) { await sleep(5000); snap[p] = norm(curl(p).html) }
     const same = prev[p] === snap[p]
     let diff = ""
-    if (!same) { const a = prev[p].split(" "), b = snap[p].split(" "); diff = `فُقد: ${a.filter((x) => !b.includes(x)).slice(0, 4).join(" ")} | جديد: ${b.filter((x) => !a.includes(x)).slice(0, 4).join(" ")}` }
+    if (!same) {
+      const a = prev[p].split(" "), b = snap[p].split(" "), lost = a.filter((x) => !b.includes(x)), added = b.filter((x) => !a.includes(x))
+      diff = lost.length || added.length ? `فُقد: ${lost.slice(0, 4).join(" ")} | جديد: ${added.slice(0, 4).join(" ")}` : `الكلمات نفسها بترتيب مختلف قرب: «${b.slice(Math.max(0, b.findIndex((x, i) => x !== a[i]) - 2)).slice(0, 8).join(" ")}»`
+    }
     ok(same, `الواجهة العربية كما كانت: ${p}`, diff)
   }
 }
