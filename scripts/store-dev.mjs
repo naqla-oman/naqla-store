@@ -32,13 +32,14 @@ const start = (name, cmd, args, cwd, extra = {}) => {
 }
 
 console.log(c.b(`▶ «${slug}»: المتجر ${env.STOREFRONT_URL} — اللوحة ${env.MEDUSA_BACKEND_URL}/app`))
-// ذاكرة Turbopack المستمرة تُفسد وحدات next/font/google بعد إعادة التشغيل («queries have exactly one entry» ← 500)؛
-// تُحذف ذاكرته (.next-<port>/cache) عند كل تشغيل ويُعاد التجميع في ثوانٍ
+// Turbopack يفسد أحياناً وحدات next/font/google عند التشغيل («queries have exactly one entry» ← 500 لكل الصفحات)؛
+// STORE_DEV_BUNDLER=webpack يشغّل Next بالمجمّع الثابت (أبطأ تجميعاً) — تستخدمه سكربتات الاختبار
+const bundler = process.env.STORE_DEV_BUNDLER === "webpack" ? [] : ["--turbopack"]
 rmSync(join(STOREFRONT, `.next-${env.STOREFRONT_PORT}`, "cache"), { recursive: true, force: true })
 const procs = [
   start("backend", "npx", ["medusa", "develop", "-p", env.BACKEND_PORT], BACKEND),
   // مجلد بناء لكل منفذ حتى لا يتصادم متجران يعملان من المجلد نفسه
-  start("store", "npx", ["next", "dev", "--turbopack", "-p", env.STOREFRONT_PORT], STOREFRONT, { NEXT_DIST_DIR: `.next-${env.STOREFRONT_PORT}`, NEXT_TSCONFIG: TSCONFIG }),
+  start("store", "npx", ["next", "dev", ...bundler, "-p", env.STOREFRONT_PORT], STOREFRONT, { NEXT_DIST_DIR: `.next-${env.STOREFRONT_PORT}`, NEXT_TSCONFIG: TSCONFIG }),
 ]
 const stopAll = (sig = "SIGTERM") => procs.forEach((p) => { try { process.kill(-p.pid, sig) } catch { /* انتهت */ } })
 for (const sig of ["SIGINT", "SIGTERM"]) process.on(sig, () => { stopAll(sig); process.exit(0) })

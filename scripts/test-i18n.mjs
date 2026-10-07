@@ -19,7 +19,7 @@ const storeJson = JSON.parse(readFileSync(new URL(`../clients/${slug}/store.json
 const enJson = JSON.parse(readFileSync(new URL(`../clients/${slug}/locales/en.json`, import.meta.url), "utf8"))
 // أول منتج له ترجمة إنجليزية (بلا منتج الخدمة) — الاختبار يعمل على أي متجر
 const HANDLE = Object.keys(enJson.products).find((h) => h !== storeJson.tailoring?.handle)
-const VOICE_ADD_FAV = { f: "أضيفي للمفضلة", m: "أضف للمفضلة" }[storeJson.voice] ?? "إضافة للمفضلة"
+const VOICE_ADD_FAV = storeJson.voice === "f" ? "أضيفي للمفضلة" : "أضف للمفضلة"
 
 async function stage0() {
   const t = tok()
@@ -109,7 +109,9 @@ async function stage1() {
   // البطاقات (الرئيسية والمتجر) والسلة المنسدلة بمنتج فيها — باللغتين
   const cards = (h) => (strip(h).match(/<span class="price[^"]*"[^>]*>[\s\S]*?<\/span>|class="saveflag"[^>]*>[^<]*/g) ?? []).join(" ")
   const reg = sapi("GET", "/store/regions").regions[0].id
-  const v = sapi("GET", `/store/products?handle=${HANDLE}&region_id=${reg}&fields=*variants`).products[0].variants[0].id
+  // أول متغيّر متوفر (مشتريات الاختبارات السابقة قد تستنفد الأول)
+  const vs = sapi("GET", `/store/products?handle=${HANDLE}&region_id=${reg}&fields=*variants,+variants.inventory_quantity,+variants.manage_inventory`).products[0].variants
+  const v = (vs.find((x) => !x.manage_inventory || x.inventory_quantity > 0) ?? vs[0]).id
   const cartId = sapi("POST", "/store/carts", { region_id: reg }).cart.id
   sapi("POST", `/store/carts/${cartId}/line-items`, { variant_id: v, quantity: 1 })
   const jarText = readFileSync(jar, "utf8")
@@ -192,6 +194,7 @@ async function stage2() {
   ok(sEn.ids?.includes(prodAr.id), `البحث بالإنجليزية «${enWord}» يجد المنتج`, `${sEn.ids?.length ?? 0} نتيجة`)
   ok(sAr.ids?.includes(prodAr.id), `البحث بالعربية «${arWord}» يجد المنتج`, `${sAr.ids?.length ?? 0} نتيجة`)
   // 5) شراء كامل بالإنجليزية (متصفح): السلة ← الدفع ← التأكيد؛ الطلب يحمل locale=en-US
+  curl("/om/en/checkout?step=address") // تسخين تجميع صفحة الدفع في وضع التطوير
   const govAr = storeJson.checkout.governorates[0], govEn = enJson.store.checkout?.governorates?.[0]
   const py = PY_HEAD + `
 async def main():
@@ -201,20 +204,33 @@ async def main():
         await m.goto(S + "/om/en/products/${HANDLE}", wait_until="domcontentloaded")
         await m.wait_for_selector("[data-testid=add-product-button]")
         await pick_options(m)
-        await m.click("[data-testid=add-product-button]:not([disabled])")
-        await m.wait_for_timeout(3000)
+        # النقر قبل اكتمال الترطيب (hydration) يضيع في وضع التطوير: نكرر حتى تظهر كوكي السلة
+        for attempt in range(5):
+            await m.click("[data-testid=add-product-button]:not([disabled])")
+            for _ in range(10):
+                await m.wait_for_timeout(500)
+                if any(ck["name"] == "_medusa_cart_id" for ck in await c.cookies()): break
+            if any(ck["name"] == "_medusa_cart_id" for ck in await c.cookies()): break
+        await m.wait_for_timeout(2000)
         for attempt in range(3):
             await m.goto(S + "/om/en/cart", wait_until="domcontentloaded")
             try:
-                await m.wait_for_selector(".cname", timeout=30000); break
+                await m.wait_for_selector(".cname", timeout=90000); break
             except Exception:
-                if attempt == 2: raise
+                if attempt == 2:
+                    print("CART PAGE:", " | ".join((await m.locator("body").inner_text())[:600].splitlines()), file=sys.stderr); raise
                 await m.wait_for_timeout(3000)
         out["cart"] = await m.locator("main").inner_text()
         await m.goto(S + "/om/en/checkout?step=address", wait_until="domcontentloaded")
         await m.wait_for_selector("#fName")
+        await m.wait_for_load_state("networkidle")
         await m.fill("#fName", "Test Customer"); await m.fill("#fPhone", "91234567")
-        await m.select_option("#fGov", ${JSON.stringify(govAr.code)})
+        for attempt in range(6):  # الاختيار قبل الترطيب لا يصل إلى React: نكرر حتى تُفعَّل قائمة الولايات
+            await m.select_option("#fGov", ${JSON.stringify(govAr.code)})
+            try:
+                await m.wait_for_selector("#fCity:not([disabled])", timeout=5000); break
+            except Exception:
+                if attempt == 5: raise
         out["govLabel"] = await m.locator("#fGov option:checked").inner_text()
         await m.select_option("#fCity", index=1)
         out["wilLabel"] = await m.locator("#fCity option:checked").inner_text()
@@ -250,9 +266,15 @@ async def main():
     async with async_playwright() as p:
         b = await p.chromium.launch(); m = await (await b.new_context()).new_page(); m.set_default_timeout(120000)
         await m.goto(S + "/om/en/track", wait_until="domcontentloaded")
-        await m.fill("#tNo", ${JSON.stringify(no)}); await m.fill("#tPh", "91234567")
-        await m.click("button[type=submit]")
-        await m.wait_for_selector("text=${tr.title}")
+        await m.wait_for_load_state("networkidle")
+        for attempt in range(4):  # الإرسال قبل الترطيب يضيع في وضع التطوير
+            await m.fill("#tNo", ${JSON.stringify(no)}); await m.fill("#tPh", "91234567")
+            await m.click("[data-testid=track-btn]")
+            try:
+                await m.wait_for_selector("text=${tr.title}", timeout=30000); break
+            except Exception:
+                if attempt == 3: raise
+                await m.goto(S + "/om/en/track", wait_until="domcontentloaded"); await m.wait_for_load_state("networkidle")
         print(json.dumps({"text": await m.locator("main").inner_text()}))
         await b.close()
 asyncio.run(main())`
@@ -270,6 +292,7 @@ async function arSnapshot() {
   const { existsSync, mkdirSync, writeFileSync } = await import("node:fs")
   const t = tok()
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
+  writeFileSync(jar, "") // جرّة كوكي نظيفة: لا سلة من اختبارات سابقة
   let h = curl("/om")
   for (let i = 0; i < 14 && attrs(h.html).switch; i++) { await sleep(5000); h = curl("/om") }
   const norm = (html) => visibleText(html).replace(/[0-9٠-٩.,:]+/g, "#").replace(/\s+/g, " ").trim()
