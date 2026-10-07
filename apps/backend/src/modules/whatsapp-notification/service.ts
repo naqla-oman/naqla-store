@@ -1,4 +1,4 @@
-import { secretFromSettings, whatsappCreds } from "../../lib/credentials"
+import { whatsappCreds, whatsappEnabled } from "../../lib/credentials"
 import { AbstractNotificationProviderService, MedusaError } from "@medusajs/framework/utils"
 import { storeError } from "../../lib/store-errors"
 import type {
@@ -57,8 +57,7 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
   }
   /** مفعّل عند وجود الرمز ومعرّف الرقم (من اللوحة أو .env مع WHATSAPP_ENABLED) — وإلا وضع السجل */
   protected get enabled() {
-    const c = this.creds
-    return !!c.accessToken && !!c.phoneNumberId && (this.options_.enabled || !!secretFromSettings("whatsapp.accessToken"))
+    return whatsappEnabled(!!this.options_.enabled)
   }
 
   async send(n: ProviderSendNotificationDTO): Promise<ProviderSendNotificationResultsDTO> {

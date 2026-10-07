@@ -2,6 +2,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 import { langOfLocale, orderNumber, storeData, storeNames } from "./store-data"
 import { decimalsOf, round } from "./money"
+import { whatsappEnabled } from "./credentials"
 
 /**
  * إشعارات واتساب لمراحل الطلب. كل نوع يقابل قالباً معتمداً (Utility) في Meta،
@@ -112,9 +113,10 @@ export async function notifyOrder(container: MedusaContainer, orderId: string, k
     const phone = String(order?.shipping_address?.phone ?? "").replace(/\D/g, "")
     if (!order || phone.length < 8) return
 
-    // لغة الزبونة من الطلب؛ وإن لم يُعتمد القالب الإنجليزي بعد تُرسل العربية (لا تُحجب الرسالة)
+    // لغة الزبونة من الطلب؛ وإن لم يُعتمد القالب الإنجليزي بعد تُرسل العربية (لا تُحجب الرسالة).
+    // التفعيل بالمنطق نفسه الذي تستعمله خدمة واتساب: .env أو مفاتيح «إعدادات المتجر»
     let lang: Lang = kind === "merchant_new_order" ? "ar" : langOfLocale(order.locale)
-    if (lang === "en" && !englishTemplateName(kind) && process.env.WHATSAPP_ENABLED === "true") {
+    if (lang === "en" && !englishTemplateName(kind) && whatsappEnabled()) {
       logger.info(`whatsapp ${kind}: لا قالب إنجليزي معتمد (WHATSAPP_TPL_${kind.toUpperCase()}_EN) — تُرسل العربية`)
       lang = "ar"
     }

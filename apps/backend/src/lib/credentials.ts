@@ -45,3 +45,13 @@ export function thawaniCreds() {
 export function whatsappCreds() {
   return { accessToken: credential("whatsapp.accessToken").value, phoneNumberId: credential("whatsapp.phoneNumberId").value }
 }
+
+/**
+ * هل إرسال واتساب الحقيقي مفعّل؟ الرمز ومعرّف الرقم موجودان (من اللوحة أو .env)، والتفعيل إمّا
+ * WHATSAPP_ENABLED=true أو مفتاح محفوظ في «إعدادات المتجر» (مسار التاجر الرسمي). وإلا وضع السجل.
+ * مصدر واحد تستعمله خدمة واتساب وnotifyOrder (الرجوع إلى القالب العربي) ولوحة القوالب.
+ */
+export function whatsappEnabled(envEnabled = process.env.WHATSAPP_ENABLED === "true") {
+  const c = whatsappCreds()
+  return !!c.accessToken && !!c.phoneNumberId && (envEnabled || !!secretFromSettings("whatsapp.accessToken"))
+}

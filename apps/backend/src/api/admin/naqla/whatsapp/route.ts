@@ -1,5 +1,6 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { client } from "../../../../lib/client"
+import { whatsappEnabled } from "../../../../lib/credentials"
 import { build, type OrderNotice } from "../../../../lib/order-notifications"
 
 /**
@@ -20,7 +21,7 @@ export const GET = async (_req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const c = client()
   const sample = { name: "هند", number: `${c.orderPrefix}0009`, total: `10.000 ${(c as any).currencyLabel ?? ""}`.trim(), shipping: "توصيل عادي", track: `https://<الدومين>/${c.country}/track?no=${c.orderPrefix}0009`, payment: "عند الاستلام", awb: "ARX123456", awbUrl: "https://<شركة الشحن>/track/ARX123456" }
   res.json({
-    enabled: process.env.WHATSAPP_ENABLED === "true",
+    enabled: whatsappEnabled(),
     credentials: { token: !!process.env.WHATSAPP_ACCESS_TOKEN, phoneNumberId: !!process.env.WHATSAPP_PHONE_NUMBER_ID },
     language: process.env.WHATSAPP_TEMPLATE_LANG || "ar",
     templates: [
