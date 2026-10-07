@@ -144,6 +144,8 @@ module.exports = defineConfig({
     }
   },
   modules: [
+    // المرحلة 2 (لغات): وحدة ترجمة Medusa — تُفعَّل مع MEDUSA_FF_TRANSLATION=true
+    ...(process.env.MEDUSA_FF_TRANSLATION === "true" ? [{ resolve: "@medusajs/medusa/translation" }] : []),
     ...redisModules,
     // أدوات التتبع (المعرّفات والرموز في الخادم) + تحويلات 301 للسيو
     { resolve: './src/modules/tracking' },

@@ -24,7 +24,8 @@
     "test:console": "node scripts/test-console.mjs",
     "test:i18n": "node scripts/test-i18n.mjs",
     "check:i18n": "node scripts/check-i18n.mjs",
-    "console:unlock": "pnpm --filter @naqla/console run unlock"
+    "console:unlock": "pnpm --filter @naqla/console run unlock",
+    "i18n:sync": "node scripts/i18n-sync.mjs"
   },
   "pnpm": {
     "overrides": {

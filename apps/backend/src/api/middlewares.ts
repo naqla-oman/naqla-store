@@ -6,6 +6,7 @@ import { blockLockedCart } from '../lib/cart-lock'
 import { revalidateAfter } from '../lib/revalidate'
 import { validatePricePrecision } from '../lib/price-precision'
 import { canonicalizeAddress } from '../workflows/hooks/cart-address'
+import { queueRevalidate } from "../lib/revalidate"
 
 // The product index declares filterable `status` and `sales_channel_ids`, so
 // the route narrows it to published products in the key's sales channels.
@@ -20,6 +21,8 @@ export default defineMiddlewares({
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/line-items/:line_id', middlewares: [blockLockedCart] },
     { method: ['POST', 'DELETE'], matcher: '/store/carts/:id/promotions', middlewares: [blockLockedCart] },
     { method: ['POST'], matcher: '/store/carts/:id/shipping-methods', middlewares: [blockLockedCart] },
+    // المرحلة 2: تعديل/حذف الترجمات من اللوحة لا يطلق حدثاً ← إبطال ذاكرة الواجهة بعد الرد
+    { method: ['POST'], matcher: '/admin/translations/batch', middlewares: [(req: any, res: any, next: any) => { res.on('finish', () => queueRevalidate(['products', 'categories', 'collections', 'shipping-threshold'])); next() }] },
     // الهوية: رفع الشعار/الأيقونة (base64 حتى 5MB)
     { method: ['POST'], matcher: '/admin/naqla/store-settings/brand', bodyParser: { sizeLimit: '8mb' } },
     // منخفضة: دقة أسعار المنتجات وقوائم الأسعار حسب العملة

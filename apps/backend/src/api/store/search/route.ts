@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
 import { tokens } from "../../../lib/arabic-search"
+import { readTranslations } from "../../../lib/translations"
 
 /**
  * GET /store/search?q= — بحث عربي مُطبَّع (H10). يعيد معرّفات المنتجات مرتبة بالصلة + أقسام مقترحة.
@@ -15,22 +16,25 @@ async function load(req: MedusaRequest) {
   const query = req.scope.resolve(ContainerRegistrationKeys.QUERY)
   const { data: products } = await query.graph({
     entity: "product",
-    fields: ["id", "title", "subtitle", "description", "status", "metadata", "categories.name", "tags.value", "collection.title", "options.values.value"],
+    fields: ["id", "title", "subtitle", "description", "status", "metadata", "categories.id", "categories.name", "tags.value", "collection.title", "options.values.id", "options.values.value"],
     filters: { status: "published" } as any,
     pagination: { take: 5000 },
   })
   const { data: cats } = await query.graph({ entity: "product_category", fields: ["name", "handle", "is_active"], pagination: { take: 500 } })
+  // المرحلة 2: الترجمات الإنجليزية تدخل الفهرس نفسه فيجد البحث الإنجليزي المنتجات المترجمة
+  const [trP, trC, trV] = await Promise.all([readTranslations(req.scope, "product", "en-US"), readTranslations(req.scope, "product_category", "en-US"), readTranslations(req.scope, "product_option_value", "en-US")])
+  const enCat = (c: any) => trC.get(c.id)?.name ?? ""
   const docs = (products as any[])
     .filter((p) => !p.metadata?.service)
     .map((p) => ({
       id: p.id,
-      title: tokens(`${p.title} ${p.subtitle ?? ""} ${p.metadata?.title_en ?? ""}`),
-      cats: tokens((p.categories ?? []).map((c: any) => c.name).join(" ")),
+      title: tokens(`${p.title} ${p.subtitle ?? ""} ${trP.get(p.id)?.title ?? ""} ${trP.get(p.id)?.subtitle ?? ""}`),
+      cats: tokens((p.categories ?? []).map((c: any) => `${c.name} ${enCat(c)}`).join(" ")),
       // الوسوم والمجموعة وقيم الخيارات (الألوان والمقاسات والأحجام): «أسود»، «54»، «100 مل»
-      other: tokens(`${(p.tags ?? []).map((t: any) => t.value).join(" ")} ${p.collection?.title ?? ""} ${(p.options ?? []).flatMap((o: any) => (o.values ?? []).map((v: any) => v.value)).join(" ")}`),
-      desc: tokens(p.description ?? ""),
+      other: tokens(`${(p.tags ?? []).map((t: any) => t.value).join(" ")} ${p.collection?.title ?? ""} ${(p.options ?? []).flatMap((o: any) => (o.values ?? []).map((v: any) => `${v.value} ${trV.get(v.id)?.value ?? ""}`)).join(" ")}`),
+      desc: tokens(`${p.description ?? ""} ${trP.get(p.id)?.description ?? ""}`),
     }))
-  const categories = (cats as any[]).filter((c) => c.is_active !== false).map((c) => ({ name: c.name, handle: c.handle, toks: tokens(c.name) }))
+  const categories = (cats as any[]).filter((c) => c.is_active !== false).map((c) => ({ name: c.name, handle: c.handle, toks: tokens(`${c.name} ${enCat(c)}`) }))
   cache = { at: Date.now(), docs, categories }
   return cache
 }

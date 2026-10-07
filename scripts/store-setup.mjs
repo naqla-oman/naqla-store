@@ -44,6 +44,8 @@ const env = {
   REVALIDATE_SECRET: strong(prev.REVALIDATE_SECRET) ? prev.REVALIDATE_SECRET : randomBytes(32).toString("base64url"),
   // تشفير أسرار «إعدادات المتجر» (ثواني، واتساب) — مستقل عن JWT_SECRET فلا يبطلها تغييره؛ لا يُغيَّر بعد الإطلاق
   SETTINGS_ENCRYPTION_KEY: strong(prev.SETTINGS_ENCRYPTION_KEY) ? prev.SETTINGS_ENCRYPTION_KEY : randomBytes(32).toString("base64url"),
+  // المرحلة 2 (لغات): وحدة ترجمة Medusa مفعّلة لكل المتاجر (بلا أثر في متجر بلغة واحدة)
+  MEDUSA_FF_TRANSLATION: "true",
   DATABASE_URL: dbUrl,
   MEDUSA_BACKEND_URL: backendUrl,
   STOREFRONT_URL: storefrontUrl,
@@ -68,6 +70,10 @@ console.log(c.d("2/3 الترحيلات + البذرة + الدفع + الضري
 const out = await run("npx", ["medusa", "db:migrate"], { cwd: BACKEND, env }).catch((e) => fail(`فشل الترحيل:\n${(e.out ?? e.message).slice(-3000)}`))
 // M12: مزوّدو الدفع حسب features والمسجّل فعلاً (ثواني بعد تفعيله يظهر دون تدخّل)
 await run("npx", ["medusa", "exec", "./src/scripts/sync-payment-providers.ts"], { cwd: BACKEND, env: { ...process.env, ...env } }).catch(() => console.log(c.y("تنبيه: تعذّرت مزامنة مزوّدي الدفع")))
+// ترجمات المحتوى من clients/<slug>/locales/en.json (إن وُجد) — upsert قابل للتكرار
+if (existsSync(join(CLIENTS, slug, "locales", "en.json"))) {
+  await run("npx", ["medusa", "exec", "./src/scripts/i18n-sync.ts"], { cwd: BACKEND, env: { ...process.env, ...env } }).catch((e) => console.log(c.y(`⚠ لم تُزرع الترجمات: ${(e.out ?? e.message).slice(-200)}`)))
+}
 const pk = (out.match(/Publishable key: (pk_[a-f0-9]+)/) || [])[1] || prev.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
 if (!pk) fail("لم يُعثر على مفتاح النشر في مخرجات البذرة — هل كانت القاعدة مستخدمة سابقاً؟ استخدمي قاعدة جديدة")
 for (const line of out.split("\n").filter((l) => /checkout-setup|product-images|loyalty-tiers|tax-inclusive|Seeded/.test(l))) {

@@ -8,6 +8,7 @@ import { queueRevalidate } from "../lib/revalidate"
  */
 const TAGS: Record<string, string[]> = {
   product: ["products"],
+  translation: ["products", "categories", "collections", "shipping-threshold"], // المرحلة 2: translation.created (التحديث عبر middlewares)
   "product-variant": ["products"],
   "product-option": ["products"],
   // M19: أسعار خيارات التوصيل (ومنها قاعدة المجاني) أسعار في وحدة التسعير
