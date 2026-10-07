@@ -306,6 +306,8 @@ async function stage3() {
   settings({ languages: ["ar", "en"], defaultLanguage: "ar" }, t)
   let en = curl("/om/en")
   for (let i = 0; i < 14 && attrs(en.html).lang !== "en"; i++) { await sleep(5000); en = curl("/om/en") }
+  // الصفحات العربية المخزَّنة قبل التفعيل تُعاد بعد إبطال الذاكرة (حتى دقيقة)
+  for (let i = 0; i < 14 && links(curl("/om").html).length === 0; i++) await sleep(5000)
   for (const [path, enPath] of [["/om", "/om/en"], [`/om/products/${HANDLE}`, `/om/en/products/${HANDLE}`], ["/om/store", "/om/en/store"], ["/om/pages/about", "/om/en/pages/about"]]) {
     const a = curl(path).html, b = curl(enPath).html, ha = hreflang(a), hb = hreflang(b)
     const want = (x) => x.ar?.endsWith(path) && x.en?.endsWith(enPath) && x["x-default"]?.endsWith(path)
