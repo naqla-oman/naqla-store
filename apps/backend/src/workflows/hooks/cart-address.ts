@@ -3,6 +3,7 @@ import { updateCartWorkflow } from "@medusajs/medusa/core-flows"
 import { normalizeAr } from "../../lib/arabic-search"
 import { client } from "../../lib/client"
 import { readShipping } from "../../lib/shipping-settings"
+import { storeError } from "../../lib/store-errors"
 
 /**
  * M18: الولاية من قائمة ولايات المحافظة (store.json) — لا نص حر يكسر التوصيل والتقارير.
@@ -13,15 +14,15 @@ updateCartWorkflow.hooks.validate(async ({ input }, { container }) => {
   if (!a?.province || !a?.city) return
   if (String(a.country_code ?? "om").toLowerCase() !== "om") return
   const gov = (client() as any).checkout?.governorates?.find((g: any) => g.code === String(a.province).toLowerCase())
-  if (!gov) throw new MedusaError(MedusaError.Types.INVALID_DATA, "المحافظة غير معروفة")
+  if (!gov) throw storeError(MedusaError.Types.INVALID_DATA, "governorate_unknown")
   // تبويب «التوصيل»: المحافظات المفعّلة من منطقة الخدمة في Medusa
   const enabled = (await readShipping(container)).governorates
-  if (enabled && !enabled.includes(gov.code)) throw new MedusaError(MedusaError.Types.NOT_ALLOWED, `التوصيل غير متاح حالياً إلى محافظة ${gov.name}`)
+  if (enabled && !enabled.includes(gov.code)) throw storeError(MedusaError.Types.NOT_ALLOWED, "governorate_unavailable", { gov: gov.code })
   const list: string[] = gov.wilayats ?? []
   if (!list.length) return
   const city = normalizeAr(String(a.city))
   if (!list.some((w) => normalizeAr(w) === city)) {
-    throw new MedusaError(MedusaError.Types.INVALID_DATA, `الولاية «${a.city}» لا تتبع محافظة ${gov.name}`)
+    throw storeError(MedusaError.Types.INVALID_DATA, "wilayat_mismatch", { city: a.city, gov: gov.code })
   }
 })
 

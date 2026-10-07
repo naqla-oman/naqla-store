@@ -10,6 +10,7 @@ import { orderAttribution } from "../tracking/attribution"
 import { g } from "@lib/voice"
 import { products as nProducts } from "@lib/util/plural"
 import { getT, medusaCartLocale } from "@/i18n/t"
+import { translateServerError } from "@lib/util/server-error"
 
 /**
  * إجراءات خطوات الدفع. كل إجراء يعيد { ok, error } بدل رمي استثناء،
@@ -41,10 +42,11 @@ const refresh = async () => {
   revalidateTag(await getCacheTag("shippingOptions"))
 }
 
-const fail = (e: unknown, fallback: string): ActionResult<never> => {
+const fail = async (e: unknown, fallback: string): Promise<ActionResult<never>> => {
   const msg = (e as any)?.message as string | undefined
   console.error("[checkout]", msg)
-  return { ok: false, error: fallback }
+  // أخطاء خادمنا المرمَّزة (المحافظة، الولاية، سعر التوصيل…) تُترجم بلغة الصفحة؛ غير ذلك الرسالة العامة
+  return { ok: false, error: (await translateServerError(msg)) ?? fallback }
 }
 
 const cartIdOrFail = async () => {
@@ -109,7 +111,7 @@ export async function saveDelivery(input: DeliveryInput): Promise<ActionResult> 
     await refresh()
     return { ok: true }
   } catch (e) {
-    return fail(e, t("s53de24"))
+    return await fail(e, t("s53de24"))
   }
 }
 
@@ -122,7 +124,7 @@ export async function chooseShipping(optionId: string): Promise<ActionResult> {
     await refresh()
     return { ok: true }
   } catch (e) {
-    return fail(e, t("s3e0791"))
+    return await fail(e, t("s3e0791"))
   }
 }
 
@@ -155,7 +157,7 @@ export async function applyCode(raw: string): Promise<ActionResult> {
     const applied = cart.promotions?.some((p) => p.code?.toUpperCase() === code)
     return applied ? { ok: true } : { ok: false, error: t("s39732d") }
   } catch (e) {
-    return fail(e, t("s39732d"))
+    return await fail(e, t("s39732d"))
   }
 }
 
@@ -172,7 +174,7 @@ export async function removeCode(code: string): Promise<ActionResult> {
     await refresh()
     return { ok: true }
   } catch (e) {
-    return fail(e, t("s071b4b"))
+    return await fail(e, t("s071b4b"))
   }
 }
 
@@ -267,7 +269,7 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
   } catch (e) {
     const msg = String((e as any)?.message ?? "")
     if (/inventory|stock/i.test(msg)) return { ok: false, error: t("s6935ad") }
-    return fail(e, t("s2d258f"))
+    return await fail(e, t("s2d258f"))
   }
 }
 

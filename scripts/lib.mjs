@@ -19,7 +19,7 @@ export function fail(msg) {
 
 export function slugArg() {
   const slug = (process.argv[2] || "").trim()
-  if (!slug) fail("حدّدي اسم المتجر: pnpm <الأمر> <slug>   (مثال: pnpm store:new demo-perfume)")
+  if (!slug) fail("حدّدي اسم المتجر: pnpm <الأمر> <slug>   (مثال: pnpm store:new my-store)")
   if (!/^[a-z0-9][a-z0-9-]{1,40}$/.test(slug) || slug.startsWith("_")) {
     fail(`اسم غير صالح «${slug}» — حروف لاتينية صغيرة وأرقام وشرطات فقط`)
   }

@@ -4,6 +4,7 @@ import { createStep, createWorkflow, StepResponse, transform, WorkflowResponse }
 import { acquireLockStep, releaseLockStep } from "@medusajs/medusa/core-flows"
 import { LOYALTY_MODULE } from "../modules/loyalty"
 import type LoyaltyModuleService from "../modules/loyalty/service"
+import { storeError } from "../lib/store-errors"
 
 /* ============ احتساب نقاط طلب ============ */
 
@@ -80,7 +81,7 @@ const checkBalanceStep = createStep("check-balance", async ({ customer_id }: Red
   const { available } = await loyalty.summary(customer_id)
   const { redeemPoints, redeemValue } = loyalty.options
   if (available < redeemPoints) {
-    throw new MedusaError(MedusaError.Types.NOT_ALLOWED, `تحتاجين ${redeemPoints} نقطة متاحة — رصيدك ${available}`)
+    throw storeError(MedusaError.Types.NOT_ALLOWED, "loyalty_need_points", { need: redeemPoints, available })
   }
   return new StepResponse({ redeemPoints, redeemValue })
 })
@@ -134,7 +135,7 @@ const recordRedeemStep = createStep(
       .reduce((sum, e) => sum + Number(e.points), 0)
     if (raw < 0) {
       await loyalty.deleteLoyaltyEntries(entry.id)
-      throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "الرصيد لا يكفي للاستبدال")
+      throw storeError(MedusaError.Types.NOT_ALLOWED, "loyalty_insufficient")
     }
     return new StepResponse(entry, entry.id)
   },

@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { localizeSnapshots } from "../../../lib/translations"
+import { storeError } from "../../../lib/store-errors"
 
 type Body = { number?: string; phone?: string }
 
@@ -24,7 +25,7 @@ function stageOf(status: string, f: { shipped_at?: string | null; delivered_at?:
 export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
   const displayId = Number(digits(req.body.number))
   const phone = digits(req.body.phone).slice(-8)
-  const notFound = new MedusaError(MedusaError.Types.NOT_FOUND, "لم نجد طلباً بهذا الرقم وهذا الهاتف")
+  const notFound = storeError(MedusaError.Types.NOT_FOUND, "order_not_found_track")
   // H5: الزبونة المسجّلة تتتبّع طلباتها بحسابها — لا هاتف في الرابط
   const customerId = (req as any).auth_context?.actor_type === "customer" ? (req as any).auth_context.actor_id : null
   if (!displayId || (!customerId && phone.length !== 8)) throw notFound

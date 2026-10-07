@@ -1,5 +1,6 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { client } from "../../../../lib/client"
+import { whatsappEnabled } from "../../../../lib/credentials"
 import { build, type OrderNotice } from "../../../../lib/order-notifications"
 
 /**
@@ -20,14 +21,16 @@ export const GET = async (_req: AuthenticatedMedusaRequest, res: MedusaResponse)
   const c = client()
   const sample = { name: "هند", number: `${c.orderPrefix}0009`, total: `10.000 ${(c as any).currencyLabel ?? ""}`.trim(), shipping: "توصيل عادي", track: `https://<الدومين>/${c.country}/track?no=${c.orderPrefix}0009`, payment: "عند الاستلام", awb: "ARX123456", awbUrl: "https://<شركة الشحن>/track/ARX123456" }
   res.json({
-    enabled: process.env.WHATSAPP_ENABLED === "true",
+    enabled: whatsappEnabled(),
     credentials: { token: !!process.env.WHATSAPP_ACCESS_TOKEN, phoneNumberId: !!process.env.WHATSAPP_PHONE_NUMBER_ID },
     language: process.env.WHATSAPP_TEMPLATE_LANG || "ar",
     templates: [
       { key: "otp", title: "رمز الدخول", category: "Authentication", env: "WHATSAPP_OTP_TEMPLATE", name: process.env.WHATSAPP_OTP_TEMPLATE || null, preview: "نص تولّده Meta تلقائياً مع زر «نسخ الرمز»", params: [] },
       ...ORDER.map((o) => {
         const b = build(o.kind, sample)
-        return { key: o.kind, title: o.title, category: "Utility", env: o.env, name: process.env[o.env] || null, preview: b.preview, params: b.params }
+        // المرحلة 4: النسخة الإنجليزية (تُعتمد في Meta بلغة en) — للطلبات بلغة en-US؛ تنبيه التاجر عربي فقط
+        const en = o.kind === "merchant_new_order" ? null : build(o.kind, { ...sample, name: "Hind", total: "10.000 OMR", shipping: "Standard delivery", payment: "Cash on delivery", track: `https://<domain>/${c.country}/en/track?no=${c.orderPrefix}0009` }, "en")
+        return { key: o.kind, title: o.title, category: "Utility", env: o.env, name: process.env[o.env] || null, preview: b.preview, params: b.params, ...(en ? { en: { env: `${o.env}_EN`, name: process.env[`${o.env}_EN`] || null, preview: en.preview, params: en.params } } : {}) }
       }),
     ],
   })

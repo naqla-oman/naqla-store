@@ -1,5 +1,6 @@
-import { secretFromSettings, whatsappCreds } from "../../lib/credentials"
+import { whatsappCreds, whatsappEnabled } from "../../lib/credentials"
 import { AbstractNotificationProviderService, MedusaError } from "@medusajs/framework/utils"
+import { storeError } from "../../lib/store-errors"
 import type {
   Logger,
   ProviderSendNotificationDTO,
@@ -15,7 +16,11 @@ type Options = {
   otpTemplate?: string
   /** أسماء قوالب الطلبات المعتمدة (Utility) — مفتاح النوع ← اسم القالب في Meta */
   orderTemplates?: Partial<Record<"order_placed" | "order_shipped" | "order_ready_pickup" | "order_canceled" | "merchant_new_order" | "order_shipped_courier" | "order_delivered", string>>
+  /** القوالب الإنجليزية المعتمدة (WHATSAPP_TPL_*_EN) — تُستخدم حين data.lang === "en" */
+  orderTemplatesEn?: Partial<Record<"order_placed" | "order_shipped" | "order_ready_pickup" | "order_canceled" | "order_shipped_courier" | "order_delivered", string>>
   language?: string
+  /** رمز لغة القوالب الإنجليزية في Meta (en أو en_US) */
+  languageEn?: string
   apiVersion?: string
 }
 
@@ -42,7 +47,7 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
   constructor({ logger }: { logger: Logger }, options: Options) {
     super()
     this.logger_ = logger
-    this.options_ = { language: "ar", apiVersion: "v21.0", ...options }
+    this.options_ = { language: "ar", languageEn: "en", apiVersion: "v21.0", ...options }
   }
 
   /** المفاتيح من «إعدادات المتجر» ← الدفع والتواصل، ثم .env */
@@ -52,8 +57,7 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
   }
   /** مفعّل عند وجود الرمز ومعرّف الرقم (من اللوحة أو .env مع WHATSAPP_ENABLED) — وإلا وضع السجل */
   protected get enabled() {
-    const c = this.creds
-    return !!c.accessToken && !!c.phoneNumberId && (this.options_.enabled || !!secretFromSettings("whatsapp.accessToken"))
+    return whatsappEnabled(!!this.options_.enabled)
   }
 
   async send(n: ProviderSendNotificationDTO): Promise<ProviderSendNotificationResultsDTO> {
@@ -62,11 +66,11 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
 
     if (!this.enabled) {
       if (process.env.NODE_ENV === "production") {
-        throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "WhatsApp غير مفعّل — لا يمكن إرسال الرمز")
+        throw storeError(MedusaError.Types.NOT_ALLOWED, "otp_disabled")
       }
       const preview = (n.data as any)?.preview
       this.logger_.info(
-        `[whatsapp:dev] ${n.template} → +${to}${data.otp ? ` رمز الدخول: ${data.otp}` : ""}${preview ? ` | ${preview}` : ""}`
+        `[whatsapp:dev] ${n.template}${(n.data as any)?.lang ? ` (${(n.data as any).lang})` : ""} → +${to}${data.otp ? ` رمز الدخول: ${data.otp}` : ""}${preview ? ` | ${preview}` : ""}`
       )
       return { id: `dev-${Date.now()}` }
     }
@@ -103,7 +107,12 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
 
   /** قالب Utility بمتغيرات نصية في المتن (ترتيبها = ترتيب params) */
   protected async sendOrderTemplate(to: string, n: ProviderSendNotificationDTO): Promise<ProviderSendNotificationResultsDTO> {
-    const name = this.options_.orderTemplates?.[n.template as keyof NonNullable<Options["orderTemplates"]>]
+    // المرحلة 4: لغة الرسالة من الطلب (data.lang)؛ الإنجليزية تحتاج قالباً معتمداً باسمه في WHATSAPP_TPL_*_EN
+    const en = (n.data as any)?.lang === "en"
+    const name = en
+      ? this.options_.orderTemplatesEn?.[n.template as keyof NonNullable<Options["orderTemplatesEn"]>]
+      : this.options_.orderTemplates?.[n.template as keyof NonNullable<Options["orderTemplates"]>]
+    const language = en ? this.options_.languageEn : this.options_.language
     if (!name) {
       // القالب غير معتمد بعد: لا نُفشل سير الطلب، نكتفي بالتسجيل
       this.logger_.warn(`WhatsApp: لا يوجد قالب معتمد لـ ${n.template} — لم يُرسل`)
@@ -117,7 +126,7 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
         messaging_product: "whatsapp",
         to,
         type: "template",
-        template: { name, language: { code: this.options_.language }, components: [{ type: "body", parameters: params }] },
+        template: { name, language: { code: language }, components: [{ type: "body", parameters: params }] },
       }),
     })
     const json = (await res.json().catch(() => ({}))) as { messages?: { id: string }[]; error?: { message?: string } }

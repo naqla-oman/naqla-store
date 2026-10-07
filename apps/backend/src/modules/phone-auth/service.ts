@@ -1,6 +1,7 @@
 import crypto from "crypto"
 import Redis from "ioredis"
 import { AbstractAuthModuleProvider, MedusaError } from "@medusajs/framework/utils"
+import { storeError, storeErrorMessage } from "../../lib/store-errors"
 import type {
   AuthenticationInput,
   AuthenticationResponse,
@@ -76,7 +77,7 @@ function redisGuard(url: string, prefix: string): Guard {
         }
         await sleep(25 + Math.random() * 25)
       }
-      throw new MedusaError(MedusaError.Types.CONFLICT, "الخادم مشغول — حاول بعد لحظات")
+      throw storeError(MedusaError.Types.CONFLICT, "otp_busy")
     },
     async overLimit(key, max, windowMs) {
       const k = `${prefix}rl:${key}:${Math.floor(Date.now() / windowMs)}`
@@ -190,9 +191,9 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
 
   async authenticate(data: AuthenticationInput, svc: AuthIdentityProviderService): Promise<AuthenticationResponse> {
     const phone = this.normalize((data.body as any)?.phone)
-    if (!phone) return { success: false, error: "رقم الهاتف غير صحيح" }
+    if (!phone) return { success: false, error: storeErrorMessage("otp_phone_invalid") }
     if (await this.guard_.overLimit(`send:${ipOf(data)}`, this.options_.ipSendsPerHour, 3600_000)) {
-      return { success: false, error: "طلبات كثيرة من هذا الجهاز — حاول بعد ساعة" }
+      return { success: false, error: storeErrorMessage("otp_device_limit") }
     }
     return this.guard_.lock(`otp:${phone}`, () => this.sendCode(phone, svc))
   }
@@ -209,14 +210,14 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
     const state = this.stateOf(identity)
     if (state.otp_sent_at && now - state.otp_sent_at < this.options_.resendSeconds * 1000) {
       const wait = Math.ceil((this.options_.resendSeconds * 1000 - (now - state.otp_sent_at)) / 1000)
-      return { success: false, error: `انتظري ${wait} ثانية قبل طلب رمز جديد` }
+      return { success: false, error: storeErrorMessage("otp_cooldown", { wait }) }
     }
 
     // سقف يومي لكل رقم (يحمي من استنزاف رسائل واتساب المدفوعة على رقم واحد)
     const day = today()
     const sentToday = state.otp_day === day ? state.otp_day_count ?? 0 : 0
     if (sentToday >= this.options_.maxSendsPerDay) {
-      return { success: false, error: "تجاوزت عدد الرموز المسموح اليوم لهذا الرقم — حاول غداً أو تواصل معنا" }
+      return { success: false, error: storeErrorMessage("otp_daily_limit") }
     }
 
     const otp = crypto.randomInt(0, 1_000_000).toString().padStart(6, "0")
@@ -239,9 +240,9 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
     const src = { ...(data.query ?? {}), ...((data.body as any) ?? {}) } as Record<string, unknown>
     const phone = this.normalize(src.phone)
     const otp = String(src.otp ?? "").replace(/\D/g, "")
-    if (!phone || otp.length !== 6) return { success: false, error: "أدخلي الرمز المكوّن من 6 أرقام" }
+    if (!phone || otp.length !== 6) return { success: false, error: storeErrorMessage("otp_format") }
     if (await this.guard_.overLimit(`verify:${ipOf(data)}`, this.options_.ipVerifiesPerHour, 3600_000)) {
-      return { success: false, error: "محاولات كثيرة من هذا الجهاز — حاول بعد ساعة" }
+      return { success: false, error: storeErrorMessage("otp_attempts_device") }
     }
     // C2: القراءة والعدّ والكتابة داخل قفل الرقم — الطلبات المتوازية تُعدّ واحدة واحدة
     return this.guard_.lock(`otp:${phone}`, () => this.checkCode(phone, otp, svc))
@@ -252,14 +253,14 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
     try {
       identity = await svc.retrieve({ entity_id: phone })
     } catch {
-      return { success: false, error: "اطلبي رمزاً أولاً" }
+      return { success: false, error: storeErrorMessage("otp_not_requested") }
     }
 
     const state = this.stateOf(identity)
-    if (!state.otp_hash || !state.otp_expires_at) return { success: false, error: "اطلبي رمزاً جديداً" }
+    if (!state.otp_hash || !state.otp_expires_at) return { success: false, error: storeErrorMessage("otp_request_new") }
     if (Date.now() > state.otp_expires_at) {
       await svc.update(phone, { provider_metadata: { ...state, otp_hash: null } })
-      return { success: false, error: "انتهت صلاحية الرمز — اطلبي رمزاً جديداً" }
+      return { success: false, error: storeErrorMessage("otp_expired") }
     }
 
     const attempts = (state.otp_attempts ?? 0) + 1
@@ -272,7 +273,7 @@ class PhoneAuthService extends AbstractAuthModuleProvider {
       })
       return {
         success: false,
-        error: exhausted ? "تجاوزتِ عدد المحاولات — اطلبي رمزاً جديداً" : `الرمز غير صحيح (تبقّى ${this.options_.maxAttempts - attempts})`,
+        error: exhausted ? storeErrorMessage("otp_exhausted") : storeErrorMessage("otp_wrong", { left: this.options_.maxAttempts - attempts }),
       }
     }
 

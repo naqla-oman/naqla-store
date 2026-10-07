@@ -2,6 +2,7 @@ import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/frame
 import { MedusaError, Modules } from "@medusajs/framework/utils"
 import { createCustomerAccountWorkflow } from "@medusajs/medusa/core-flows"
 import { claimOrdersByPhone } from "../../../lib/claim-orders"
+import { storeError } from "../../../lib/store-errors"
 
 export const PLACEHOLDER_EMAIL_DOMAIN = "phone.invalid"
 
@@ -14,18 +15,18 @@ type Body = { first_name?: string; last_name?: string; email?: string }
  */
 export const POST = async (req: AuthenticatedMedusaRequest<Body>, res: MedusaResponse) => {
   const { auth_identity_id, actor_id } = req.auth_context
-  if (actor_id) throw new MedusaError(MedusaError.Types.DUPLICATE_ERROR, "الحساب موجود مسبقاً")
+  if (actor_id) throw storeError(MedusaError.Types.DUPLICATE_ERROR, "account_exists")
 
   const auth = req.scope.resolve(Modules.AUTH)
   const identity = await auth.retrieveAuthIdentity(auth_identity_id, { relations: ["provider_identities"] })
   const phone = identity.provider_identities?.find((p) => p.provider === "phone-auth")?.entity_id
-  if (!phone) throw new MedusaError(MedusaError.Types.UNAUTHORIZED, "تحققي من رقمك أولاً")
+  if (!phone) throw storeError(MedusaError.Types.UNAUTHORIZED, "verify_phone_first")
 
   const first = (req.body.first_name ?? "").trim().slice(0, 60)
-  if (!first) throw new MedusaError(MedusaError.Types.INVALID_DATA, "أدخلي اسمك")
+  if (!first) throw storeError(MedusaError.Types.INVALID_DATA, "name_required")
   const email = (req.body.email ?? "").trim().toLowerCase()
   if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-    throw new MedusaError(MedusaError.Types.INVALID_DATA, "البريد الإلكتروني غير صحيح")
+    throw storeError(MedusaError.Types.INVALID_DATA, "email_invalid")
   }
 
   const { result: customer } = await createCustomerAccountWorkflow(req.scope).run({
