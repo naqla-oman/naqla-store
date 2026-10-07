@@ -406,6 +406,32 @@ asyncio.run(main())`
   const enMsg = r.en.cooldown ?? r.en.sendErr, arMsg = r.ar.cooldown ?? r.ar.sendErr
   ok(!!enMsg && !rawCode(enMsg) && !/[؀-ۿ]/.test(enMsg), "الواجهة الإنجليزية: خطأ الرمز مترجم (لا رمز خام ولا عربي)", enMsg)
   ok(!!arMsg && !rawCode(arMsg) && /[؀-ۿ]/.test(arMsg), "الواجهة العربية: خطأ الرمز بالعربية (ICU حسب المخاطبة)", arMsg)
+  // 3) إشعار واتساب بلغة الطلب: طلب عبر API بـ locale=en-US ← معاينة إنجليزية (Hello، OMR، /en/track)، وبالعربية «مرحباً»
+  const placeOrder = async (locale, firstName) => {
+    const c = sapi("POST", "/store/carts", { region_id: reg, locale, email: `t${Date.now()}@phone.invalid` }).cart
+    const vs = sapi("GET", `/store/products?handle=${HANDLE}&region_id=${reg}&fields=*variants,+variants.inventory_quantity,+variants.manage_inventory`).products[0].variants
+    const v = (vs.find((x) => !x.manage_inventory || x.inventory_quantity > 0) ?? vs[0]).id
+    sapi("POST", `/store/carts/${c.id}/line-items`, { variant_id: v, quantity: 1 })
+    const gov = storeJson.checkout.governorates[0]
+    const addr = { first_name: firstName, last_name: "Test", address_1: "Street 1", city: gov.wilayats[0], province: gov.code, country_code: "om", phone: "+96891234567" }
+    sapi("POST", `/store/carts/${c.id}`, { shipping_address: addr, billing_address: addr })
+    const so = sapi("GET", `/store/shipping-options?cart_id=${c.id}`).shipping_options.find((o) => o.type?.code === "standard") ?? sapi("GET", `/store/shipping-options?cart_id=${c.id}`).shipping_options[0]
+    sapi("POST", `/store/carts/${c.id}/shipping-methods`, { option_id: so.id })
+    const pc = sapi("POST", "/store/payment-collections", { cart_id: c.id }).payment_collection
+    sapi("POST", `/store/payment-collections/${pc.id}/payment-sessions`, { provider_id: "pp_cod_offline" })
+    const done = sapi("POST", `/store/carts/${c.id}/complete`)
+    return done.order ?? done
+  }
+  const notices = (orderId) => (aapi("GET", "/admin/notifications?limit=50&order=-created_at", t).notifications ?? []).filter((n) => n.resource_id === orderId)
+  const enOrder = await placeOrder("en-US", "Hind"), arOrder = await placeOrder("ar-SA", "")
+  let nEn = [], nAr = []
+  for (let i = 0; i < 10 && !(nEn.length && nAr.length); i++) { await sleep(2000); nEn = notices(enOrder.id); nAr = notices(arOrder.id) }
+  const pEn = nEn.find((n) => n.template === "order_placed")?.data?.preview ?? "", pAr = nAr.find((n) => n.template === "order_placed")?.data?.preview ?? ""
+  const enLocale = aapi("GET", `/admin/orders/${enOrder.id}?fields=id,locale`, t).order?.locale
+  ok(enLocale === "en-US" && pEn.startsWith("Hello Hind,") && pEn.includes("OMR") && pEn.includes("/om/en/track?no=") && !/[\u0600-\u06FF]/.test(pEn), "إشعار الطلب الإنجليزي: Hello، OMR، رابط /en/track، اسم المتجر الإنجليزي", pEn.slice(0, 90))
+  ok(pAr.startsWith("مرحباً بك،") && pAr.includes("ر.ع") && !pAr.includes("عزيزتنا"), "إشعار الطلب العربي بلا اسم: «مرحباً بك» (لا «عزيزتنا»)", pAr.slice(0, 60))
+  const mEn = nEn.find((n) => n.template === "merchant_new_order")?.data?.preview
+  ok(!mEn || /^طلب جديد/.test(mEn), "تنبيه التاجر يبقى عربياً", (mEn ?? "لا تنبيه (merchantPhones فارغ)").slice(0, 40))
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 

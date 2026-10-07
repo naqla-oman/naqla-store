@@ -229,6 +229,16 @@ module.exports = defineConfig({
                 order_shipped_courier: process.env.WHATSAPP_TPL_ORDER_SHIPPED_COURIER,
                 merchant_new_order: process.env.WHATSAPP_TPL_MERCHANT_NEW_ORDER,
               },
+              // المرحلة 4: القوالب الإنجليزية (تُعتمد في Meta بلغة en) — غيابها = تُرسل العربية
+              orderTemplatesEn: {
+                order_placed: process.env.WHATSAPP_TPL_ORDER_PLACED_EN,
+                order_shipped: process.env.WHATSAPP_TPL_ORDER_SHIPPED_EN,
+                order_ready_pickup: process.env.WHATSAPP_TPL_ORDER_READY_PICKUP_EN,
+                order_delivered: process.env.WHATSAPP_TPL_ORDER_DELIVERED_EN,
+                order_canceled: process.env.WHATSAPP_TPL_ORDER_CANCELED_EN,
+                order_shipped_courier: process.env.WHATSAPP_TPL_ORDER_SHIPPED_COURIER_EN,
+              },
+              languageEn: process.env.WHATSAPP_TEMPLATE_LANG_EN || 'en',
               language: process.env.WHATSAPP_TEMPLATE_LANG || 'ar',
             },
           },

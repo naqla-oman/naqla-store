@@ -27,7 +27,9 @@ export const GET = async (_req: AuthenticatedMedusaRequest, res: MedusaResponse)
       { key: "otp", title: "رمز الدخول", category: "Authentication", env: "WHATSAPP_OTP_TEMPLATE", name: process.env.WHATSAPP_OTP_TEMPLATE || null, preview: "نص تولّده Meta تلقائياً مع زر «نسخ الرمز»", params: [] },
       ...ORDER.map((o) => {
         const b = build(o.kind, sample)
-        return { key: o.kind, title: o.title, category: "Utility", env: o.env, name: process.env[o.env] || null, preview: b.preview, params: b.params }
+        // المرحلة 4: النسخة الإنجليزية (تُعتمد في Meta بلغة en) — للطلبات بلغة en-US؛ تنبيه التاجر عربي فقط
+        const en = o.kind === "merchant_new_order" ? null : build(o.kind, { ...sample, name: "Hind", total: "10.000 OMR", shipping: "Standard delivery", payment: "Cash on delivery", track: `https://<domain>/${c.country}/en/track?no=${c.orderPrefix}0009` }, "en")
+        return { key: o.kind, title: o.title, category: "Utility", env: o.env, name: process.env[o.env] || null, preview: b.preview, params: b.params, ...(en ? { en: { env: `${o.env}_EN`, name: process.env[`${o.env}_EN`] || null, preview: en.preview, params: en.params } } : {}) }
       }),
     ],
   })
