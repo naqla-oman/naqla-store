@@ -49,16 +49,24 @@ export function buildMatrix(product: HttpTypes.StoreProduct): VariantMatrix {
   }
   const used = (product.options ?? []).filter((o) => variants.some((v) => valueOf(v, o.id)))
 
-  // ترتيب store.options أولاً، ثم أي خيار أُضيف من اللوحة باسم آخر (يُعرض كأزرار)
+  // ترتيب store.options أولاً، ثم أي خيار أُضيف من اللوحة باسم آخر (يُعرض كأزرار).
+  // المطابقة بالمفتاح الثابت metadata.key (يضعه الخادم) قبل العنوان: العنوان قد يكون مترجماً أو مُعاد تسميته.
   const conf = storeConfig.options
   const defs: OptionDef[] = used
     .map((o) => {
-      const c = conf.find((x) => x.title === o.title)
+      const k = (o.metadata as any)?.key as string | undefined
+      const c = (k && conf.find((x) => x.key === k)) || conf.find((x) => x.title === o.title)
+      // الألوان من metadata.hex على قيم الخيار (ثابتة مهما تغيّر نص القيمة أو ترجمته)، ثم لوحة store.json
+      const swatches: Record<string, [string, string]> = { ...(c?.swatches ?? {}) }
+      for (const val of o.values ?? []) {
+        const hex = (val as any).metadata?.hex
+        if (Array.isArray(hex) && hex.length) swatches[val.value] = [hex[0], hex[1] ?? hex[0]]
+      }
       return {
-        key: c?.key ?? o.id,
+        key: c?.key ?? k ?? o.id,
         title: o.title,
         type: c?.type ?? ("buttons" as const),
-        swatches: c?.swatches,
+        swatches: Object.keys(swatches).length ? swatches : undefined,
         optionId: o.id,
         values: ordered(o.title, Array.from(new Set(variants.map((v) => valueOf(v, o.id)).filter(Boolean) as string[]))),
       }

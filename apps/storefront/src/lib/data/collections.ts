@@ -3,6 +3,7 @@
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions } from "./cookies"
+import { localeQuery } from "@/i18n/t"
 
 export const retrieveCollection = async (id: string) => {
   const next = {
@@ -13,6 +14,7 @@ export const retrieveCollection = async (id: string) => {
     .fetch<{ collection: HttpTypes.StoreCollection }>(
       `/store/collections/${id}`,
       {
+        query: await localeQuery(),
         next,
         cache: "force-cache",
       }
@@ -34,7 +36,7 @@ export const listCollections = async (
     .fetch<{ collections: HttpTypes.StoreCollection[]; count: number }>(
       "/store/collections",
       {
-        query: queryParams,
+        query: { ...queryParams, ...(await localeQuery()) },
         next,
         cache: "force-cache",
       }
@@ -51,7 +53,7 @@ export const getCollectionByHandle = async (
 
   return sdk.client
     .fetch<HttpTypes.StoreCollectionListResponse>(`/store/collections`, {
-      query: { handle, fields: "*products" },
+      query: { handle, fields: "*products", ...(await localeQuery()) },
       next,
       cache: "force-cache",
     })

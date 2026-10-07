@@ -19,7 +19,8 @@ function deepMerge<T>(base: T, over: unknown): T {
 let clientEn: Record<string, unknown> | null = null
 async function loadClientEn() {
   if (clientEn) return clientEn
-  try { clientEn = (await import("@client/locales/en.json")).default as Record<string, unknown> } catch { clientEn = {} }
+  // قسم messages وحده يدخل القاموس؛ store/products/… تُستهلك من i18n/store-config وأداة i18n-sync
+  try { clientEn = (((await import("@client-en")).default as Record<string, unknown>).messages ?? {}) as Record<string, unknown> } catch { clientEn = {} }
   return clientEn
 }
 const lookup = (dict: any, key: string) => key.split(".").reduce((o, k) => (o == null ? undefined : o[k]), dict)

@@ -14,7 +14,7 @@ import {
   setCartId,
 } from "./cookies"
 import { getRegion } from "./regions"
-import { getLocale } from "@lib/data/locale-actions"
+import { localeQuery, medusaCartLocale, shippingOptionTranslations } from "@/i18n/t"
 import { getT } from "@/i18n/t"
 
 /**
@@ -25,7 +25,7 @@ import { getT } from "@/i18n/t"
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.product, *items.variant, *items.thumbnail, *items.metadata, +items.total, *promotions, *items.adjustments, +shipping_methods.name"
+    "*items, *region, *items.product, *items.variant, *items.variant.options, *items.thumbnail, *items.metadata, +items.total, *promotions, *items.adjustments, +shipping_methods.name"
 
   if (!id) {
     return null
@@ -44,6 +44,7 @@ export async function retrieveCart(cartId?: string, fields?: string) {
       method: "GET",
       query: {
         fields,
+        ...(await localeQuery()),
       },
       headers,
       next,
@@ -67,9 +68,9 @@ export async function getOrSetCart(countryCode: string) {
   }
 
   if (!cart) {
-    const locale = await getLocale()
+    // لغة السلة تنتقل إلى الطلب (order.locale): en-US من الصفحات الإنجليزية، ar-SA من العربية
     const cartResp = await sdk.store.cart.create(
-      { region_id: region.id, locale: locale || undefined },
+      { region_id: region.id, locale: await medusaCartLocale() },
       {},
       headers
     )
@@ -478,13 +479,18 @@ export async function listCartOptions() {
     ...(await getCacheOptions("shippingOptions")),
   }
 
-  return await sdk.client.fetch<{
+  const res = await sdk.client.fetch<{
     shipping_options: HttpTypes.StoreCartShippingOption[]
   }>("/store/shipping-options", {
-    query: { cart_id: cartId },
+    query: { cart_id: cartId, ...(await localeQuery()) },
     next,
     headers,
     // H13: هذه مصدر خيارات التوصيل في صفحة الدفع — أسعارها تتبع السلة لحظياً (حد المجاني، المستوى)
     cache: "no-store",
   })
+  // Store API لا يطبّق ترجمات خيارات الشحن بنفسه: نأخذها من /store/naqla/translations (فارغة للعربية)
+  const tr = await shippingOptionTranslations()
+  if (Object.keys(tr).length)
+    res.shipping_options = res.shipping_options.map((o) => (tr[o.id]?.name ? { ...o, name: tr[o.id].name } : o))
+  return res
 }

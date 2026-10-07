@@ -26,7 +26,8 @@ declare module "@naqla-themes/presets.json" {
   export default v
 }
 
-declare module "@client/locales/en.json" {
+/** ترجمات العميل الإنجليزية (clients/<slug>/locales/en.json أو _template إن غابت) */
+declare module "@client-en" {
   const v: Record<string, unknown>
   export default v
 }

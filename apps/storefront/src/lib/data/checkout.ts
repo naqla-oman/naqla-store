@@ -9,7 +9,7 @@ import { storeConfig } from "../../store.config"
 import { orderAttribution } from "../tracking/attribution"
 import { g } from "@lib/voice"
 import { products as nProducts } from "@lib/util/plural"
-import { getT } from "@/i18n/t"
+import { getT, medusaCartLocale } from "@/i18n/t"
 
 /**
  * إجراءات خطوات الدفع. كل إجراء يعيد { ok, error } بدل رمي استثناء،
@@ -198,6 +198,9 @@ export async function placeOrderWith(providerId: string, countryCode: string): P
     )
     if (!cart.items?.length) return { ok: false, error: t("sdd1f5a") }
     if (!cart.shipping_methods?.length) return { ok: false, error: t("se87ef1") }
+    // لغة الصفحة التي أُكمل منها الطلب هي لغة الطلب (الزبون قد يبدّل اللغة بعد إنشاء السلة)
+    const wanted = await medusaCartLocale()
+    if ((cart as any).locale !== wanted) await sdk.store.cart.update(id, { locale: wanted } as any, {}, headers).catch(() => {})
 
     // Store API لا يوسّع shipping_option داخل طرق التوصيل، فنقرأ نوعه من خيارات السلة
     const optionId = cart.shipping_methods[0].shipping_option_id

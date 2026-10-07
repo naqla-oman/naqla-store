@@ -1,6 +1,7 @@
 import { sdk } from "@lib/config"
 import { HttpTypes } from "@medusajs/types"
 import { getCacheOptions } from "./cookies"
+import { localeQuery } from "@/i18n/t"
 
 export const listCategories = async (query?: Record<string, any>) => {
   const next = {
@@ -17,6 +18,7 @@ export const listCategories = async (query?: Record<string, any>) => {
           fields:
             "*category_children, *products, *parent_category, *parent_category.parent_category",
           limit,
+          ...(await localeQuery()),
           ...query,
         },
         next,
@@ -40,6 +42,7 @@ export const getCategoryByHandle = async (categoryHandle: string[]) => {
         query: {
           fields: "*category_children, *products, +metadata, +description",
           handle,
+          ...(await localeQuery()),
         },
         next,
         cache: "force-cache",

@@ -41,22 +41,23 @@ export async function feedItems(): Promise<FeedItem[]> {
     const r = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[] }>("/store/products", {
       query: {
         limit: 100, offset, region_id: region.id,
-        fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.options,+variants.metadata,*options,*images,*categories,+metadata",
+        fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.options,+variants.metadata,*options,+options.metadata,*images,*categories,+metadata",
       },
       cache: "no-store",
     })
     products.push(...r.products)
     if (r.products.length < 100) break
   }
-  const colorTitle = storeConfig.options.find((o) => o.type === "color")?.title
-  const sizeTitle = storeConfig.options.find((o) => o.type !== "color")?.title
+  const colorDef = storeConfig.options.find((o) => o.type === "color")
+  const sizeDef = storeConfig.options.find((o) => o.type !== "color")
 
   return products
     .filter((p) => !(p.metadata as any)?.service)
     .flatMap((p) => {
       const images = (p.images ?? []).map((i) => i.url)
-      const val = (v: HttpTypes.StoreProductVariant, title?: string) => {
-        const opt = (p.options ?? []).find((o) => o.title === title)
+      // الخيار بمفتاحه الثابت metadata.key ثم بالعنوان (قد يكون مترجماً)
+      const val = (v: HttpTypes.StoreProductVariant, def?: { key: string; title: string }) => {
+        const opt = (p.options ?? []).find((o) => (def && (o.metadata as any)?.key === def.key) || o.title === def?.title)
         return opt ? v.options?.find((x) => x.option_id === opt.id)?.value ?? "" : ""
       }
       const multi = (p.variants ?? []).length > 1
@@ -83,8 +84,8 @@ export async function feedItems(): Promise<FeedItem[]> {
           brand: storeConfig.name,
           condition: "new",
           product_type: clean(p.categories?.[0]?.name),
-          size: val(v, sizeTitle),
-          color: val(v, colorTitle),
+          size: val(v, sizeDef),
+          color: val(v, colorDef),
         } satisfies FeedItem
       })
     })

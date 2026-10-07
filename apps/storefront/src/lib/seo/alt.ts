@@ -6,8 +6,8 @@ import { storeConfig } from "../../store.config"
  * «عباءة كلاسيكية — عباءات — أسود، رملي»
  */
 export function productAlt(p: Pick<HttpTypes.StoreProduct, "title" | "categories" | "options" | "variants">, locale = "ar") {
-  const colorTitle = storeConfig.options.find((o) => o.type === "color")?.title
-  const opt = (p.options ?? []).find((o) => o.title === colorTitle) ?? (p.options ?? [])[0]
+  const color = storeConfig.options.find((o) => o.type === "color")
+  const opt = (p.options ?? []).find((o) => (o.metadata as any)?.key === color?.key || o.title === color?.title) ?? (p.options ?? [])[0]
   const values = opt
     ? Array.from(new Set((p.variants ?? []).map((v) => v.options?.find((x) => x.option_id === opt.id)?.value).filter(Boolean) as string[])).slice(0, 4)
     : []

@@ -9,8 +9,12 @@ checkEnvVariables()
 // العميل من STORE: كل ما يخصه يُقرأ من clients/<STORE>/ عبر أسماء مستعارة — لا نسخ ملفات
 const CLIENT_DIR = clientDir()
 const CLIENT = clientStore()
+// ترجمات العميل الإنجليزية (اختيارية): إن غابت يُستعمل ملف _template (فارغ تقريباً) حتى لا يفشل البناء
+const fs = require("fs")
+const CLIENT_EN = [path.join(CLIENT_DIR, "locales/en.json"), path.join(CLIENT_DIR, "../_template/locales/en.json")].find((f) => fs.existsSync(f))
 const ALIASES = {
   "@client": CLIENT_DIR,
+  "@client-en": CLIENT_EN,
   // لوحات نقلة وأزواج الخطوط (مصدر واحد مع الخادم) — تبويب «الهوية»
   "@naqla-themes": path.join(__dirname, "../../themes"),
   "@client-font-display": path.join(__dirname, "src/fonts/display", `${CLIENT.fonts.display}.ts`),

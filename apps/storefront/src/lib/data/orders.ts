@@ -1,6 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
+import { localeQuery } from "@/i18n/t"
 import medusaError from "@lib/util/medusa-error"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { HttpTypes } from "@medusajs/types"
@@ -19,7 +20,8 @@ export const retrieveOrder = async (id: string) => {
       method: "GET",
       query: {
         fields:
-          "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.product,*items.adjustments",
+          "*payment_collections.payments,*items,*items.metadata,*items.variant,*items.variant.options,*items.product,*items.adjustments",
+        ...(await localeQuery()),
       },
       headers,
       next,
@@ -120,7 +122,8 @@ export const retrieveConfirmedOrder = async (id: string) => {
         method: "GET",
         query: {
           fields:
-            "*items,*items.metadata,*shipping_address,*shipping_methods,*payment_collections.payment_sessions,+item_total,+total,+discount_total,+shipping_total,+shipping_discount_total,*promotions,*promotions.application_method,+created_at,+display_id",
+            "*items,*items.metadata,*items.variant,*items.variant.options,*shipping_address,*shipping_methods,*payment_collections.payment_sessions,+item_total,+total,+discount_total,+shipping_total,+shipping_discount_total,*promotions,*promotions.application_method,+created_at,+display_id",
+          ...(await localeQuery()),
         },
         headers,
         cache: "no-store",
