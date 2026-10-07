@@ -50,7 +50,7 @@ export async function feedItems(lang = "ar"): Promise<FeedItem[]> {
     const r = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[] }>("/store/products", {
       query: {
         limit: 100, offset, region_id: region.id, ...localeQ,
-        fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.options,+variants.metadata,*options,+options.metadata,*images,*categories,+metadata",
+        fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.options,+variants.metadata,*options,*options.values,+options.metadata,*images,*categories,+metadata",
       },
       cache: "no-store",
     })
@@ -70,6 +70,12 @@ export async function feedItems(lang = "ar"): Promise<FeedItem[]> {
         return opt ? v.options?.find((x) => x.option_id === opt.id)?.value ?? "" : ""
       }
       const multi = (p.variants ?? []).length > 1
+      // اسم المتغيّر من قيم الخيارات (مترجمة مع ?locale) لا من variant.title المخزَّن بالعربية
+      const valueById = new Map((p.options ?? []).flatMap((o) => (o.values ?? []).map((x) => [x.id, x.value] as const)))
+      const variantLabel = (v: HttpTypes.StoreProductVariant) => {
+        const vals = (v.options ?? []).map((o) => valueById.get(o.id) ?? o.value).filter(Boolean)
+        return vals.length ? vals.join(" / ") : v.title ?? ""
+      }
       return (p.variants ?? []).map((v) => {
         const cp = v.calculated_price
         const price = cp?.calculated_amount ?? 0
@@ -80,7 +86,7 @@ export async function feedItems(lang = "ar"): Promise<FeedItem[]> {
           // فتطابق Meta/TikTok/Snap الإعلانات الديناميكية بالكتالوج (الـSKU قد يحوي نصاً عربياً)
           id: v.id,
           item_group_id: p.handle!,
-          title: clean(multi ? `${p.title} — ${v.title}` : p.title).slice(0, 150),
+          title: clean(multi ? `${p.title} — ${variantLabel(v)}` : p.title).slice(0, 150),
           description: clean(p.description || p.title).slice(0, 5000),
           link: `${base}/${cc}${langPrefix(lang)}/products/${p.handle}?v_id=${v.id}`,
           image_link: images[0] ?? "",

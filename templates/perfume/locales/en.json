@@ -1,6 +1,7 @@
 {
   "$schema": "ترجمات العميل الإنجليزية: store (بنفس شكل store.json، يُدمج فوقه)، products/categories/collections بالـ handle، options بعنوانها العربي، shipping برمز النوع ({name, desc} أو نص الاسم)، messages لتجاوز نصوص الواجهة",
   "store": {
+    "name": "__SHORT_EN__",
     "tagline": "Perfumes, oud oils and bakhoor with an Omani soul",
     "description": "__NAME_EN__: perfumes, oud oils and bakhoor carefully selected in Muscat, in sizes for every occasion, delivered to your door across the Sultanate.",
     "contact": {

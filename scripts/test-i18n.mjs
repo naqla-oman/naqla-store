@@ -339,6 +339,22 @@ async function stage3() {
   ok(titles(gAr.html).some((x) => /[؀-ۿ]/.test(x)) && !gAr.html.includes("/om/en/"), "كتالوج Google العربي كما كان")
   const mEn = curl("/feeds/meta.csv?lang=en")
   ok(mEn.code === 200 && mEn.html.includes(enJson.products[HANDLE].title) && mEn.html.includes("/om/en/products/"), "كتالوج Meta بالإنجليزية")
+  // لا عربي في عنوان أو وصف أي صف لمنتج مترجم (اسم المتغيّر من قيم الخيارات المترجمة، لا من variant.title)
+  const translated = new Set(Object.keys(enJson.products))
+  const arabic = (x) => /[\u0600-\u06FF]/.test(x)
+  const gItems = [...gEn.html.matchAll(/<item>([\s\S]*?)<\/item>/g)].map((m) => ({ group: (m[1].match(/<g:item_group_id>([^<]*)</) ?? [])[1], title: (m[1].match(/<title>([^<]*)</) ?? [])[1] ?? "", desc: (m[1].match(/<description>([^<]*)</) ?? [])[1] ?? "", brand: (m[1].match(/<g:brand>([^<]*)</) ?? [])[1] ?? "" }))
+  const gBad = gItems.filter((i) => translated.has(i.group) && (arabic(i.title) || arabic(i.desc)))
+  ok(gItems.length > 0 && gBad.length === 0, "كتالوج Google الإنجليزي: لا عربي في عنوان/وصف المنتجات المترجمة", gBad.length ? `${gBad.length}/${gItems.length}: ${gBad[0].title}` : `${gItems.length} صفاً`)
+  const csvRows = (txt) => { const rows = []; let row = [], cell = "", q = false; for (let i = 0; i < txt.length; i++) { const ch = txt[i]; if (q) { if (ch === '"') { if (txt[i + 1] === '"') { cell += '"'; i++ } else q = false } else cell += ch } else if (ch === '"') q = true; else if (ch === ",") { row.push(cell); cell = "" } else if (ch === "\n") { row.push(cell); rows.push(row); row = []; cell = "" } else if (ch !== "\r") cell += ch } if (cell || row.length) { row.push(cell); rows.push(row) } return rows }
+  const [head, ...rows] = csvRows(mEn.html.replace(/^\uFEFF/, ""))
+  const col = (name) => head.indexOf(name)
+  const mBad = rows.filter((r) => translated.has(r[col("item_group_id")]) && (arabic(r[col("title")] ?? "") || arabic(r[col("description")] ?? "")))
+  ok(rows.length > 0 && mBad.length === 0, "كتالوج Meta الإنجليزي: لا عربي في عنوان/وصف المنتجات المترجمة", mBad.length ? `${mBad.length}/${rows.length}: ${mBad[0][col("title")]}` : `${rows.length} صفاً`)
+  // اسم المتجر الإنجليزي (store.name في en.json): g:brand وعنوان القناة وOrganization/WebSite
+  const enName = enJson.store?.name
+  const chTitle = (gEn.html.match(/<channel>\s*<title>([^<]*)</) ?? [])[1]
+  const org = homeEn.flatMap((x) => x["@graph"] ?? [x]).find((x) => x["@type"] === "Organization")
+  ok(!enName || (gItems.every((i) => i.brand === enName) && chTitle === enName && org?.name === enName && site(homeEn)?.name === enName), "اسم المتجر الإنجليزي في g:brand وعنوان القناة وOrganization/WebSite", `${chTitle} / ${org?.name}`)
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 
