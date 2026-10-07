@@ -1,0 +1,468 @@
+{
+  "$schema": "ترجمات العميل الإنجليزية: store (بنفس شكل store.json، يُدمج فوقه)، products/categories/collections بالـ handle، options بعنوانها العربي، shipping برمز النوع، messages لتجاوز نصوص الواجهة",
+  "store": {
+    "tagline": "Abayas and dresses, carefully tailored in Muscat",
+    "description": "An Omani boutique for abayas and dresses with exclusive designs tailored with care in Muscat, delivered to your door across the Sultanate.",
+    "contact": {
+      "address": "Muscat, Al Khuwair — __SHORT_EN__ Complex",
+      "hours": "Sat – Thu 10am – 10pm · Fri 4pm – 10pm"
+    },
+    "nav": [
+      {
+        "label": "All products"
+      },
+      {
+        "label": "Abayas"
+      },
+      {
+        "label": "Dresses"
+      },
+      {
+        "label": "Scarves"
+      },
+      {
+        "label": "Bags"
+      },
+      {
+        "label": "Sale"
+      }
+    ],
+    "searchPlaceholder": "Search for an abaya, dress, scarf…",
+    "welcomeCode": {
+      "text": "10% off your first order"
+    },
+    "ticker": [
+      "Free delivery on orders over {free_over} OMR",
+      "Free exchange within {return_days} days",
+      "10% off your first order with code __CODE__10",
+      "Exclusive embroidery by __SHORT_EN__",
+      "Secure payment via Thawani"
+    ],
+    "home": {
+      "hero": {
+        "kicker": "The Winter 2026 collection has arrived",
+        "title": [
+          "Abayas tailored for you",
+          "with the spirit of Muscat"
+        ],
+        "text": "Abayas and dresses carefully tailored in Muscat — exclusive cuts, selected fabrics, and free length adjustment on order.",
+        "primary": {
+          "label": "Shop the collection"
+        },
+        "secondary": {
+          "label": "New abayas"
+        }
+      },
+      "tiles": [
+        {
+          "title": "Sale",
+          "text": "Up to 23% off selected pieces"
+        },
+        {
+          "title": "Leather bags",
+          "text": "Made to last — completes your look"
+        }
+      ],
+      "trust": [
+        {
+          "title": "24–48h delivery",
+          "text": "To all governorates"
+        },
+        {
+          "title": "14-day exchange",
+          "text": "No questions asked"
+        },
+        {
+          "title": "Tailored in our atelier",
+          "text": "Free length adjustment"
+        },
+        {
+          "title": "Secure payment",
+          "text": "Thawani · Apple Pay · Cash on delivery"
+        }
+      ]
+    },
+    "loyalty": {
+      "tiers": [
+        {
+          "name": "Silver",
+          "perk": "10 points per OMR"
+        },
+        {
+          "name": "Gold",
+          "perk": "Always free delivery",
+          "group": "Gold members"
+        },
+        {
+          "name": "Diamond",
+          "perk": "15% off custom tailoring",
+          "group": "Diamond members"
+        }
+      ]
+    },
+    "checkout": {
+      "governorates": [
+        {
+          "name": "Muscat",
+          "wilayats": [
+            "Muscat",
+            "Muttrah",
+            "Bawshar",
+            "As Seeb",
+            "Al Amerat",
+            "Quriyat"
+          ]
+        },
+        {
+          "name": "Dhofar",
+          "wilayats": [
+            "Salalah",
+            "Taqah",
+            "Mirbat",
+            "Rakhyut",
+            "Thumrait",
+            "Dhalkut",
+            "Al Mazyunah",
+            "Muqshin",
+            "Shalim and the Hallaniyat Islands",
+            "Sadah"
+          ]
+        },
+        {
+          "name": "North Al Batinah",
+          "wilayats": [
+            "Sohar",
+            "Shinas",
+            "Liwa",
+            "Saham",
+            "Al Khaburah",
+            "As Suwayq"
+          ]
+        },
+        {
+          "name": "South Al Batinah",
+          "wilayats": [
+            "Ar Rustaq",
+            "Al Awabi",
+            "Nakhal",
+            "Wadi Al Maawil",
+            "Barka",
+            "Al Musanaah"
+          ]
+        },
+        {
+          "name": "Ad Dakhiliyah",
+          "wilayats": [
+            "Nizwa",
+            "Bahla",
+            "Manah",
+            "Al Hamra",
+            "Adam",
+            "Izki",
+            "Samail",
+            "Bidbid"
+          ]
+        },
+        {
+          "name": "North Ash Sharqiyah",
+          "wilayats": [
+            "Ibra",
+            "Al Mudaybi",
+            "Bidiyah",
+            "Al Qabil",
+            "Wadi Bani Khalid",
+            "Dima Wa At Taiyin"
+          ]
+        },
+        {
+          "name": "South Ash Sharqiyah",
+          "wilayats": [
+            "Sur",
+            "Al Kamil Wal Wafi",
+            "Jalan Bani Bu Hasan",
+            "Jalan Bani Bu Ali",
+            "Masirah"
+          ]
+        },
+        {
+          "name": "Adh Dhahirah",
+          "wilayats": [
+            "Ibri",
+            "Yanqul",
+            "Dank"
+          ]
+        },
+        {
+          "name": "Al Buraimi",
+          "wilayats": [
+            "Al Buraimi",
+            "Mahdah",
+            "As Sunaynah"
+          ]
+        },
+        {
+          "name": "Musandam",
+          "wilayats": [
+            "Khasab",
+            "Dibba",
+            "Bukha",
+            "Madha"
+          ]
+        },
+        {
+          "name": "Al Wusta",
+          "wilayats": [
+            "Haima",
+            "Duqm",
+            "Mahout",
+            "Al Jazer"
+          ]
+        }
+      ],
+      "payments": [
+        {
+          "key": "thawani",
+          "title": "Pay online via Thawani",
+          "desc": "Bank card, Apple Pay or Thawani wallet",
+          "cta": "Pay now"
+        },
+        {
+          "key": "cod",
+          "title": "Cash on delivery",
+          "desc": "Cash or card when the courier arrives",
+          "cta": "Confirm order"
+        },
+        {
+          "key": "whatsapp",
+          "title": "Send the order on WhatsApp",
+          "desc": "We confirm the order and payment with you on WhatsApp",
+          "cta": "Send on WhatsApp"
+        }
+      ],
+      "shipping": {
+        "express": {
+          "eta": "Arrives today before 9pm within Muscat"
+        },
+        "pickup": {
+          "eta": "Ready for pickup at the atelier within two hours"
+        }
+      },
+      "giftNote": "Free premium wrapping + a card with your message, and no invoice inside the parcel"
+    },
+    "product": {
+      "lengthField": {
+        "note": "Free length adjustment"
+      },
+      "delivery": {
+        "cityLabel": "within Muscat",
+        "othersLabel": "other governorates within 48 hours"
+      },
+      "perks": [
+        {
+          "text": "Delivery within 24–48 hours"
+        },
+        {
+          "text": "14-day exchange"
+        },
+        {
+          "text": "Secure payment via Thawani"
+        },
+        {
+          "text": "Free gift wrapping"
+        }
+      ],
+      "craftNote": "Every piece is tailored at the __SHORT_EN__ atelier in Muscat.",
+      "shippingReturns": "Delivery within Muscat in 24 hours and to other governorates within 48 hours. Free exchange within 14 days as long as the piece is unworn with its tags.",
+      "sizeGuides": {
+        "abayas": {
+          "head": [
+            "Size",
+            "Length (cm)",
+            "Bust (cm)",
+            "Sleeve (cm)"
+          ]
+        },
+        "dresses": {
+          "head": [
+            "Size",
+            "Bust (cm)",
+            "Waist (cm)",
+            "Length (cm)"
+          ]
+        }
+      },
+      "availability": {
+        "inStock": "Available at the atelier — try it before you buy",
+        "outOfStock": "Back in stock soon"
+      }
+    },
+    "location": {
+      "name": "__SHORT_EN__ atelier — Al Khuwair",
+      "city": "Muscat",
+      "address": "Al Khuwair, __SHORT_EN__ Complex",
+      "wilayat": "Bawshar"
+    },
+    "shipping": [
+      {
+        "name": "Standard delivery",
+        "desc": "Within 24–48 hours by __SHORT_EN__'s courier"
+      },
+      {
+        "name": "Same-day express",
+        "desc": "Within Muscat — for orders before 3pm"
+      },
+      {
+        "name": "Pickup from the atelier",
+        "desc": "Al Khuwair — __SHORT_EN__ Complex · ready within two hours"
+      }
+    ],
+    "promotions": [
+      {
+        "description": "10% off the first order"
+      }
+    ],
+    "tags": [
+      {
+        "label": "Eid"
+      },
+      {
+        "label": "Weddings"
+      },
+      {
+        "label": "Work"
+      },
+      {
+        "label": "Umrah"
+      },
+      {
+        "label": "Graduation"
+      }
+    ],
+    "tailoring": {
+      "title": "Custom tailoring",
+      "description": "Made-to-measure at the __SHORT_EN__ atelier: the piece is sewn to your measurements or its size adjusted.",
+      "services": [
+        {
+          "title": "Abaya tailoring"
+        },
+        {
+          "title": "Dress tailoring"
+        },
+        {
+          "title": "Size adjustment"
+        }
+      ],
+      "measurements": [
+        {
+          "label": "Length"
+        },
+        {
+          "label": "Bust"
+        },
+        {
+          "label": "Shoulder"
+        },
+        {
+          "label": "Sleeve"
+        }
+      ]
+    }
+  },
+  "options": {
+    "المقاس": {
+      "title": "Size",
+      "values": {
+        "مقاس واحد": "One size"
+      }
+    },
+    "اللون": {
+      "title": "Color",
+      "values": {
+        "أسود": "Black",
+        "رملي": "Sand",
+        "زمردي": "Emerald"
+      }
+    }
+  },
+  "products": {
+    "classic-straight-abaya": {
+      "title": "Classic Straight-Cut Abaya",
+      "description": "An everyday abaya in a light, flowing premium crepe with a straight cut, wide sleeves and concealed stitching. A practical design for work and daily occasions."
+    },
+    "gold-embroidered-evening-dress": {
+      "title": "Gold-Thread Embroidered Evening Dress",
+      "description": "A long evening dress with hand embroidery in gold thread on the bodice and sleeves, a full satin lining and a concealed back zip."
+    },
+    "gold-trim-embroidered-abaya": {
+      "title": "Gold-Trim Embroidered Abaya",
+      "description": "An occasion abaya in Emirati Nada fabric with gold ribbon embroidery on the sleeves and front edges."
+    },
+    "printed-silk-scarf": {
+      "title": "Printed Silk Scarf",
+      "description": "A 100% natural silk scarf with an exclusive __SHORT_EN__ print and hand-stitched edges. Comes in an elegant gift box."
+    },
+    "medium-leather-handbag": {
+      "title": "Medium Leather Handbag",
+      "description": "A genuine leather bag with a geometric design, an adjustable shoulder strap and a cotton lining with two inner pockets."
+    },
+    "puff-sleeve-day-dress": {
+      "title": "Puff-Sleeve Day Dress",
+      "description": "A comfortable cotton midi day dress with puff sleeves, practical side pockets and a detachable waist belt."
+    },
+    "beaded-embroidered-shayla": {
+      "title": "Beaded Embroidered Shayla",
+      "description": "A Korean chiffon shayla with delicate bead embroidery along the edges — light, stays in place and needs no ironing."
+    },
+    "mini-chain-evening-bag": {
+      "title": "Mini Chain Evening Bag",
+      "description": "A clutch with a gold metal clasp and a concealable shoulder chain, with room for your phone and essentials."
+    },
+    "practical-side-pocket-abaya": {
+      "title": "Practical Side-Pocket Abaya",
+      "description": "A light everyday abaya with hidden side pockets and front buttons, in a crease-resistant fabric for travel and work."
+    },
+    "floral-casual-dress": {
+      "title": "Floral Casual Dress",
+      "description": "A relaxed casual dress with a soft floral print in cool viscose for summer days."
+    },
+    "open-sleeve-black-abaya": {
+      "title": "Open-Sleeve Black Abaya",
+      "description": "A classic black abaya with wide open sleeves and a flowing cut, in premium Korean silk fabric."
+    },
+    "small-leather-backpack": {
+      "title": "Small Leather Backpack",
+      "description": "An elegant backpack in a practical size with soft leather, gold metal zips and two adjustable straps."
+    }
+  },
+  "categories": {
+    "abayas": {
+      "name": "Abayas"
+    },
+    "dresses": {
+      "name": "Dresses"
+    },
+    "scarves": {
+      "name": "Scarves"
+    },
+    "bags": {
+      "name": "Bags"
+    }
+  },
+  "collections": {
+    "new": {
+      "title": "New arrivals"
+    },
+    "bestsellers": {
+      "title": "Bestsellers"
+    },
+    "sale": {
+      "title": "Sale"
+    }
+  },
+  "shipping": {
+    "standard": "Standard delivery",
+    "express": "Same-day express",
+    "pickup": "Pickup from the atelier"
+  },
+  "messages": {}
+}

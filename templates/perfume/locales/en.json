@@ -1,0 +1,380 @@
+{
+  "$schema": "ترجمات العميل الإنجليزية: store (بنفس شكل store.json، يُدمج فوقه)، products/categories/collections بالـ handle، options بعنوانها العربي، shipping برمز النوع، messages لتجاوز نصوص الواجهة",
+  "store": {
+    "tagline": "Perfumes, oud oils and bakhoor with an Omani soul",
+    "description": "__NAME_EN__: perfumes, oud oils and bakhoor carefully selected in Muscat, in sizes for every occasion, delivered to your door across the Sultanate.",
+    "contact": {
+      "address": "Muscat, Muttrah — Souq Al Dhalam",
+      "hours": "Daily 9am – 11pm"
+    },
+    "nav": [
+      {
+        "label": "All perfumes"
+      },
+      {
+        "label": "Women"
+      },
+      {
+        "label": "Men"
+      },
+      {
+        "label": "Oud oils"
+      },
+      {
+        "label": "Bakhoor"
+      },
+      {
+        "label": "Sale"
+      }
+    ],
+    "searchPlaceholder": "Search for a perfume, oud oil, bakhoor…",
+    "welcomeCode": {
+      "text": "10% off your first order"
+    },
+    "ticker": [
+      "Free delivery on orders over {free_over} OMR",
+      "A free sample with every order",
+      "10% off your first order with code __CODE__10",
+      "Premium gift wrapping"
+    ],
+    "home": {
+      "hero": {
+        "kicker": "The Omani winter collection",
+        "title": [
+          "A scent that tells",
+          "of Muscat"
+        ],
+        "text": "Perfumes, oud oils and bakhoor carefully selected — in trial and full sizes, with a free sample in every order.",
+        "primary": {
+          "label": "Discover the perfumes"
+        },
+        "secondary": {
+          "label": "Oud oils"
+        }
+      },
+      "tiles": [
+        {
+          "title": "Oud oils",
+          "text": "From 3 ml to 12 ml"
+        },
+        {
+          "title": "House bakhoor",
+          "text": "Traditional blends for the majlis"
+        }
+      ],
+      "trust": [
+        {
+          "title": "24–48h delivery",
+          "text": "To all governorates"
+        },
+        {
+          "title": "Gift wrapping",
+          "text": "With a card carrying your message"
+        },
+        {
+          "title": "Free sample",
+          "text": "With every order"
+        },
+        {
+          "title": "Secure payment",
+          "text": "Cash on delivery or WhatsApp"
+        }
+      ]
+    },
+    "loyalty": {
+      "tiers": [
+        {
+          "name": "Silver",
+          "perk": "10 points per OMR"
+        },
+        {
+          "name": "Gold",
+          "perk": "Always free delivery",
+          "group": "__SHORT_EN__ Gold members"
+        }
+      ]
+    },
+    "checkout": {
+      "governorates": [
+        {
+          "name": "Muscat",
+          "wilayats": [
+            "Muscat",
+            "Muttrah",
+            "Bawshar",
+            "As Seeb",
+            "Al Amerat",
+            "Quriyat"
+          ]
+        },
+        {
+          "name": "Dhofar",
+          "wilayats": [
+            "Salalah",
+            "Taqah",
+            "Mirbat",
+            "Rakhyut",
+            "Thumrait",
+            "Dhalkut",
+            "Al Mazyunah",
+            "Muqshin",
+            "Shalim and the Hallaniyat Islands",
+            "Sadah"
+          ]
+        },
+        {
+          "name": "North Al Batinah",
+          "wilayats": [
+            "Sohar",
+            "Shinas",
+            "Liwa",
+            "Saham",
+            "Al Khaburah",
+            "As Suwayq"
+          ]
+        },
+        {
+          "name": "South Al Batinah",
+          "wilayats": [
+            "Ar Rustaq",
+            "Al Awabi",
+            "Nakhal",
+            "Wadi Al Maawil",
+            "Barka",
+            "Al Musanaah"
+          ]
+        },
+        {
+          "name": "Ad Dakhiliyah",
+          "wilayats": [
+            "Nizwa",
+            "Bahla",
+            "Manah",
+            "Al Hamra",
+            "Adam",
+            "Izki",
+            "Samail",
+            "Bidbid"
+          ]
+        },
+        {
+          "name": "North Ash Sharqiyah",
+          "wilayats": [
+            "Ibra",
+            "Al Mudaybi",
+            "Bidiyah",
+            "Al Qabil",
+            "Wadi Bani Khalid",
+            "Dima Wa At Taiyin"
+          ]
+        },
+        {
+          "name": "South Ash Sharqiyah",
+          "wilayats": [
+            "Sur",
+            "Al Kamil Wal Wafi",
+            "Jalan Bani Bu Hasan",
+            "Jalan Bani Bu Ali",
+            "Masirah"
+          ]
+        },
+        {
+          "name": "Adh Dhahirah",
+          "wilayats": [
+            "Ibri",
+            "Yanqul",
+            "Dank"
+          ]
+        },
+        {
+          "name": "Al Buraimi",
+          "wilayats": [
+            "Al Buraimi",
+            "Mahdah",
+            "As Sunaynah"
+          ]
+        },
+        {
+          "name": "Musandam",
+          "wilayats": [
+            "Khasab",
+            "Dibba",
+            "Bukha",
+            "Madha"
+          ]
+        },
+        {
+          "name": "Al Wusta",
+          "wilayats": [
+            "Haima",
+            "Duqm",
+            "Mahout",
+            "Al Jazer"
+          ]
+        }
+      ],
+      "payments": [
+        {
+          "key": "thawani",
+          "title": "Pay online via Thawani",
+          "desc": "Bank card, Apple Pay or Thawani wallet",
+          "cta": "Pay now"
+        },
+        {
+          "key": "cod",
+          "title": "Cash on delivery",
+          "desc": "Cash or card when the courier arrives",
+          "cta": "Confirm order"
+        },
+        {
+          "key": "whatsapp",
+          "title": "Send the order on WhatsApp",
+          "desc": "We confirm the order and payment with you on WhatsApp",
+          "cta": "Send on WhatsApp"
+        }
+      ],
+      "shipping": {
+        "express": {
+          "eta": "Arrives today within Muscat"
+        },
+        "pickup": {
+          "eta": "Ready for pickup at the Muttrah shop within an hour"
+        }
+      },
+      "giftNote": "A premium gift box + a card with your message"
+    },
+    "product": {
+      "delivery": {
+        "cityLabel": "within Muscat",
+        "othersLabel": "other governorates within 48 hours"
+      },
+      "perks": [
+        {
+          "text": "Delivery within 24–48 hours"
+        },
+        {
+          "text": "A free sample with every order"
+        },
+        {
+          "text": "Original sealed products"
+        },
+        {
+          "text": "Free gift wrapping"
+        }
+      ],
+      "shippingReturns": "Delivery within Muscat in 24 hours and to other governorates within 48 hours. Sealed items can be returned within 7 days.",
+      "craftNote": "Every bottle is filled at __NAME_EN__ in Muscat.",
+      "availability": {
+        "inStock": "Available at the shop — try it before you buy",
+        "outOfStock": "Back in stock soon"
+      },
+      "lengthField": {
+        "note": "Free length adjustment"
+      }
+    },
+    "location": {
+      "name": "__SHORT_EN__ shop — Muttrah",
+      "city": "Muscat",
+      "address": "Muttrah, Souq Al Dhalam",
+      "wilayat": "Muttrah"
+    },
+    "shipping": [
+      {
+        "name": "Standard delivery",
+        "desc": "Within 24–48 hours"
+      },
+      {
+        "name": "Pickup from the shop",
+        "desc": "Muttrah — ready within an hour"
+      }
+    ],
+    "promotions": [
+      {
+        "description": "10% off the first order"
+      }
+    ],
+    "tags": [
+      {
+        "label": "Gift"
+      },
+      {
+        "label": "Eid"
+      }
+    ]
+  },
+  "options": {
+    "الحجم": {
+      "title": "Size",
+      "values": {
+        "3 مل": "3 ml",
+        "6 مل": "6 ml",
+        "12 مل": "12 ml",
+        "50 مل": "50 ml",
+        "100 مل": "100 ml",
+        "50 غ": "50 g",
+        "100 غ": "100 g"
+      }
+    }
+  },
+  "products": {
+    "jabal-rose": {
+      "title": "Jabal Akhdar Rose",
+      "description": "A floral perfume of Jabal Akhdar Taif rose with a touch of white musk and light vanilla. Long-lasting, for work and occasions."
+    },
+    "night-musk": {
+      "title": "Night Musk",
+      "description": "A soft, warm musk with amber and sandalwood that stays on skin and clothes."
+    },
+    "saffron-amber": {
+      "title": "Saffron Amber",
+      "description": "Premium saffron with amber and warm spices — an evening perfume for occasions."
+    },
+    "muscat-oud": {
+      "title": "Muscat Oud",
+      "description": "Cambodian oud with leather and cardamom — rich, deep and lasting all day."
+    },
+    "dhofar-frankincense": {
+      "title": "Dhofar Frankincense",
+      "description": "Hojari frankincense from Dhofar with citrus and cedar — fresh and Omani in spirit."
+    },
+    "royal-oud-oil": {
+      "title": "Royal Oud Oil",
+      "description": "Aged, concentrated oud oil — one drop is enough. Wear it on skin or with a perfume for longer hold."
+    },
+    "dar-bakhoor": {
+      "title": "House Bakhoor",
+      "description": "A traditional bakhoor blend of oud, musk and rose — for the majlis and hospitality."
+    }
+  },
+  "categories": {
+    "women": {
+      "name": "Women's perfumes"
+    },
+    "men": {
+      "name": "Men's perfumes"
+    },
+    "oud-oils": {
+      "name": "Oud oils"
+    },
+    "bakhoor": {
+      "name": "Bakhoor"
+    }
+  },
+  "collections": {
+    "bestsellers": {
+      "title": "Bestsellers"
+    },
+    "new": {
+      "title": "New arrivals"
+    },
+    "sale": {
+      "title": "Sale"
+    }
+  },
+  "shipping": {
+    "standard": "Standard delivery",
+    "pickup": "Pickup from the shop",
+    "express": "Same-day express"
+  },
+  "messages": {}
+}

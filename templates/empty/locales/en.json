@@ -1,0 +1,10 @@
+{
+  "$schema": "ترجمات العميل الإنجليزية (اختياري): store بنفس شكل store.json، products/categories/collections بالـ handle، options بعنوانها العربي، shipping برمز النوع، messages لتجاوز نصوص الواجهة",
+  "store": {},
+  "products": {},
+  "options": {},
+  "categories": {},
+  "collections": {},
+  "shipping": {},
+  "messages": {}
+}
