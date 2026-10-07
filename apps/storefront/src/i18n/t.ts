@@ -50,12 +50,21 @@ export async function localeQuery(): Promise<Record<string, string>> {
 
 type TrMap = Record<string, Record<string, string>>
 type TrRes = { translations: TrMap; sources?: Record<string, string> }
-async function fetchTranslationsRes(reference: string): Promise<TrRes> {
+type FetchOpts = { ids?: string[]; fields?: string[] }
+/**
+ * قراءة من /store/naqla/translations. ids يحصر الصفوف في المطلوب (المنتجات في السلة مثلاً) وfields الحقول اللازمة فقط؛
+ * بلا ids تعود كل الصفوف المنشورة على صفحات في الخادم.
+ */
+async function fetchTranslationsRes(reference: string, opts: FetchOpts = {}): Promise<TrRes> {
   const q = await localeQuery()
   if (!q.locale) return { translations: {} }
+  if (opts.ids && !opts.ids.length) return { translations: {} }
   const base = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
+  const params = new URLSearchParams({ reference, locale: q.locale })
+  if (opts.ids) params.set("ids", Array.from(new Set(opts.ids)).sort().join(","))
+  if (opts.fields) params.set("fields", opts.fields.join(","))
   try {
-    const r = await fetch(`${base}/store/naqla/translations?reference=${reference}&locale=${q.locale}`, {
+    const r = await fetch(`${base}/store/naqla/translations?${params}`, {
       headers: { "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "" },
       next: { revalidate: 60 },
     })
@@ -64,14 +73,14 @@ async function fetchTranslationsRes(reference: string): Promise<TrRes> {
     return { translations: j.translations ?? {}, sources: j.sources }
   } catch { return { translations: {} } }
 }
-const fetchTranslations = async (reference: string) => (await fetchTranslationsRes(reference)).translations
+const fetchTranslations = async (reference: string, opts: FetchOpts = {}) => (await fetchTranslationsRes(reference, opts)).translations
 
 /**
  * ترجمات لقطات السلة/الطلب (variant_title وproduct_title مخزّنة بالعربية في Medusa):
  * values: id قيمة الخيار ← القيمة المترجمة، products: id المنتج ← العنوان المترجم. للعربية خرائط فارغة.
  */
-export async function itemTranslations() {
-  const [v, p] = await Promise.all([fetchTranslationsRes("product_option_value"), fetchTranslations("product")])
+export async function itemTranslations(productIds?: string[]) {
+  const [v, p] = await Promise.all([fetchTranslationsRes("product_option_value", { fields: ["value"] }), fetchTranslations("product", { ids: productIds, fields: ["title"] })])
   const values: Record<string, string> = {}, products: Record<string, string> = {}
   for (const [id, t] of Object.entries(v.translations)) if (t.value) values[id] = t.value
   for (const [id, t] of Object.entries(p)) if (t.title) products[id] = t.title
@@ -80,11 +89,11 @@ export async function itemTranslations() {
 }
 /** ترجمات خيارات الشحن: id ← { name } */
 export async function shippingOptionTranslations() {
-  return fetchTranslations("shipping_option")
+  return fetchTranslations("shipping_option", { fields: ["name"] })
 }
 /** ترجمات أنواع الشحن (الوصف تحت الخيار في الدفع): type id ← { label, description } */
 export async function shippingTypeTranslations() {
-  return fetchTranslations("shipping_option_type")
+  return fetchTranslations("shipping_option_type", { fields: ["label", "description"] })
 }
 /** خريطة واحدة id ← نص (قيم الخيارات وعناوين المنتجات) تُمرَّر لمكوّنات العميل (valueMap) */
 export async function optionValueTranslations(): Promise<Record<string, string>> {
@@ -108,7 +117,8 @@ export async function localizeSnapshots<T extends Snap>(o: T): Promise<T> {
   if (!o) return o
   const q = await localeQuery()
   if (!q.locale) return o
-  const [{ values, products, valuesByText }, ship] = await Promise.all([itemTranslations(), shippingOptionTranslations()])
+  const productIds = Array.from(new Set<string>(((o.items ?? []) as any[]).map((i) => i.product_id).filter(Boolean)))
+  const [{ values, products, valuesByText }, ship] = await Promise.all([itemTranslations(productIds), shippingOptionTranslations()])
   for (const i of o.items ?? []) {
     const title = i.product_id && products[i.product_id]
     if (title) i.product_title = title

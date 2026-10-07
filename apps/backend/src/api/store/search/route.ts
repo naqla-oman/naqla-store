@@ -22,7 +22,7 @@ async function load(req: MedusaRequest) {
   })
   const { data: cats } = await query.graph({ entity: "product_category", fields: ["name", "handle", "is_active"], pagination: { take: 500 } })
   // المرحلة 2: الترجمات الإنجليزية تدخل الفهرس نفسه فيجد البحث الإنجليزي المنتجات المترجمة
-  const [trP, trC, trV] = await Promise.all([readTranslations(req.scope, "product", "en-US"), readTranslations(req.scope, "product_category", "en-US"), readTranslations(req.scope, "product_option_value", "en-US")])
+  const [trP, trC, trV] = await Promise.all([readTranslations(req.scope, "product", "en-US", { fields: ["title", "subtitle", "description"] }), readTranslations(req.scope, "product_category", "en-US", { fields: ["name"] }), readTranslations(req.scope, "product_option_value", "en-US", { fields: ["value"] })])
   const enCat = (c: any) => trC.get(c.id)?.name ?? ""
   const docs = (products as any[])
     .filter((p) => !p.metadata?.service)

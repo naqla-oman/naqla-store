@@ -502,5 +502,30 @@
     "cardMessage": "Card message: {msg}",
     "nameLine": "Name: {name}",
     "notFoundHint": "The link may have changed or the product is no longer available. Browse {store} from here:"
+  },
+  "platform": {
+    "payments": {
+      "thawani": {
+        "title": "Pay online via Thawani",
+        "desc": "Bank card, Apple Pay or Thawani wallet",
+        "cta": "Pay now"
+      },
+      "cod": {
+        "title": "Cash on delivery",
+        "desc": "Cash or card when the courier arrives",
+        "cta": "Confirm order"
+      },
+      "whatsapp": {
+        "title": "Send the order on WhatsApp",
+        "desc": "We confirm the order and payment with you on WhatsApp",
+        "cta": "Send on WhatsApp"
+      }
+    },
+    "searchPlaceholder": "Search the store…",
+    "availability": {
+      "inStock": "In stock",
+      "outOfStock": "Back in stock soon"
+    },
+    "builtBy": "Naqla Digital Solutions"
   }
 }

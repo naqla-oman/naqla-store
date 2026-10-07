@@ -2,6 +2,7 @@ import { useLocale } from "next-intl"
 import { getLocale } from "next-intl/server"
 import { buildFrom, storeConfig, type StoreConfig } from "@/store.config"
 import clientEn from "@client-en"
+import messagesEn from "../../messages/en.json"
 
 /**
  * نصوص store.json بلغة الصفحة: الإنجليزية = قسم store من clients/<slug>/locales/en.json فوق الإعداد العربي.
@@ -43,8 +44,30 @@ export function localizedStoreConfig(lang: string): StoreConfig {
   const { promotions: _p, tags: _t, ...layer } = en as AnyObj & { promotions?: unknown; tags?: unknown }
   const built = buildFrom((c) => overlay(c as unknown as AnyObj, layer) as unknown as typeof c)
   if (cache && cache.key === built.key) return cache.value
+  platformDefaults(built.value)
   cache = { key: built.key, value: built.value }
   return built.value
+}
+
+/**
+ * افتراضات المنصة العربية في store.config (نصوص قنوات الدفع، searchPlaceholder، availability، builtBy) لها مقابل
+ * إنجليزي في messages/en.json → platform؛ يُستخدم فقط حين تركتها طبقة المتجر كما هي (أي ما زالت مساوية للعربية).
+ */
+function platformDefaults(v: StoreConfig) {
+  const P = (messagesEn as { platform: typeof import("../../messages/en.json")["platform"] }).platform
+  const ar = storeConfig
+  const same = (a: unknown, b: unknown) => a === b
+  for (const p of v.checkout.payments) {
+    const arP = ar.checkout.payments.find((x) => x.key === p.key), en = (P.payments as Record<string, { title: string; desc: string; cta: string }>)[p.key]
+    if (!arP || !en) continue
+    if (same(p.title, arP.title)) p.title = en.title
+    if (same(p.desc, arP.desc)) p.desc = en.desc
+    if (same(p.cta, arP.cta)) p.cta = en.cta
+  }
+  if (same(v.searchPlaceholder, ar.searchPlaceholder)) v.searchPlaceholder = P.searchPlaceholder
+  if (same(v.product.availability.inStock, ar.product.availability.inStock)) v.product.availability.inStock = P.availability.inStock
+  if (same(v.product.availability.outOfStock, ar.product.availability.outOfStock)) v.product.availability.outOfStock = P.availability.outOfStock
+  if (same(v.builtBy.name, ar.builtBy.name)) v.builtBy = { ...v.builtBy, name: P.builtBy }
 }
 
 /** في مكوّنات العميل والخادم المتزامنة */
