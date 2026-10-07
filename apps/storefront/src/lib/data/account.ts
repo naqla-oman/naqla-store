@@ -6,7 +6,7 @@ import { getAuthHeaders, getCacheTag, setAuthToken } from "./cookies"
 import { transferCart } from "./customer"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
-import { getT } from "@/i18n/t"
+import { getT, localeHeader } from "@/i18n/t"
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
 
@@ -236,7 +236,7 @@ export async function trackOrder(number: string, phone: string): Promise<Result<
     const { order } = await sdk.client.fetch<{ order: TrackedOrder }>("/store/track", {
       method: "POST",
       body: { number, phone },
-      headers: auth,
+      headers: { ...auth, ...(await localeHeader()) },
       cache: "no-store",
     })
     return { ok: true, data: order }

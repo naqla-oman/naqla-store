@@ -1,7 +1,7 @@
 "use server"
 
 import { sdk } from "@lib/config"
-import { localeQuery } from "@/i18n/t"
+import { localeQuery, localizeSnapshots } from "@/i18n/t"
 import medusaError from "@lib/util/medusa-error"
 import { getAuthHeaders, getCacheOptions } from "./cookies"
 import { HttpTypes } from "@medusajs/types"
@@ -27,7 +27,7 @@ export const retrieveOrder = async (id: string) => {
       next,
       cache: "force-cache",
     })
-    .then(({ order }) => order)
+    .then(({ order }) => localizeSnapshots(order))
     .catch((err) => medusaError(err))
 }
 
@@ -51,14 +51,15 @@ export const listOrders = async (
         limit,
         offset,
         order: "-created_at",
-        fields: "*items,+items.metadata,*items.variant,*items.product",
+        fields: "*items,+items.metadata,*items.variant,*items.variant.options,*items.product",
+        ...(await localeQuery()),
         ...filters,
       },
       headers,
       next,
       cache: "force-cache",
     })
-    .then(({ orders }) => orders)
+    .then(async ({ orders }) => { for (const o of orders) await localizeSnapshots(o); return orders })
     .catch((err) => medusaError(err))
 }
 
@@ -128,7 +129,7 @@ export const retrieveConfirmedOrder = async (id: string) => {
         headers,
         cache: "no-store",
       })
-      .then(({ order }) => order),
+      .then(({ order }) => localizeSnapshots(order)),
     sdk.client
       .fetch<{ extras: Record<string, any>; points?: { points: number; status: string | null; has_account: boolean } }>(
         `/store/order-extras/${id}`,

@@ -13,6 +13,7 @@ import { useParams } from "next/navigation"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { storeConfig } from "../../../../store.config"
 import { useCurrencyLabel, useT } from "@/i18n/t"
+import { useStoreConfig } from "@/i18n/store-config"
 
 type Props = {
   product: HttpTypes.StoreProduct
@@ -25,6 +26,7 @@ const waLink = (text: string) =>
   `https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(text)}`
 
 export default function ProductActions({ product, disabled }: Props) {
+  const sc = useStoreConfig()
   const t = useT("product")
   const CUR = useCurrencyLabel()
   const countryCode = useParams().countryCode as string
@@ -144,15 +146,15 @@ export default function ProductActions({ product, disabled }: Props) {
   // الرابط يُقرأ بعد التحميل فقط (pageUrl) حتى تتطابق نسخة الخادم مع المتصفح
   const waOrder = () =>
     waLink(
-      t("waOrder", { store: storeConfig.shortName, title: product.title, selection: selectionText, qty, price: `${formatAmount(price * qty)} ${CUR}` }) + (pageUrl ? `\n${pageUrl}` : "")
+      t("waOrder", { store: sc.shortName, title: product.title, selection: selectionText, qty, price: `${formatAmount(price * qty)} ${CUR}` }) + (pageUrl ? `\n${pageUrl}` : "")
     )
   const waNotify = () =>
-    waLink(t("waNotify", { store: storeConfig.shortName, title: product.title, selection: selectionText }))
+    waLink(t("waNotify", { store: sc.shortName, title: product.title, selection: selectionText }))
   const waAtelier = (kind: "custom" | "fitting") =>
     waLink(
       kind === "custom"
-        ? t("waTailor", { store: storeConfig.shortName, title: product.title })
-        : t("waFitting", { store: storeConfig.shortName, title: product.title })
+        ? t("waTailor", { store: sc.shortName, title: product.title })
+        : t("waFitting", { store: sc.shortName, title: product.title })
     )
 
   return (
@@ -289,7 +291,7 @@ export default function ProductActions({ product, disabled }: Props) {
           )}
         </div>
 
-        {canBuy && storeConfig.features.whatsappOrder && (
+        {canBuy && sc.features.whatsappOrder && (
           <a className="btn wa block warow" href={waOrder()} target="_blank" rel="noopener noreferrer">
             <Icon name="whatsapp" size={18} /> {t("saa3776")}
           </a>

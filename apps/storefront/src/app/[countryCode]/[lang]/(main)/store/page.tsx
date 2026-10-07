@@ -2,18 +2,19 @@ import { Metadata } from "next"
 
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import StoreTemplate from "@modules/store/templates"
-import { storeConfig } from "@/store.config"
 import { langPrefix } from "@/i18n/config"
 import { getT } from "@/i18n/t"
+import { getStoreConfig } from "@/i18n/store-config"
 
 /** منخفضة: عنوان ووصف عربيان؛ نتائج البحث (?q=) لا تُفهرس ورابطها القانوني /store */
 export async function generateMetadata(props: Params): Promise<Metadata> {
+  const sc = await getStoreConfig()
   const t = await getT("store")
   const { countryCode, lang } = await props.params
   const { q, page } = await props.searchParams
   return {
     title: q ? t("searchResults", { q: q.slice(0, 60) }) : t("s2495fa"),
-    description: storeConfig.description,
+    description: sc.description,
     alternates: { canonical: `/${countryCode}${langPrefix(lang)}/store${!q && page && page !== "1" ? `?page=${page}` : ""}` },
     ...(q ? { robots: { index: false, follow: true } } : {}),
   }

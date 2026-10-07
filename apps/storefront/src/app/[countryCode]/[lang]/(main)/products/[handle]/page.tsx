@@ -9,7 +9,7 @@ import { HttpTypes } from "@medusajs/types"
 import { PRODUCT_FIELDS } from "@modules/products/lib/fields"
 import { variantPricing, availableQty } from "@modules/products/lib/variants"
 import { getBaseURL } from "@lib/util/env"
-import { storeConfig } from "@/store.config"
+import { getStoreConfig } from "@/i18n/store-config"
 import { getFreeShippingOver } from "@lib/data/shipping-threshold"
 import { langPrefix } from "@/i18n/config"
 import { getT } from "@/i18n/t"
@@ -76,6 +76,7 @@ function getImagesForVariant(
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
+  const sc = await getStoreConfig()
   const params = await props.params
   const { handle } = params
   const region = await getRegion(params.countryCode)
@@ -105,7 +106,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     description,
     alternates: { canonical: `/${params.countryCode}${langPrefix(params.lang)}/products/${handle}` },
     openGraph: {
-      title: `${product.title} | ${storeConfig.name}`,
+      title: `${product.title} | ${sc.name}`,
       description,
       locale: "ar_OM",
       images: product.thumbnail ? [product.thumbnail] : [],
@@ -115,6 +116,7 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
 
 export default async function ProductPage(props: Props) {
   const t = await getT("product")
+  const sc = await getStoreConfig()
   const params = await props.params
   const region = await getRegion(params.countryCode)
   const searchParams = await props.searchParams
@@ -149,7 +151,7 @@ export default async function ProductPage(props: Props) {
     description: pricedProduct.description ?? undefined,
     image: (pricedProduct.images ?? []).map((i) => (i.url.startsWith("http") ? i.url : `${getBaseURL()}${i.url}`)),
     sku: pricedProduct.variants?.[0]?.sku ?? undefined,
-    brand: { "@type": "Brand", name: storeConfig.name },
+    brand: { "@type": "Brand", name: sc.name },
     category: pricedProduct.categories?.[0]?.name,
     offers: {
       "@type": "Offer",

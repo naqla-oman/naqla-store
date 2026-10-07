@@ -5,21 +5,22 @@ import Hero from "@modules/home/components/hero"
 import Decor from "@modules/common/components/decor"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
-import { storeConfig } from "@/store.config"
+import { getStoreConfig } from "@/i18n/store-config"
 
-export const metadata: Metadata = {
-  title: `${storeConfig.name} — ${storeConfig.tagline}`,
-  description: storeConfig.description,
+export async function generateMetadata(): Promise<Metadata> {
+  const sc = await getStoreConfig()
+  return { title: `${sc.name} — ${sc.tagline}`, description: sc.description }
 }
 
 
 export default async function Home(props: { params: Promise<{ countryCode: string }> }) {
   const { countryCode } = await props.params
+  const sc = await getStoreConfig()
   const region = await getRegion(countryCode)
   const { collections } = await listCollections({ fields: "id, handle, title" })
   if (!collections || !region) return null
   // ترتيب المجموعات من store.json → home.collectionsOrder (غير المذكورة في الآخر)
-  const order = storeConfig.home.collectionsOrder ?? []
+  const order = sc.home.collectionsOrder ?? []
   const rank = (h?: string | null) => (order.indexOf(h ?? "") < 0 ? 99 : order.indexOf(h ?? ""))
   const ordered = [...collections].sort((a, b) => rank(a.handle) - rank(b.handle))
 

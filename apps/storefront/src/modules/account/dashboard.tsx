@@ -12,6 +12,7 @@ import { g } from "@lib/voice"
 import { products as nProducts, pieces as nPieces } from "@lib/util/plural"
 import { useLocale } from "next-intl"
 import { useCurrencyLabel, useT } from "@/i18n/t"
+import { useStoreConfig } from "@/i18n/store-config"
 
 type Props = {
   customer: HttpTypes.StoreCustomer
@@ -19,7 +20,6 @@ type Props = {
   orders: HttpTypes.StoreOrder[]
 }
 
-const { loyalty: L, checkout } = storeConfig
 // الميزات تُقرأ عند الرسم (تتغير من «إعدادات المتجر»)
 const F = new Proxy({} as typeof storeConfig.features, { get: (_t, k) => (storeConfig.features as any)[k] })
 type T = (k: string, v?: Record<string, string | number>) => string
@@ -35,10 +35,12 @@ function orderStage(o: HttpTypes.StoreOrder, t: T) {
 
 /** لوحة الحساب — مطابقة لصفحة «حسابي» في الديمو */
 export default function AccountDashboard({ customer, loyalty, orders }: Props) {
+  const sc = useStoreConfig()
+  const { loyalty: L, checkout } = sc
   const t = useT("account")
   const CUR = useCurrencyLabel()
   const locale = useLocale()
-  const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en-GB", { day: "numeric", month: "long", timeZone: storeConfig.product.delivery.timezone })
+  const dateFmt = new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en-GB", { day: "numeric", month: "long", timeZone: sc.product.delivery.timezone })
   const STATUS: Record<string, string> = { pending: t("s5098dd"), available: t("s2cd29c"), canceled: t("se92ebe") }
   const name = customer.first_name || t("s16b203")
   const phone = (customer.phone ?? "").replace(checkout.phone.prefix, "")
@@ -63,7 +65,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
               <div className="av">{name.slice(0, 1)}</div>
               <div>
                 <b className="hi">{t("hello", { name })}</b>
-                {F.loyaltyTiers && tier && <span className="tier"><Icon name="sparkle" size={12} /> {t("tierInClub", { tier: tier.name, store: storeConfig.shortName })}</span>}
+                {F.loyaltyTiers && tier && <span className="tier"><Icon name="sparkle" size={12} /> {t("tierInClub", { tier: tier.name, store: sc.shortName })}</span>}
               </div>
             </div>
             {F.loyaltyTiers && myPerks.length > 0 && (
@@ -166,7 +168,7 @@ export default function AccountDashboard({ customer, loyalty, orders }: Props) {
           <div className="rowlinks">
             <LocalizedClientLink href="/track" className="rowlink"><span className="ic"><Icon name="truck" /></span><div>{t("s94d17e")}<span className="sub">{t("scc57e6")}</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
             <LocalizedClientLink href="/account/wishlist" className="rowlink"><span className="ic"><Icon name="heart" /></span><div>{t("s501839")}<span className="sub">{nProducts(t, ((customer.metadata as any)?.wishlist ?? []).length)}</span></div><span className="chev"><Icon name="chevL" /></span></LocalizedClientLink>
-            <a href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="rowlink"><span className="ic"><Icon name="whatsapp" /></span><div>{t("s0f8e37")}<span className="sub">{storeConfig.contact.hours}</span></div><span className="chev"><Icon name="chevL" /></span></a>
+            <a href={`https://wa.me/${sc.contact.whatsapp}`} target="_blank" rel="noopener noreferrer" className="rowlink"><span className="ic"><Icon name="whatsapp" /></span><div>{t("s0f8e37")}<span className="sub">{sc.contact.hours}</span></div><span className="chev"><Icon name="chevL" /></span></a>
           </div>
 
           <div style={{ marginTop: 16 }}>

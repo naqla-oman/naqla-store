@@ -83,3 +83,34 @@ export async function optionValueTranslations(): Promise<Record<string, string>>
   const { values, products } = await itemTranslations()
   return { ...values, ...products }
 }
+
+/** ترويسة لغة Medusa لطلبات POST (التتبع): x-medusa-locale؛ للعربية لا شيء */
+export async function localeHeader(): Promise<Record<string, string>> {
+  const q = await localeQuery()
+  return q.locale ? { "x-medusa-locale": q.locale } : {}
+}
+
+/**
+ * لقطات السلة/الطلب (product_title, variant_title, shipping_methods[].name) مخزّنة بالعربية؛
+ * بالإنجليزية تُستبدل من الترجمات (ما لا ترجمة له يبقى عربياً). للعربية يُعاد الكائن كما هو.
+ * يحتاج *items.variant.options في الحقول المطلوبة.
+ */
+type Snap = { items?: any[] | null; shipping_methods?: any[] | null } | null | undefined
+export async function localizeSnapshots<T extends Snap>(o: T): Promise<T> {
+  if (!o) return o
+  const q = await localeQuery()
+  if (!q.locale) return o
+  const [{ values, products }, ship] = await Promise.all([itemTranslations(), shippingOptionTranslations()])
+  for (const i of o.items ?? []) {
+    const title = i.product_id && products[i.product_id]
+    if (title) i.product_title = title
+    const opts: any[] = i.variant?.options ?? []
+    const vals = opts.map((x) => (x.option_value_id && values[x.option_value_id]) || x.value).filter(Boolean)
+    if (vals.length) i.variant_title = vals.join(" / ")
+  }
+  for (const m of o.shipping_methods ?? []) {
+    const name = m.shipping_option_id && ship[m.shipping_option_id]?.name
+    if (name) m.name = name
+  }
+  return o
+}

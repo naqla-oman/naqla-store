@@ -4,9 +4,11 @@ import ShareButton from "@modules/products/components/share-button"
 import WishButton from "@modules/common/components/wish-button"
 import { storeConfig } from "../../../../store.config"
 import { useT } from "@/i18n/t"
+import { useStoreConfig } from "@/i18n/store-config"
 
 /** رأس المنتج: القسم، العنوان مع المشاركة، والتقييم */
 export default function ProductInfo({ product }: { product: HttpTypes.StoreProduct }) {
+  const sc = useStoreConfig()
   const t = useT("product")
   const meta = (product.metadata || {}) as Record<string, any>
   const rating = Number(meta.rating) || 0
@@ -23,7 +25,7 @@ export default function ProductInfo({ product }: { product: HttpTypes.StoreProdu
       </div>
       {meta.title_en && <div className="latinline">{meta.title_en}</div>}
       {/* التقييمات خلف features.reviews: بيانات الديمو مزروعة، وتُطفأ لأي عميل حقيقي حتى نظام تقييمات فعلي */}
-      {storeConfig.features.reviews && rating > 0 && (
+      {sc.features.reviews && rating > 0 && (
         <div className="raterow">
           <span className="stars" aria-label={t("ratingOf", { rating })}>
             {Array.from({ length: 5 }, (_, i) => (

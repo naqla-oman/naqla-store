@@ -1,8 +1,10 @@
 import { storeConfig } from "../../../../store.config"
+import { useStoreConfig } from "@/i18n/store-config"
 
 /** زخرفة فاصلة من store.json → decor (مثل موج «بحر مسقط»). لا شيء إن لم تُعرَّف */
 export default function Decor({ className = "" }: { className?: string }) {
-  const d = storeConfig.decor
+  const sc = useStoreConfig()
+  const d = sc.decor
   if (!d || d.type !== "wave") return null
   return (
     <div className={`decor-wave ${className}`} aria-hidden="true" style={{ color: d.color }}>

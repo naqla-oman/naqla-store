@@ -9,6 +9,7 @@ import { FormEvent, useEffect, useRef, useState } from "react"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
 import { useT } from "@/i18n/t"
+import { useStoreConfig } from "@/i18n/store-config"
 
 const { phone: P } = storeConfig.checkout
 const phoneRe = new RegExp(P.pattern)
@@ -16,6 +17,7 @@ const RESEND = 60
 
 /** الدخول برمز واتساب: الرقم ← الرمز (6 أرقام) ← الاسم (أول مرة فقط) */
 export default function PhoneLogin() {
+  const sc = useStoreConfig()
   const t = useT("account")
   const router = useRouter()
   const [step, setStep] = useState<"phone" | "otp" | "profile">("phone")
@@ -101,7 +103,7 @@ export default function PhoneLogin() {
 
           {step === "phone" && (
             <form onSubmit={send} noValidate>
-              <h1>{t("welcomeTo", { store: storeConfig.shortName })}</h1>
+              <h1>{t("welcomeTo", { store: sc.shortName })}</h1>
               <p className="lead">{t("sd39726")} — {t("otpNote")}</p>
               <div className={`field ${error ? "err" : ""}`}>
                 <label htmlFor="lPhone">{t("s0947ad")}</label>
@@ -117,7 +119,7 @@ export default function PhoneLogin() {
                 <Icon name="whatsapp" size={18} /> {busy ? t("s172044") : t("sa3838d")}
               </button>
               <div className="perkline">
-                {storeConfig.features.loyalty && <div><Icon name="sparkle" size={15} /> {t("pointsPerRial", { n: storeConfig.loyalty.pointsPerUnit })}</div>}
+                {sc.features.loyalty && <div><Icon name="sparkle" size={15} /> {t("pointsPerRial", { n: sc.loyalty.pointsPerUnit })}</div>}
                 <div><Icon name="box" size={15} /> {t("sdd473a")}</div>
                 <div><Icon name="heart" size={15} /> {t("s1892f8")}</div>
               </div>

@@ -34,3 +34,9 @@ export function addressLabels(sc: StoreConfig, province?: string | null, city?: 
   const wi = city ? (ar.wilayats ?? []).indexOf(city) : -1
   return { gov: loc.name, wil: wi >= 0 ? loc.wilayats?.[wi] ?? city ?? "" : city ?? "" }
 }
+
+/** «المحافظة — الولاية» بلغة الصفحة */
+export function placeLabel(sc: StoreConfig, province?: string | null, city?: string | null) {
+  const { gov, wil } = addressLabels(sc, province, city)
+  return wil ? `${gov} — ${wil}` : gov
+}

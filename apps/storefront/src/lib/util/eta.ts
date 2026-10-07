@@ -26,8 +26,9 @@ export function deliveryEta(t: T, locale: string, code: string | undefined | nul
   return t("common.arrives", { day: dayName(locale, day + add), where: inCapital ? t("common.inCapital") : t("common.within48") })
 }
 
-export const governorateName = (code?: string | null) =>
-  storeConfig.checkout.governorates.find((g) => g.code === code)?.name ?? code ?? ""
+/** اسم المحافظة بلغة الصفحة: يُمرَّر إعداد اللغة (useStoreConfig/getStoreConfig)، وبدونه العربية */
+export const governorateName = (code?: string | null, sc: { checkout: { governorates: { code: string; name: string }[] } } = storeConfig) =>
+  sc.checkout.governorates.find((g) => g.code === code)?.name ?? code ?? ""
 
 export const orderNumber = (displayId?: number | null) =>
   `${storeConfig.checkout.orderPrefix}${String(displayId ?? "").padStart(4, "0")}`

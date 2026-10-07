@@ -5,8 +5,10 @@ import Icon from "@modules/common/components/icon"
 import { storeConfig } from "../../../../store.config"
 import { langPrefix } from "@/i18n/config"
 import { useT } from "@/i18n/t"
+import { useStoreConfig } from "@/i18n/store-config"
 
 export default function HeaderSearch({ className = "" }: { className?: string }) {
+  const sc = useStoreConfig()
   const t = useT("layout")
   const [q, setQ] = useState("")
   const router = useRouter()
@@ -21,7 +23,7 @@ export default function HeaderSearch({ className = "" }: { className?: string })
         type="search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
-        placeholder={storeConfig.searchPlaceholder}
+        placeholder={sc.searchPlaceholder}
         aria-label={t("sab79fc")}
         autoComplete="off"
       />

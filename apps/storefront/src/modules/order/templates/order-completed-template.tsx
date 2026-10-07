@@ -1,5 +1,5 @@
 import Image from "next/image"
-import { deliveryEta, governorateName, orderNumber } from "@lib/util/eta"
+import { deliveryEta, orderNumber } from "@lib/util/eta"
 import { formatAmount } from "@lib/util/money"
 import { orderMessage, waUrl } from "@lib/util/wa-order"
 import { HttpTypes } from "@medusajs/types"
@@ -15,6 +15,8 @@ import { includedTax } from "@lib/util/tax"
 import { discountLines } from "@lib/util/discounts"
 import { useLocale } from "next-intl"
 import { useCurrencyLabel, useT } from "@/i18n/t"
+import { useStoreConfig } from "@/i18n/store-config"
+import { placeLabel } from "@lib/util/labels"
 
 type Props = {
   order: HttpTypes.StoreOrder
@@ -27,6 +29,7 @@ const CONFETTI = ["var(--accent)", "var(--copper)", "#e8d5b5", "#9fd4c0"]
 
 /** صفحة النجاح — مطابقة لصفحة التأكيد في الديمو */
 export default function OrderCompletedTemplate({ order, extras, via }: Props) {
+  const sc = useStoreConfig()
   const t = useT("order")
   const locale = useLocale()
   const CUR = useCurrencyLabel()
@@ -44,7 +47,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
   const itemDiscount = Math.max(0, (order.discount_total ?? 0) - shipDiscount)
   const ship = order.shipping_methods?.[0]
   const placedAt = new Intl.DateTimeFormat("ar-OM", {
-    timeZone: storeConfig.product.delivery.timezone,
+    timeZone: sc.product.delivery.timezone,
     hour: "numeric",
     minute: "2-digit",
   }).format(new Date(order.created_at ?? Date.now()))
@@ -58,7 +61,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
       items: items.map((i) => ({ title: i.product_title ?? i.title, variant: i.variant_title, qty: i.quantity, length: (i.metadata as any)?.length_cm })),
       total: order.total,
       shipping: ship?.name,
-      place: pickup ? null : `${governorateName(addr?.province)} — ${addr?.city ?? ""}`,
+      place: pickup ? null : `${placeLabel(sc, addr?.province, addr?.city)}`,
       name,
       gift: !!extras.gift,
       giftMessage: extras.gift_message,
@@ -82,7 +85,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
           </div>
           <div className="ring"><Icon name="check" size={40} /></div>
           <h1>{t("s414e71")}</h1>
-          <p>{t("thanksWa", { store: storeConfig.shortName })}</p>
+          <p>{t("thanksWa", { store: sc.shortName })}</p>
           {phone && (
             <div className="phonechip">
               <Icon name="whatsapp" size={15} />
@@ -100,7 +103,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
           )}
         </div>
 
-        {storeConfig.features.loyalty && extras._points?.points > 0 && (
+        {sc.features.loyalty && extras._points?.points > 0 && (
           <div className="earned" data-testid="success-points">
             <Icon name="sparkle" size={22} />
             {extras._points.has_account ? (
@@ -148,7 +151,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
               </li>
               <li>
                 <i><Icon name="home" size={13} /></i>
-                <div><b>{eta}</b><span>{pickup ? storeConfig.contact.address : t("sbab52e")}</span></div>
+                <div><b>{eta}</b><span>{pickup ? sc.contact.address : t("sbab52e")}</span></div>
               </li>
             </ul>
           </div>
@@ -177,7 +180,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
               ))}
               <div className="kv"><span>{t("s30ecbc")}</span><span>{ship?.name} · {order.shipping_total ? fmt(order.shipping_total) : shipDiscount > 0 ? t("sdf761f") : t("s5abc46")}</span></div>
               <div className="kv"><span>{t("s4ee631")}</span><span>{pay?.title ?? "—"}</span></div>
-              <div className="kv"><span>{t("s6dc658")}</span><span>{pickup ? t("sd4cab2") : `${governorateName(addr?.province)} — ${addr?.city ?? ""}`}</span></div>
+              <div className="kv"><span>{t("s6dc658")}</span><span>{pickup ? t("sd4cab2") : `${placeLabel(sc, addr?.province, addr?.city)}`}</span></div>
               {extras.gift && (
                 <div className="kv"><span>{t("s8a9ce8")}</span><span>{extras.gift_message ? `«${extras.gift_message}»` : t("sa25e32")}</span></div>
               )}
@@ -192,7 +195,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
 
         <div className="succacts">
           <LocalizedClientLink href="/store" className="btn">{t("s279044")}</LocalizedClientLink>
-          <a className="btn ghost" href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noopener noreferrer">
+          <a className="btn ghost" href={`https://wa.me/${sc.contact.whatsapp}`} target="_blank" rel="noopener noreferrer">
             <Icon name="whatsapp" size={16} /> {t("s34a9aa")}
           </a>
         </div>

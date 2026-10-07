@@ -14,7 +14,7 @@ import {
   setCartId,
 } from "./cookies"
 import { getRegion } from "./regions"
-import { localeQuery, medusaCartLocale, shippingOptionTranslations } from "@/i18n/t"
+import { localeQuery, localizeSnapshots, medusaCartLocale, shippingOptionTranslations } from "@/i18n/t"
 import { getT } from "@/i18n/t"
 
 /**
@@ -25,7 +25,7 @@ import { getT } from "@/i18n/t"
 export async function retrieveCart(cartId?: string, fields?: string) {
   const id = cartId || (await getCartId())
   fields ??=
-    "*items, *region, *items.product, *items.variant, *items.variant.options, *items.thumbnail, *items.metadata, +items.total, *promotions, *items.adjustments, +shipping_methods.name"
+    "*items, *region, *items.product, *items.variant, *items.variant.options, *items.thumbnail, *items.metadata, +items.total, *promotions, *items.adjustments, +shipping_methods.name, +shipping_methods.shipping_option_id"
 
   if (!id) {
     return null
@@ -50,7 +50,7 @@ export async function retrieveCart(cartId?: string, fields?: string) {
       next,
       cache: "force-cache",
     })
-    .then(({ cart }: { cart: HttpTypes.StoreCart }) => cart)
+    .then(({ cart }: { cart: HttpTypes.StoreCart }) => localizeSnapshots(cart))
     .catch(() => null)
 }
 

@@ -1,5 +1,6 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
+import { localizeSnapshots } from "../../../lib/translations"
 
 type Body = { number?: string; phone?: string }
 
@@ -34,14 +35,16 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
     fields: [
       "id", "display_id", "status", "created_at", "total", "metadata",
       "customer_id", "shipping_address.phone", "shipping_address.province", "shipping_address.city",
-      "shipping_methods.name",
-      "items.id", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
+      "shipping_methods.name", "shipping_methods.shipping_option_id",
+      "items.id", "items.product_id", "items.variant.options.option_value_id", "items.variant.options.value", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
       "fulfillments.packed_at", "fulfillments.shipped_at", "fulfillments.delivered_at", "fulfillments.canceled_at", "fulfillments.created_at",
       "fulfillments.labels.tracking_number", "fulfillments.labels.tracking_url",
     ],
     filters: { display_id: displayId } as any, // display_id رقمي في القاعدة
   })
   const o: any = data[0]
+  // بلغة الصفحة (x-medusa-locale / ?locale): أسماء المنتجات والخيارات وخيار الشحن من الترجمات
+  await localizeSnapshots(req.scope, o, (req as any).locale)
   const own = !!customerId && o?.customer_id === customerId
   if (!o || (!own && (phone.length !== 8 || digits(o.shipping_address?.phone).slice(-8) !== phone))) throw notFound
 

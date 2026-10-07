@@ -5,7 +5,7 @@ import { includedTax } from "@lib/util/tax"
 import { track } from "@lib/tracking/events"
 import Image from "next/image"
 import { applyCode, chooseShipping, DeliveryInput, placeOrderWith, removeCode, saveDelivery } from "@lib/data/checkout"
-import { deliveryEta, governorateName, orderNumber } from "@lib/util/eta"
+import { deliveryEta, orderNumber } from "@lib/util/eta"
 import { formatAmount } from "@lib/util/money"
 import { orderMessage, waUrl } from "@lib/util/wa-order"
 import { HttpTypes } from "@medusajs/types"
@@ -22,6 +22,8 @@ import { discountLines } from "@lib/util/discounts"
 import { langPrefix } from "@/i18n/config"
 import { useLocale } from "next-intl"
 import { useCurrencyLabel, useT } from "@/i18n/t"
+import { useStoreConfig } from "@/i18n/store-config"
+import { placeLabel } from "@lib/util/labels"
 
 type Props = {
   cart: HttpTypes.StoreCart
@@ -61,6 +63,7 @@ function validate(f: DeliveryInput, t: T): Errors {
 
 
 export default function CheckoutFlow({ cart, shippingOptions, providers, countryCode, step, error, customer, enabledGovernorates }: Props) {
+  const sc = useStoreConfig()
   const t = useT("checkout")
   const CUR = useCurrencyLabel()
   const locale = useLocale()
@@ -90,7 +93,15 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
   const [codeMsg, setCodeMsg] = useState<{ ok: boolean; text: string } | null>(null)
   const [sumOpen, setSumOpen] = useState(false)
   const [placeError, setPlaceError] = useState<string | null>(error ? urlError(t, error) ?? null : null)
-  const payments = checkout.payments.filter((p) => providers.includes(p.id))
+  // القيم (رموز المحافظات وأسماء الولايات) تبقى بالعربية كما تُخزَّن في العنوان؛ التسميات بلغة الصفحة
+  const loc = sc.checkout
+  const govLabel = (code: string) => loc.governorates.find((x) => x.code === code)?.name ?? checkout.governorates.find((x) => x.code === code)?.name ?? code
+  const wilLabel = (code: string, w: string) => {
+    const ar = checkout.governorates.find((x) => x.code === code)?.wilayats ?? []
+    const i = ar.indexOf(w)
+    return (i >= 0 && loc.governorates.find((x) => x.code === code)?.wilayats?.[i]) || w
+  }
+  const payments = loc.payments.filter((p) => providers.includes(p.id))
   const [payId, setPayId] = useState(payments[0]?.id ?? "")
   const autoPicked = useRef(false)
 
@@ -218,7 +229,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
           items: items.map((i) => ({ title: i.product_title ?? i.title, variant: i.variant_title, qty: i.quantity, length: (i.metadata as any)?.length_cm })),
           total,
           shipping: currentOption?.name,
-          place: shipCode === "pickup" ? null : `${governorateName(form.province)} — ${form.city}`,
+          place: shipCode === "pickup" ? null : `${placeLabel(sc, form.province, form.city)}`,
           name: form.name,
           gift: form.gift,
           giftMessage: form.giftMessage,
@@ -255,7 +266,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
           <div className="field" style={{ marginTop: 6 }}>
             <label htmlFor="coupon">{t("sc38a00")}</label>
             <div className="coupon">
-              <input id="coupon" value={code} onChange={(e) => setCode(e.target.value)} placeholder={storeConfig.welcomeCode ? t("example", { code: storeConfig.welcomeCode.code }) : t("s95b4c5")} autoComplete="off" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onApply() } }} />
+              <input id="coupon" value={code} onChange={(e) => setCode(e.target.value)} placeholder={sc.welcomeCode ? t("example", { code: sc.welcomeCode.code }) : t("s95b4c5")} autoComplete="off" onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); onApply() } }} />
               <button type="button" className="btn ghost" onClick={onApply} disabled={!code.trim() || busy === "code"}>{busy === "code" ? "…" : t("sabe315")}</button>
             </div>
             {codeMsg && !codeMsg.ok && <div className="ferr-inline" role="alert">{codeMsg.text}</div>}
@@ -314,12 +325,12 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
       <Steps current={step === "address" ? 1 : 2} />
       {customer ? (
         <div className="guest" data-testid="signed-in-note">
-          <Icon name="user" size={15} /> {t("s8660e0")}{customer.first_name ? t("hiName", { name: customer.first_name }) : ""}{storeConfig.features.loyalty ? t("pointsNote") : ""}
+          <Icon name="user" size={15} /> {t("s8660e0")}{customer.first_name ? t("hiName", { name: customer.first_name }) : ""}{sc.features.loyalty ? t("pointsNote") : ""}
         </div>
       ) : (
         <div className="guest" data-testid="guest-note">
           <Icon name="user" size={15} /> {t("s099ef5")}{" "}
-          <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{t("s33c19c")}</LocalizedClientLink>{storeConfig.features.loyalty ? t("sa9d64f") : t("sbe32b2")}
+          <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>{t("s33c19c")}</LocalizedClientLink>{sc.features.loyalty ? t("sa9d64f") : t("sbe32b2")}
         </div>
       )}
       <button type="button" className="sumtoggle" aria-expanded={step === "payment" || sumOpen} aria-controls="sumBox" onClick={() => setSumOpen((v) => !v)}>
@@ -347,10 +358,10 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                 </div>
               </div>
               {/* منخفضة: استلام من المحل بلا عنوان */}
-              {storeConfig.seo.shipping.some((s) => s.code === "pickup") && (
+              {sc.seo.shipping.some((s) => s.code === "pickup") && (
                 <div className="seg2" role="radiogroup" aria-label={t("sdf3035")} data-testid="pickup-toggle">
                   <button type="button" role="radio" aria-checked={!form.pickup} className={!form.pickup ? "on" : ""} onClick={() => set("pickup", false)}>{t("s3a3dce")}</button>
-                  <button type="button" role="radio" aria-checked={!!form.pickup} className={form.pickup ? "on" : ""} onClick={() => set("pickup", true)}>{t("pickupFrom", { place: storeConfig.seo.location.name })}</button>
+                  <button type="button" role="radio" aria-checked={!!form.pickup} className={form.pickup ? "on" : ""} onClick={() => set("pickup", true)}>{t("pickupFrom", { place: sc.seo.location.name })}</button>
                 </div>
               )}
               {!form.pickup && (
@@ -371,7 +382,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                     aria-describedby="eGov"
                   >
                     <option value="">{t("se494ea")}</option>
-                    {govOptions.map((g) => <option key={g.code} value={g.code}>{g.name}</option>)}
+                    {govOptions.map((g) => <option key={g.code} value={g.code}>{govLabel(g.code)}</option>)}
                   </select>
                   <span className="ferr" id="eGov">{showErr("province")}</span>
                 </div>
@@ -383,7 +394,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                     return list.length ? (
                       <select id="fCity" value={form.city} onChange={(e) => set("city", e.target.value)} autoComplete="address-level2" aria-invalid={!!showErr("city")} aria-describedby="eCity">
                         <option value="">{t("s2aac38")}</option>
-                        {list.map((w) => <option key={w} value={w}>{w}</option>)}
+                        {list.map((w) => <option key={w} value={w}>{wilLabel(form.province, w)}</option>)}
                       </select>
                     ) : (
                       <select id="fCity" value="" disabled aria-describedby="eCity">
@@ -410,7 +421,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                 <label htmlFor="fNote">{t("s4e1676")}</label>
                 <input id="fNote" value={form.note} onChange={(e) => set("note", e.target.value)} placeholder={t("s218308")} />
               </div>
-              {storeConfig.features.gift && (<>
+              {sc.features.gift && (<>
               <button type="button" className={`giftrow ${form.gift ? "on" : ""}`} role="switch" aria-checked={form.gift} onClick={() => set("gift", !form.gift)}>
                 <Icon name="gift" size={22} />
                 <span><b>{t("sdb8be7")}</b><span className="d">{checkout.giftNote}</span></span>
@@ -438,7 +449,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
                   <Icon name="pin" size={16} />
                   <div>
                     <b>{form.name}</b> · <bdi dir="ltr">{checkout.phone.prefix} {form.phone}</bdi><br />
-                    <span className="muted">{governorateName(form.province)} — {form.city}{form.address ? `${t("sep")}${form.address}` : ""}</span>
+                    <span className="muted">{placeLabel(sc, form.province, form.city)}{form.address ? `${t("sep")}${form.address}` : ""}</span>
                   </div>
                   <button type="button" onClick={() => go("address")}>{t("s759fdc")}</button>
                 </div>
@@ -446,11 +457,11 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
 
               <div className="panelbox" role="radiogroup" aria-label={t("sb02f7e")}>
                 <h3>{t("sb02f7e")}</h3>
-                {!customer && storeConfig.loyalty.freeShippingTier && (
+                {!customer && sc.loyalty.freeShippingTier && (
                   <div className="guest copper" data-testid="gold-hint">
                     <Icon name="sparkle" size={15} />
                     <span>
-                      {t("tierMember", { tier: storeConfig.loyalty.freeShippingTier.name, tierM: storeConfig.loyalty.freeShippingTier.name.replace(/ة$/, "") })}{" "}
+                      {t("tierMember", { tier: sc.loyalty.freeShippingTier.name, tierM: sc.loyalty.freeShippingTier.name.replace(/ة$/, "") })}{" "}
                       <LocalizedClientLink href="/account" style={{ textDecoration: "underline" }}>
                         {t("s60746c")}
                       </LocalizedClientLink>{" "}

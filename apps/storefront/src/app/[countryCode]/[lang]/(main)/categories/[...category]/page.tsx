@@ -2,7 +2,6 @@ import { Metadata } from "next"
 import { notFound, permanentRedirect } from "next/navigation"
 import { findRedirect } from "@lib/data/seo"
 import { breadcrumbs, jsonLdScript } from "@lib/seo/jsonld"
-import { storeConfig } from "@/store.config"
 
 import { getCategoryByHandle, listCategories } from "@lib/data/categories"
 import { listRegions } from "@lib/data/regions"
@@ -11,6 +10,7 @@ import CategoryTemplate from "@modules/categories/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
 import { langPrefix } from "@/i18n/config"
 import { getT } from "@/i18n/t"
+import { getStoreConfig } from "@/i18n/store-config"
 
 type Props = {
   params: Promise<{ category: string[]; countryCode: string; lang: string }>
@@ -48,6 +48,7 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata(props: Props): Promise<Metadata> {
+  const sc = await getStoreConfig()
   const params = await props.params
   const category = await getCategoryByHandle(params.category).catch(() => null)
   if (!category) {
@@ -56,13 +57,13 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
   const meta = (category.metadata ?? {}) as Record<string, any>
-  const description = (meta.seo_description || category.description || `${category.name} — ${storeConfig.name}`).slice(0, 160)
+  const description = (meta.seo_description || category.description || `${category.name} — ${sc.name}`).slice(0, 160)
   return {
     // اسم المتجر يُضاف من قالب العنوان في التخطيط الجذري
     title: meta.seo_title || category.name,
     description,
     alternates: { canonical: `/${params.countryCode}${langPrefix(params.lang)}/categories/${params.category.join("/")}` },
-    openGraph: { title: `${meta.seo_title || category.name} | ${storeConfig.name}`, description },
+    openGraph: { title: `${meta.seo_title || category.name} | ${sc.name}`, description },
   }
 }
 

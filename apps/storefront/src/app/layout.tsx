@@ -19,17 +19,19 @@ import "styles/account.css"
 import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
 import { CLIENT_NAMESPACES, dirOf } from "@/i18n/config"
+import { getStoreConfig } from "@/i18n/store-config"
 
 // إعدادات اللوحة تُطبَّق قبل البيانات الوصفية (الاسم، الوصف…)
 export async function generateMetadata(): Promise<Metadata> {
   await ensureStoreSettings()
+  const sc = await getStoreConfig()
   return {
     metadataBase: new URL(getBaseURL()),
-    title: { default: storeConfig.name, template: `%s | ${storeConfig.name}` },
-    description: storeConfig.description,
-    applicationName: storeConfig.name,
+    title: { default: sc.name, template: `%s | ${sc.name}` },
+    description: sc.description,
+    applicationName: sc.name,
     manifest: "/manifest.webmanifest",
-    appleWebApp: { capable: true, title: storeConfig.shortName, statusBarStyle: "default" },
+    appleWebApp: { capable: true, title: sc.shortName, statusBarStyle: "default" },
     icons: {
       icon: [
         ...(storeConfig.icons.svg ? [{ url: clientAsset(storeConfig.icons.svg), type: "image/svg+xml" }] : []),
@@ -38,10 +40,10 @@ export async function generateMetadata(): Promise<Metadata> {
       apple: [{ url: clientAsset(storeConfig.icons.apple) }],
     },
     openGraph: {
-      siteName: storeConfig.name,
+      siteName: sc.name,
       locale: storeConfig.locale.replace("-", "_"),
       // أبعاد الصورة كما في مجلد العميل (لا تُفرض هنا)
-      images: [{ url: clientAsset("og.jpg"), alt: storeConfig.name }],
+      images: [{ url: clientAsset("og.jpg"), alt: sc.name }],
     },
   }
 }

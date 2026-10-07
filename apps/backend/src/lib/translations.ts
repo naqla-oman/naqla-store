@@ -52,3 +52,29 @@ export async function upsertTranslations(container: MedusaContainer, items: { re
   if (toUpdate.length) await svc.updateTranslations(toUpdate)
   return { created: toCreate.length, updated: toUpdate.length }
 }
+
+/**
+ * لقطات الطلب/السلة (product_title, variant_title, shipping_methods.name) مخزّنة بالعربية.
+ * بلغة غير العربية تُستبدل من ترجمات المنتج وقيم الخيارات وخيار الشحن (ما لا ترجمة له يبقى عربياً).
+ * يحتاج الحقول: items.product_id, items.variant.options.option_value_id, shipping_methods.shipping_option_id
+ */
+export async function localizeSnapshots(container: MedusaContainer, o: any, locale?: string | null) {
+  if (!o || !locale || locale.startsWith("ar")) return o
+  const [p, v, s] = await Promise.all([
+    readTranslations(container, "product", locale),
+    readTranslations(container, "product_option_value", locale),
+    readTranslations(container, "shipping_option", locale),
+  ])
+  for (const i of o.items ?? []) {
+    const title = i.product_id && p.get(i.product_id)?.title
+    if (title) i.product_title = title
+    const opts: any[] = i.variant?.options ?? []
+    const vals = opts.map((x) => (x.option_value_id && v.get(x.option_value_id)?.value) || x.value).filter(Boolean)
+    if (vals.length) i.variant_title = vals.join(" / ")
+  }
+  for (const m of o.shipping_methods ?? []) {
+    const name = m.shipping_option_id && s.get(m.shipping_option_id)?.name
+    if (name) m.name = name
+  }
+  return o
+}

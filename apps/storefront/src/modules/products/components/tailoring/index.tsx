@@ -10,6 +10,7 @@ import { useParams } from "next/navigation"
 import { FormEvent, useState } from "react"
 import { storeConfig } from "../../../../store.config"
 import { useCurrencyLabel, useT } from "@/i18n/t"
+import { useStoreConfig } from "@/i18n/store-config"
 
 type Props = {
   /** القطعة التي يُطلب تفصيلها */
@@ -18,13 +19,14 @@ type Props = {
   service: HttpTypes.StoreProduct
 }
 
-const T = storeConfig.tailoring!
 
 /**
  * «تفصيل على مقاسك»: اختيار الخدمة المناسبة لقسم القطعة + المقاسات (أو طلب التواصل لأخذها)،
  * ثم إضافة الخدمة للسلة ببياناتها في metadata.tailoring (تظهر في السلة والطلب ولوحة التحكم).
  */
 export default function Tailoring({ product, service }: Props) {
+  const sc = useStoreConfig()
+  const T = sc.tailoring!
   const t = useT("product")
   const CUR = useCurrencyLabel()
   const { countryCode } = useParams() as { countryCode: string }

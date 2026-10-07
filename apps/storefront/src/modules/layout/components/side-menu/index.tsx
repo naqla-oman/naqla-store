@@ -10,6 +10,7 @@ import { storeConfig } from "../../../../store.config"
 import { langPrefix } from "@/i18n/config"
 import { useT } from "@/i18n/t"
 import ThemeToggle from "@modules/layout/components/theme-toggle"
+import { useStoreConfig } from "@/i18n/store-config"
 
 type T = (k: string, v?: Record<string, string | number>) => string
 const extraOf = (t: T) => [
@@ -19,6 +20,7 @@ const extraOf = (t: T) => [
 ]
 
 const SideMenu = () => {
+  const sc = useStoreConfig()
   const t = useT("layout")
   const EXTRA = extraOf(t)
   const router = useRouter()
@@ -44,7 +46,7 @@ const SideMenu = () => {
             <PopoverPanel className="fixed inset-y-0 start-0 z-[51] w-[86%] max-w-[360px] bg-surface shadow-card flex flex-col rounded-e-lg2">
               <div className="flex items-center gap-3 p-4 border-b border-line">
                 <LogoMark className="w-9 h-9" />
-                <b className="font-display text-lg">{storeConfig.shortName}</b>
+                <b className="font-display text-lg">{sc.shortName}</b>
                 <button onClick={close} className="iconbtn ms-auto" aria-label={t("s9932cc")}><Icon name="x" /></button>
               </div>
               {/* H9: بحث في القائمة الجانبية (الجوال) */}
@@ -62,7 +64,7 @@ const SideMenu = () => {
                 <input type="search" name="q" placeholder={t("sd9d4bc")} aria-label={t("s45511c")} enterKeyHint="search" data-testid="menu-search" />
               </form>
               <ul className="p-3 flex flex-col gap-1 overflow-y-auto">
-                {storeConfig.nav.map((n) => (
+                {sc.nav.map((n) => (
                   <li key={n.href}>
                     <LocalizedClientLink
                       href={n.href}
@@ -87,7 +89,7 @@ const SideMenu = () => {
               <div className="mt-auto p-4 border-t border-line grid gap-3">
                 {/* الجوال: الوضع الليلي هنا (أُخفي من الرأس ليتّسع للمبدّل) */}
                 <div className="flex items-center justify-between"><span className="text-sm text-muted">{t("theme")}</span><ThemeToggle /></div>
-                <a href={`https://wa.me/${storeConfig.contact.whatsapp}`} target="_blank" rel="noreferrer" className="btn wa block">
+                <a href={`https://wa.me/${sc.contact.whatsapp}`} target="_blank" rel="noreferrer" className="btn wa block">
                   <Icon name="whatsapp" size={18} /> {t("waUs")}
                 </a>
               </div>

@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { TrackedOrder, trackOrder } from "@lib/data/account"
-import { deliveryEta, governorateName, orderNumber } from "@lib/util/eta"
+import { deliveryEta, orderNumber } from "@lib/util/eta"
 import { formatAmount } from "@lib/util/money"
 import Icon from "@modules/common/components/icon"
 import { FormEvent, useEffect, useRef, useState } from "react"
@@ -10,13 +10,16 @@ import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
 import { useLocale } from "next-intl"
 import { useCurrencyLabel, useT } from "@/i18n/t"
+import { useStoreConfig } from "@/i18n/store-config"
+import { placeLabel } from "@lib/util/labels"
 
-const { checkout } = storeConfig
 const fmtTime = (locale: string, iso?: string | null) =>
   iso ? new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en-GB", { timeZone: storeConfig.product.delivery.timezone, day: "numeric", month: "short", hour: "numeric", minute: "2-digit" }).format(new Date(iso)) : ""
 
 /** تتبّع الطلب بلا تسجيل دخول: رقم الطلب + الهاتف */
 export default function TrackOrder({ initialNo, initialPhone, signedIn = false }: { initialNo: string; initialPhone: string; signedIn?: boolean }) {
+  const sc = useStoreConfig()
+  const { checkout } = sc
   const t = useT("tracking")
   const CUR = useCurrencyLabel()
   const locale = useLocale()
@@ -44,13 +47,13 @@ export default function TrackOrder({ initialNo, initialPhone, signedIn = false }
   const STEPS = [
     { t: t("s5a2478"), d: t("sce6a73"), i: "check", at: order?.times.placed },
     { t: t("s4b3fe2"), d: t("sbfbcf6"), i: "scissors", at: order?.times.packed },
-    { t: pickup ? t("sff4351") : t("se99455"), d: pickup ? storeConfig.contact.address : t("s6dbe06"), i: "truck", at: order?.times.shipped },
+    { t: pickup ? t("sff4351") : t("se99455"), d: pickup ? sc.contact.address : t("s6dbe06"), i: "truck", at: order?.times.shipped },
     { t: pickup ? t("s1fb4a1") : t("s3a0c4f"), d: t("s3c22a1"), i: "home", at: order?.times.delivered },
   ]
   const stage = order?.stage ?? 0
   const current = stage >= 0 ? STEPS[Math.min(stage, 3)] : null
   const number = order ? orderNumber(order.display_id) : ""
-  const help = t("waHelp", { store: storeConfig.shortName, number })
+  const help = t("waHelp", { store: sc.shortName, number })
 
   return (
     <div className="wrap">
@@ -110,7 +113,7 @@ export default function TrackOrder({ initialNo, initialPhone, signedIn = false }
                 <span className="pr">{formatAmount(i.unit_price * i.quantity)}</span>
               </div>
             ))}
-            <div className="kv" style={{ marginTop: 6 }}><span>{t("s6dc658")}</span><span>{pickup ? t("sd4cab2") : `${governorateName(order.province)} — ${order.city ?? ""}`}</span></div>
+            <div className="kv" style={{ marginTop: 6 }}><span>{t("s6dc658")}</span><span>{pickup ? t("sd4cab2") : `${placeLabel(sc, order.province, order.city)}`}</span></div>
             <div className="kv"><span>{t("s88fc73")}</span><span className="num">{formatAmount(order.total)} {CUR}</span></div>
               {order.shipment && (
                 <div className="kv" data-testid="track-awb">
@@ -126,9 +129,9 @@ export default function TrackOrder({ initialNo, initialPhone, signedIn = false }
             <div className="helprow">
               {/* منخفضة: لا «تغيير وقت التوصيل» لطلب ملغى (stage < 0) أو مسلَّم (stage 3) */}
               {stage >= 0 && stage < 3 && (
-                <a href={`https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(help + t("sfaacdb"))}`} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> {t("se29980")}</a>
+                <a href={`https://wa.me/${sc.contact.whatsapp}?text=${encodeURIComponent(help + t("sfaacdb"))}`} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> {t("se29980")}</a>
               )}
-              <a href={`https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(help)}`} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" size={14} /> {t("s11381d")}</a>
+              <a href={`https://wa.me/${sc.contact.whatsapp}?text=${encodeURIComponent(help)}`} target="_blank" rel="noopener noreferrer"><Icon name="whatsapp" size={14} /> {t("s11381d")}</a>
             </div>
           </div>
         )}
