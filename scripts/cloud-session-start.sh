@@ -27,5 +27,35 @@ fi
 corepack enable >/dev/null 2>&1 || true
 pnpm install --frozen-lockfile >/tmp/cloud-pnpm-install.log 2>&1 && log "pnpm install ✓" || log "pnpm install فشل — راجع /tmp/cloud-pnpm-install.log"
 
-log "جاهز: pnpm store:setup layan && pnpm store:setup demo-perfume عند الحاجة"
+# متصفح Playwright لاختبارات test:i18n (بايثون): الحاوية فيها متصفح مثبّت مسبقاً في PLAYWRIGHT_BROWSERS_PATH
+# قد لا يطابق نسخة حزمة بايثون. الترتيب: يعمل كما هو ← playwright install chromium (سريع إن كان مثبّتاً)
+# ← إن منعت الشبكة cdn.playwright.dev: نثبّت من PyPI نسخة بايثون التي تطابق مراجعة المتصفح الموجود.
+pw_ok() { timeout 90 python3 -c "
+import asyncio
+from playwright.async_api import async_playwright
+async def m():
+    async with async_playwright() as p:
+        b = await p.chromium.launch(); await b.close()
+asyncio.run(m())" >/dev/null 2>&1; }
+pw_ver() { python3 -c "import importlib.metadata as m; print(m.version('playwright'))" 2>/dev/null; }
+if python3 -c "import playwright" >/dev/null 2>&1; then
+  if pw_ok; then
+    log "playwright $(pw_ver) ✓"
+  else
+    python3 -m playwright install chromium >/tmp/cloud-playwright.log 2>&1 || true
+    if ! pw_ok; then
+      # نسخة playwright-core (Node) المثبّتة مع المتصفح نفسه تحدد النسخة المطابقة (1.56.1 ← 1.56.x في PyPI)
+      bp="${PLAYWRIGHT_BROWSERS_PATH:-$HOME/.cache/ms-playwright}"
+      for bj in $(find /opt /usr/local/lib /usr/lib -path '*playwright-core/browsers.json' 2>/dev/null); do
+        rev=$(node -p "require('$bj').browsers.find(b=>b.name==='chromium').revision" 2>/dev/null)
+        [ -n "$rev" ] && [ -d "$bp/chromium-$rev" ] || continue
+        mm=$(node -p "require('$(dirname "$bj")/package.json').version.split('.').slice(0,2).join('.')" 2>/dev/null)
+        pip install -q --break-system-packages "playwright~=$mm.0" >>/tmp/cloud-playwright.log 2>&1 && pw_ok && break
+      done
+    fi
+    pw_ok && log "playwright $(pw_ver) ✓ (متصفح مطابق)" || log "playwright: لا متصفح مطابق — راجع /tmp/cloud-playwright.log"
+  fi
+fi
+
+log "جاهز: pnpm store:setup <slug> لكل متجر في clients/ عند الحاجة"
 exit 0

@@ -423,15 +423,21 @@ asyncio.run(main())`
     return done.order ?? done
   }
   const notices = (orderId) => (aapi("GET", "/admin/notifications?limit=50&order=-created_at", t).notifications ?? []).filter((n) => n.resource_id === orderId)
-  const enOrder = await placeOrder("en-US", "Hind"), arOrder = await placeOrder("ar-SA", "")
+  // رقم تاجر مؤقت حتى يُرسل تنبيه merchant_new_order فعلاً (يُعاد الأصلي بعد الطلبين مهما حدث)
+  const payments = (b) => aapi(b ? "POST" : "GET", "/admin/naqla/store-settings/payments", t, b)
+  const prevPhones = payments().merchantPhones ?? []
+  payments({ merchantPhones: ["96890000009"] })
+  let enOrder, arOrder
+  try { enOrder = await placeOrder("en-US", "Hind"); arOrder = await placeOrder("ar-SA", "") } finally { payments({ merchantPhones: prevPhones }) }
+  ok(JSON.stringify(payments().merchantPhones ?? []) === JSON.stringify(prevPhones), "أرقام التاجر أُعيدت كما كانت", JSON.stringify(prevPhones))
   let nEn = [], nAr = []
-  for (let i = 0; i < 10 && !(nEn.length && nAr.length); i++) { await sleep(2000); nEn = notices(enOrder.id); nAr = notices(arOrder.id) }
+  for (let i = 0; i < 10 && !(nEn.some((n) => n.template === "merchant_new_order") && nAr.length); i++) { await sleep(2000); nEn = notices(enOrder.id); nAr = notices(arOrder.id) }
   const pEn = nEn.find((n) => n.template === "order_placed")?.data?.preview ?? "", pAr = nAr.find((n) => n.template === "order_placed")?.data?.preview ?? ""
   const enLocale = aapi("GET", `/admin/orders/${enOrder.id}?fields=id,locale`, t).order?.locale
   ok(enLocale === "en-US" && pEn.startsWith("Hello Hind,") && pEn.includes("OMR") && pEn.includes("/om/en/track?no=") && !/[\u0600-\u06FF]/.test(pEn), "إشعار الطلب الإنجليزي: Hello، OMR، رابط /en/track، اسم المتجر الإنجليزي", pEn.slice(0, 90))
   ok(pAr.startsWith("مرحباً بك،") && pAr.includes("ر.ع") && !pAr.includes("عزيزتنا"), "إشعار الطلب العربي بلا اسم: «مرحباً بك» (لا «عزيزتنا»)", pAr.slice(0, 60))
-  const mEn = nEn.find((n) => n.template === "merchant_new_order")?.data?.preview
-  ok(!mEn || /^طلب جديد/.test(mEn), "تنبيه التاجر يبقى عربياً", (mEn ?? "لا تنبيه (merchantPhones فارغ)").slice(0, 40))
+  const mEn = nEn.find((n) => n.template === "merchant_new_order")
+  ok(mEn?.to === "+96890000009" && /^طلب جديد/.test(mEn.data?.preview ?? "") && mEn.data?.lang !== "en", "تنبيه التاجر لطلب إنجليزي يبقى عربياً (merchant_new_order)", (mEn?.data?.preview ?? "لم يُرسل تنبيه").slice(0, 50))
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 
