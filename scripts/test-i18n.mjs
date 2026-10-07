@@ -444,7 +444,8 @@ async function arSnapshot() {
   writeFileSync(jar, "") // جرّة كوكي نظيفة: لا سلة من اختبارات سابقة
   let h = curl("/om")
   for (let i = 0; i < 14 && attrs(h.html).switch; i++) { await sleep(5000); h = curl("/om") }
-  const norm = (html) => visibleText(html).replace(/[0-9٠-٩.,:]+/g, "#").replace(/\s+/g, " ").trim()
+  // المخزون يتغيّر مع مشتريات الاختبار: مؤشرات «بقي # فقط» تُستثنى من المقارنة
+  const norm = (html) => visibleText(html).replace(/[0-9٠-٩.,:]+/g, "#").replace(/بقي # فقط/g, "").replace(/\s+/g, " ").trim()
   const pages = ["/om", "/om/store", `/om/products/${HANDLE}`, "/om/cart", "/om/account", "/om/track"]
   const snap = Object.fromEntries(pages.map((p) => [p, norm(curl(p).html)]))
   const dir = new URL("../.i18n-snapshots/", import.meta.url), file = new URL(`../.i18n-snapshots/${slug}.json`, import.meta.url)
