@@ -475,7 +475,8 @@
     "s8bdd7a": "Our customers' favorite picks",
     "s056650": "Limited discounts on selected pieces",
     "searchResults": "Search results for “{q}”",
-    "noResults": "No results for “{q}”"
+    "noResults": "No results for “{q}”",
+    "collectionDesc": "{title} — a collection by {store}"
   },
   "common": {
     "s3aa857": "Home",

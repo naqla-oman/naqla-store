@@ -5,6 +5,7 @@ import StoreTemplate from "@modules/store/templates"
 import { langPrefix } from "@/i18n/config"
 import { getT } from "@/i18n/t"
 import { getStoreConfig } from "@/i18n/store-config"
+import { langAlternates, ogLocale } from "@lib/seo/alternates"
 
 /** منخفضة: عنوان ووصف عربيان؛ نتائج البحث (?q=) لا تُفهرس ورابطها القانوني /store */
 export async function generateMetadata(props: Params): Promise<Metadata> {
@@ -15,7 +16,8 @@ export async function generateMetadata(props: Params): Promise<Metadata> {
   return {
     title: q ? t("searchResults", { q: q.slice(0, 60) }) : t("s2495fa"),
     description: sc.description,
-    alternates: { canonical: `/${countryCode}${langPrefix(lang)}/store${!q && page && page !== "1" ? `?page=${page}` : ""}` },
+    alternates: await langAlternates(countryCode, lang, `/store${!q && page && page !== "1" ? `?page=${page}` : ""}`),
+    openGraph: { ...(await ogLocale(lang)) },
     ...(q ? { robots: { index: false, follow: true } } : {}),
   }
 }

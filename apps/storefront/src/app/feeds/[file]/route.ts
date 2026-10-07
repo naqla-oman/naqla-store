@@ -1,10 +1,14 @@
 import { feedItems, FeedItem } from "@lib/feeds/items"
 import { getBaseURL } from "@lib/util/env"
 import { storeConfig } from "@/store.config"
+import { localizedStoreConfig } from "@/i18n/store-config"
+import { isLocale } from "@/i18n/config"
+import { ensureStoreSettings } from "@lib/data/store-settings"
 
 /**
  * الكتالوجات: /feeds/google.xml (Merchant Center)، /feeds/meta.csv (Meta + كتالوج واتساب)،
  * /feeds/snap.csv، /feeds/tiktok.csv — من Medusa مباشرة، تُعاد كل ساعة.
+ * ?lang=en: كتالوج إنجليزي (المرحلة 3) — فقط حين تكون الإنجليزية مفعّلة في المتجر، وإلا 404.
  */
 export const revalidate = 3600
 
@@ -16,8 +20,8 @@ const csvCell = (s: string | number) => {
   return /[",\n\r]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v
 }
 
-function google(items: FeedItem[]) {
-  const ship = storeConfig.seo.shipping.find((s) => s.code === "standard")
+function google(items: FeedItem[], sc = storeConfig) {
+  const ship = sc.seo.shipping.find((s) => s.code === "standard")
   const country = storeConfig.seo.country.toUpperCase()
   const entries = items.map((i) => `    <item>
       <g:id>${xml(i.id)}</g:id>
@@ -42,9 +46,9 @@ ${i.additional_image_links.map((u) => `      <g:additional_image_link>${xml(u)}<
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
   <channel>
-    <title>${xml(storeConfig.name)}</title>
+    <title>${xml(sc.name)}</title>
     <link>${xml(getBaseURL())}</link>
-    <description>${xml(storeConfig.description)}</description>
+    <description>${xml(sc.description)}</description>
 ${entries}
   </channel>
 </rss>
@@ -76,10 +80,14 @@ const csv = (items: FeedItem[], cols: (typeof COLUMNS)[string]) =>
   // BOM حتى تقرأ Excel والمنصات النص العربي بترميز UTF-8
   "\uFEFF" + [cols.map(([h]) => h).join(","), ...items.map((i) => cols.map(([, f]) => csvCell(f(i))).join(","))].join("\n") + "\n"
 
-export async function GET(_: Request, { params }: { params: Promise<{ file: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ file: string }> }) {
   const { file } = await params
-  const items = await feedItems()
-  if (file === "google.xml") return new Response(google(items), { headers: { "Content-Type": "application/xml; charset=utf-8" } })
+  await ensureStoreSettings()
+  const langParam = new URL(req.url).searchParams.get("lang") ?? "ar"
+  const lang = isLocale(langParam) ? langParam : null
+  if (!lang || (lang !== "ar" && !(storeConfig.languages ?? ["ar"]).includes(lang))) return new Response("Not found", { status: 404 })
+  const items = await feedItems(lang)
+  if (file === "google.xml") return new Response(google(items, localizedStoreConfig(lang)), { headers: { "Content-Type": "application/xml; charset=utf-8" } })
   const m = file.match(/^(meta|snap|tiktok)\.csv$/)
   if (m) return new Response(csv(items, COLUMNS[m[1]]), { headers: { "Content-Type": "text/csv; charset=utf-8" } })
   return new Response("Not found", { status: 404 })

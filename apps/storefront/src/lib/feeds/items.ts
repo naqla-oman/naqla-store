@@ -4,6 +4,9 @@ import { getBaseURL } from "@lib/util/env"
 import { availableQty } from "@modules/products/lib/variants"
 import { HttpTypes } from "@medusajs/types"
 import { storeConfig } from "../../store.config"
+import { localizedStoreConfig } from "@/i18n/store-config"
+import { MEDUSA_LOCALE } from "@/i18n/t"
+import { langPrefix } from "@/i18n/config"
 
 /**
  * عناصر الكتالوج: عنصر لكل متغيّر (مقاس/لون/حجم)، يجمعها item_group_id للمنتج.
@@ -31,16 +34,22 @@ export type FeedItem = {
 const money = (n: number) => `${n.toFixed(3)} ${storeConfig.currency.toUpperCase()}`
 const clean = (s?: string | null) => (s ?? "").replace(/\s+/g, " ").trim()
 
-export async function feedItems(): Promise<FeedItem[]> {
+/**
+ * lang="en" (المرحلة 3): العناوين والأوصاف والأقسام وقيم الخيارات من ترجمات Medusa (?locale=en-US)،
+ * والروابط إلى /om/en/…، واسم العلامة من طبقة المتجر الإنجليزية. ما لا ترجمة له يبقى عربياً.
+ */
+export async function feedItems(lang = "ar"): Promise<FeedItem[]> {
   const base = getBaseURL()
   const cc = process.env.NEXT_PUBLIC_DEFAULT_REGION || "om"
+  const sc = localizedStoreConfig(lang)
+  const localeQ = lang === "ar" ? {} : { locale: MEDUSA_LOCALE[lang] ?? lang }
   const { regions } = await sdk.client.fetch<{ regions: HttpTypes.StoreRegion[] }>("/store/regions", { cache: "no-store" })
   const region = regions.find((r) => r.countries?.some((c) => c.iso_2 === cc)) ?? regions[0]
   const products: HttpTypes.StoreProduct[] = []
   for (let offset = 0; offset < 10000; offset += 100) {
     const r = await sdk.client.fetch<{ products: HttpTypes.StoreProduct[] }>("/store/products", {
       query: {
-        limit: 100, offset, region_id: region.id,
+        limit: 100, offset, region_id: region.id, ...localeQ,
         fields: "*variants.calculated_price,+variants.inventory_quantity,+variants.manage_inventory,+variants.allow_backorder,*variants.options,+variants.metadata,*options,+options.metadata,*images,*categories,+metadata",
       },
       cache: "no-store",
@@ -73,7 +82,7 @@ export async function feedItems(): Promise<FeedItem[]> {
           item_group_id: p.handle!,
           title: clean(multi ? `${p.title} — ${v.title}` : p.title).slice(0, 150),
           description: clean(p.description || p.title).slice(0, 5000),
-          link: `${base}/${cc}/products/${p.handle}?v_id=${v.id}`,
+          link: `${base}/${cc}${langPrefix(lang)}/products/${p.handle}?v_id=${v.id}`,
           image_link: images[0] ?? "",
           additional_image_links: images.slice(1, 10),
           availability: qty > 0 ? "in stock" : "out of stock",
@@ -81,7 +90,7 @@ export async function feedItems(): Promise<FeedItem[]> {
           // سعر قبل الخصم في price والسعر الحالي في sale_price عند وجود تخفيض (قاعدة Google/Meta)
           price: money(old > price ? old : price),
           sale_price: old > price ? money(price) : "",
-          brand: storeConfig.name,
+          brand: sc.name,
           condition: "new",
           product_type: clean(p.categories?.[0]?.name),
           size: val(v, sizeDef),

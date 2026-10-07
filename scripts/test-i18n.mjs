@@ -286,6 +286,60 @@ asyncio.run(main())`
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 
+async function stage3() {
+  console.log("\n— المرحلة 3: السيو —")
+  const t = tok()
+  const links = (h) => [...h.matchAll(/<link[^>]+rel="alternate"[^>]+>/g)].map((m) => m[0]).filter((x) => /hreflang=/i.test(x))
+  const hreflang = (h) => Object.fromEntries(links(h).map((x) => [(x.match(/hreflang="([^"]+)"/i) ?? [])[1], (x.match(/href="([^"]+)"/) ?? [])[1]]))
+  const meta = (h, prop) => (h.match(new RegExp(`<meta[^>]+property="${prop}"[^>]+content="([^"]+)"`)) ?? h.match(new RegExp(`<meta[^>]+content="([^"]+)"[^>]+property="${prop}"`)) ?? [])[1]
+  const canonical = (h) => (h.match(/<link[^>]+rel="canonical"[^>]+href="([^"]+)"/) ?? [])[1]
+  const jsonLds = (h) => [...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map((m) => { try { return JSON.parse(m[1]) } catch { return null } }).filter(Boolean)
+  // متجر بلغة واحدة: لا hreflang، sitemap عربي فقط، كتالوج ?lang=en ← 404
+  settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
+  let h = curl("/om")
+  for (let i = 0; i < 14 && attrs(h.html).switch; i++) { await sleep(5000); h = curl("/om") }
+  ok(links(h.html).length === 0 && canonical(h.html)?.endsWith("/om"), "لغة واحدة: لا hreflang وcanonical عربي", canonical(h.html))
+  const sm1 = curl("/sitemap.xml")
+  ok(sm1.code === 200 && !sm1.html.includes("/om/en") && !sm1.html.includes("hreflang"), "لغة واحدة: sitemap عربي بلا /en", `${(sm1.html.match(/<url>/g) ?? []).length} رابط`)
+  ok(curl("/feeds/google.xml?lang=en").code === 404, "لغة واحدة: /feeds/google.xml?lang=en يعطي 404")
+  // بعد تفعيل الإنجليزية
+  settings({ languages: ["ar", "en"], defaultLanguage: "ar" }, t)
+  let en = curl("/om/en")
+  for (let i = 0; i < 14 && attrs(en.html).lang !== "en"; i++) { await sleep(5000); en = curl("/om/en") }
+  for (const [path, enPath] of [["/om", "/om/en"], [`/om/products/${HANDLE}`, `/om/en/products/${HANDLE}`], ["/om/store", "/om/en/store"], ["/om/pages/about", "/om/en/pages/about"]]) {
+    const a = curl(path).html, b = curl(enPath).html, ha = hreflang(a), hb = hreflang(b)
+    const want = (x) => x.ar?.endsWith(path) && x.en?.endsWith(enPath) && x["x-default"]?.endsWith(path)
+    ok(want(ha) && want(hb) && canonical(a)?.endsWith(path) && canonical(b)?.endsWith(enPath), `hreflang (ar/en/x-default=ar) وcanonical: ${path}`, `ar=${ha.ar} en=${ha.en} x=${ha["x-default"]}`)
+    ok(meta(a, "og:locale") === "ar_OM" && meta(b, "og:locale") === "en_US" && meta(a, "og:locale:alternate") === "en_US" && meta(b, "og:locale:alternate") === "ar_OM", `og:locale حسب اللغة: ${path}`, `${meta(a, "og:locale")} / ${meta(b, "og:locale")}`)
+  }
+  // JSON-LD: الرئيسية (WebSite/Organization/Store) والمنتج (Product/Breadcrumb) بلغة الصفحة
+  const homeAr = jsonLds(curl("/om").html), homeEn = jsonLds(curl("/om/en").html)
+  const site = (arr) => arr.flatMap((x) => x["@graph"] ?? [x]).find((x) => x["@type"] === "WebSite")
+  const store = (arr) => arr.flatMap((x) => x["@graph"] ?? [x]).find((x) => x["@type"] === "Store")
+  ok(site(homeAr)?.inLanguage === "ar" && site(homeEn)?.inLanguage === "en" && site(homeEn)?.url?.endsWith("/om/en"), "JSON-LD الرئيسية: inLanguage وurl بلغة الصفحة", `${site(homeAr)?.inLanguage}/${site(homeEn)?.inLanguage}`)
+  ok(store(homeEn) && !/[؀-ۿ]/.test(JSON.stringify([store(homeEn).address, store(homeEn).name])), "JSON-LD المحل بالإنجليزية (الاسم والعنوان)", String(store(homeEn)?.address?.addressLocality))
+  const prodEn = jsonLds(curl(`/om/en/products/${HANDLE}`).html), P = prodEn.find((x) => x["@type"] === "Product"), B = prodEn.find((x) => x["@type"] === "BreadcrumbList")
+  ok(P?.inLanguage === "en" && P?.name === enJson.products[HANDLE].title && P?.offers?.url?.includes("/om/en/products/"), "JSON-LD المنتج بالإنجليزية (name، inLanguage، offers.url)", P?.name)
+  ok(B && B.itemListElement.every((x) => !/[؀-ۿ]/.test(x.name) && x.item.includes("/om/en")) , "JSON-LD مسار التنقل بالإنجليزية", B?.itemListElement?.map((x) => x.name).join(" › "))
+  const prodAr = jsonLds(curl(`/om/products/${HANDLE}`).html).find((x) => x["@type"] === "Product")
+  ok(prodAr?.inLanguage === "ar" && /[؀-ۿ]/.test(prodAr?.name ?? ""), "JSON-LD المنتج العربي كما كان")
+  // sitemap باللغتين مع alternates
+  let sm = curl("/sitemap.xml")
+  for (let i = 0; i < 14 && !sm.html.includes("/om/en"); i++) { await sleep(5000); sm = curl("/sitemap.xml") }
+  const urls = [...sm.html.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])
+  const arUrls = urls.filter((u) => !u.includes("/om/en")), enUrls = urls.filter((u) => u.includes("/om/en"))
+  ok(enUrls.length === arUrls.length && enUrls.length > 5 && enUrls.some((u) => u.endsWith(`/om/en/products/${HANDLE}`)), "sitemap: كل رابط باللغتين", `${arUrls.length} عربي / ${enUrls.length} إنجليزي`)
+  ok(sm.html.includes('hreflang="en"') && sm.html.includes('hreflang="x-default"'), "sitemap: xhtml:link hreflang (ar/en/x-default)")
+  // كتالوجات ?lang=en
+  const gEn = curl("/feeds/google.xml?lang=en"), gAr = curl("/feeds/google.xml")
+  const titles = (x) => [...x.matchAll(/<title>([^<]*)<\/title>/g)].map((m) => m[1]).slice(1)
+  ok(gEn.code === 200 && titles(gEn.html).some((x) => x.includes(enJson.products[HANDLE].title)) && gEn.html.includes(`/om/en/products/`), "كتالوج Google بالإنجليزية: عناوين مترجمة وروابط /en", titles(gEn.html)[0])
+  ok(titles(gAr.html).some((x) => /[؀-ۿ]/.test(x)) && !gAr.html.includes("/om/en/"), "كتالوج Google العربي كما كان")
+  const mEn = curl("/feeds/meta.csv?lang=en")
+  ok(mEn.code === 200 && mEn.html.includes(enJson.products[HANDLE].title) && mEn.html.includes("/om/en/products/"), "كتالوج Meta بالإنجليزية")
+  settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
+}
+
 /** لقطة الواجهة العربية (متجر بلغة واحدة): تُسجَّل بـ --snapshot وتُقارَن بعدها — الأرقام وتسميات المبدّل مستثناة */
 async function arSnapshot() {
   console.log("\n— لقطة الواجهة العربية —")
@@ -312,7 +366,7 @@ async function arSnapshot() {
     ok(same, `الواجهة العربية كما كانت: ${p}`, diff)
   }
 }
-const sections = { stage0, stage1, stage2, arSnapshot }
+const sections = { stage0, stage1, stage2, stage3, arSnapshot }
 for (const s of (process.argv[3] && !process.argv[3].startsWith("--") ? [process.argv[3]] : Object.keys(sections))) await sections[s]()
 console.log(`\n${failn ? "✖" : "✔"} ${pass} نجح، ${failn} فشل`)
 process.exit(failn ? 1 : 0)

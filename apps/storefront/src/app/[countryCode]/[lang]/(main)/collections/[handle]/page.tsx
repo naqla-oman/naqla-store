@@ -6,9 +6,12 @@ import { listRegions } from "@lib/data/regions"
 import { StoreCollection, StoreRegion } from "@medusajs/types"
 import CollectionTemplate from "@modules/collections/templates"
 import { SortOptions } from "@modules/store/components/refinement-list/sort-products"
+import { langAlternates, ogLocale } from "@lib/seo/alternates"
+import { getStoreConfig } from "@/i18n/store-config"
+import { getT } from "@/i18n/t"
 
 type Props = {
-  params: Promise<{ handle: string; countryCode: string }>
+  params: Promise<{ handle: string; countryCode: string; lang: string }>
   searchParams: Promise<{
     page?: string
     sortBy?: SortOptions
@@ -59,12 +62,14 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     notFound()
   }
 
-  const metadata = {
+  const sc = await getStoreConfig()
+  const t = await getT("store")
+  return {
     title: collection.title,
-    description: `${collection.title} collection`,
-  } as Metadata
-
-  return metadata
+    description: t("collectionDesc", { title: collection.title, store: sc.name }),
+    alternates: await langAlternates(params.countryCode, params.lang, `/collections/${params.handle}`),
+    openGraph: { title: `${collection.title} | ${sc.name}`, ...(await ogLocale(params.lang)) },
+  }
 }
 
 export default async function CollectionPage(props: Props) {

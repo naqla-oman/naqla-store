@@ -11,6 +11,7 @@ import { SortOptions } from "@modules/store/components/refinement-list/sort-prod
 import { langPrefix } from "@/i18n/config"
 import { getT } from "@/i18n/t"
 import { getStoreConfig } from "@/i18n/store-config"
+import { langAlternates, ogLocale } from "@lib/seo/alternates"
 
 type Props = {
   params: Promise<{ category: string[]; countryCode: string; lang: string }>
@@ -62,8 +63,8 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
     // اسم المتجر يُضاف من قالب العنوان في التخطيط الجذري
     title: meta.seo_title || category.name,
     description,
-    alternates: { canonical: `/${params.countryCode}${langPrefix(params.lang)}/categories/${params.category.join("/")}` },
-    openGraph: { title: `${meta.seo_title || category.name} | ${sc.name}`, description },
+    alternates: await langAlternates(params.countryCode, params.lang, `/categories/${params.category.join("/")}`),
+    openGraph: { title: `${meta.seo_title || category.name} | ${sc.name}`, description, ...(await ogLocale(params.lang)) },
   }
 }
 

@@ -13,6 +13,7 @@ import { getStoreConfig } from "@/i18n/store-config"
 import { getFreeShippingOver } from "@lib/data/shipping-threshold"
 import { langPrefix } from "@/i18n/config"
 import { getT } from "@/i18n/t"
+import { jsonLdLang, langAlternates, ogLocale } from "@lib/seo/alternates"
 
 type Props = {
   params: Promise<{ countryCode: string; handle: string; lang: string }>
@@ -104,11 +105,11 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   return {
     title: meta.seo_title || product.title,
     description,
-    alternates: { canonical: `/${params.countryCode}${langPrefix(params.lang)}/products/${handle}` },
+    alternates: await langAlternates(params.countryCode, params.lang, `/products/${handle}`),
     openGraph: {
       title: `${product.title} | ${sc.name}`,
       description,
-      locale: "ar_OM",
+      ...(await ogLocale(params.lang)),
       images: product.thumbnail ? [product.thumbnail] : [],
     },
   }
@@ -143,10 +144,11 @@ export default async function ProductPage(props: Props) {
   const images = getImagesForVariant(pricedProduct, selectedVariantId)
   const { price, currency } = variantPricing(pricedProduct)
   const inStock = (pricedProduct.variants ?? []).some((v) => availableQty(v) > 0)
-  const url = `${getBaseURL()}/${params.countryCode}/products/${pricedProduct.handle}`
+  const url = `${getBaseURL()}/${params.countryCode}${langPrefix(params.lang)}/products/${pricedProduct.handle}`
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
+    inLanguage: jsonLdLang(params.lang),
     name: pricedProduct.title,
     description: pricedProduct.description ?? undefined,
     image: (pricedProduct.images ?? []).map((i) => (i.url.startsWith("http") ? i.url : `${getBaseURL()}${i.url}`)),
@@ -161,7 +163,7 @@ export default async function ProductPage(props: Props) {
       availability: inStock ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@id": `${getBaseURL()}/#org` },
-      ...offerExtras(price, await getFreeShippingOver()),
+      ...offerExtras(price, await getFreeShippingOver(), sc),
     },
     // لا aggregateRating: التقييمات حالياً بيانات مزروعة لا تقييمات حقيقية (إرشادات Google)
   }

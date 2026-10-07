@@ -20,11 +20,13 @@ import { NextIntlClientProvider } from "next-intl"
 import { getLocale, getMessages } from "next-intl/server"
 import { CLIENT_NAMESPACES, dirOf } from "@/i18n/config"
 import { getStoreConfig } from "@/i18n/store-config"
+import { ogLocale } from "@lib/seo/alternates"
 
 // إعدادات اللوحة تُطبَّق قبل البيانات الوصفية (الاسم، الوصف…)
 export async function generateMetadata(): Promise<Metadata> {
   await ensureStoreSettings()
   const sc = await getStoreConfig()
+  const lang = await getLocale().catch(() => "ar")
   return {
     metadataBase: new URL(getBaseURL()),
     title: { default: sc.name, template: `%s | ${sc.name}` },
@@ -41,7 +43,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     openGraph: {
       siteName: sc.name,
-      locale: storeConfig.locale.replace("-", "_"),
+      ...(await ogLocale(lang)),
       // أبعاد الصورة كما في مجلد العميل (لا تُفرض هنا)
       images: [{ url: clientAsset("og.jpg"), alt: sc.name }],
     },

@@ -1,5 +1,7 @@
 import { getBaseURL } from "@lib/util/env"
-import { clientAsset, storeConfig as c } from "../../store.config"
+import { clientAsset, storeConfig as c, type StoreConfig } from "../../store.config"
+import { jsonLdLang } from "./alternates"
+import { langPrefix } from "@/i18n/config"
 
 /** بيانات منظّمة (schema.org) من إعدادات المتجر فقط — بلا أي اسم عميل في الكود */
 
@@ -8,28 +10,29 @@ const COUNTRY = c.seo.country.toUpperCase()
 
 export const jsonLdScript = (data: unknown) => ({ __html: JSON.stringify(data).replace(/</g, "\\u003c") })
 
-/** Organization + WebSite (مع بحث يعمل: /store?q=) */
-export function siteGraph(countryCode: string) {
-  const site = `${getBaseURL()}/${countryCode}`
+/** Organization + WebSite (مع بحث يعمل: /store?q=) — بلغة الصفحة (sc من getStoreConfig) */
+export function siteGraph(countryCode: string, lang = "ar", sc: StoreConfig = c) {
+  const site = `${getBaseURL()}/${countryCode}${langPrefix(lang)}`
+  const langs = (c.languages ?? ["ar"]).map(jsonLdLang)
   return {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Organization",
         "@id": `${getBaseURL()}/#org`,
-        name: c.name,
+        name: sc.name,
         alternateName: c.nameEn,
-        url: site,
+        url: `${getBaseURL()}/${countryCode}`,
         logo: abs(clientAsset("icons/icon-512.png")),
         sameAs: Object.values(c.social ?? {}).filter((u) => u && !/\/\/[^/]+\/?$/.test(u)),
-        contactPoint: { "@type": "ContactPoint", telephone: c.contact.phone, email: c.contact.email, contactType: "customer service", areaServed: COUNTRY, availableLanguage: ["ar"] },
+        contactPoint: { "@type": "ContactPoint", telephone: c.contact.phone, email: c.contact.email, contactType: "customer service", areaServed: COUNTRY, availableLanguage: langs },
       },
       {
         "@type": "WebSite",
         "@id": `${getBaseURL()}/#website`,
         url: site,
-        name: c.name,
-        inLanguage: c.locale,
+        name: sc.name,
+        inLanguage: jsonLdLang(lang),
         publisher: { "@id": `${getBaseURL()}/#org` },
         potentialAction: {
           "@type": "SearchAction",
@@ -41,18 +44,18 @@ export function siteGraph(countryCode: string) {
   }
 }
 
-/** المحل الفعلي (للاستلام والزيارة) */
-export function localBusiness(countryCode: string) {
+/** المحل الفعلي (للاستلام والزيارة) — الاسم والعنوان بلغة الصفحة */
+export function localBusiness(countryCode: string, lang = "ar", sc: StoreConfig = c) {
   return {
     "@context": "https://schema.org",
     "@type": "Store",
     "@id": `${getBaseURL()}/#store`,
-    name: c.seo.location.name || c.name,
-    url: `${getBaseURL()}/${countryCode}`,
+    name: sc.seo.location.name || sc.name,
+    url: `${getBaseURL()}/${countryCode}${langPrefix(lang)}`,
     image: abs(clientAsset("og.jpg")),
     telephone: c.contact.phone,
     email: c.contact.email,
-    address: { "@type": "PostalAddress", streetAddress: c.seo.location.address, addressLocality: c.seo.location.city, addressCountry: COUNTRY },
+    address: { "@type": "PostalAddress", streetAddress: sc.seo.location.address, addressLocality: sc.seo.location.city, addressCountry: COUNTRY },
     parentOrganization: { "@id": `${getBaseURL()}/#org` },
   }
 }
@@ -67,9 +70,9 @@ export function breadcrumbs(items: { name: string; path: string }[]) {
 
 /** تفاصيل التوصيل لكل طريقة من store.json (مجاني فوق الحد إن وُجد) + سياسة الإرجاع */
 /** M19: freeOver من قاعدة Medusa الفعلية (للتوصيل العادي) */
-export function offerExtras(price: number, freeOver?: number | null) {
+export function offerExtras(price: number, freeOver?: number | null, sc: StoreConfig = c) {
   const currency = c.currency.toUpperCase()
-  const shippingDetails = c.seo.shipping
+  const shippingDetails = sc.seo.shipping
     .filter((sh) => sh.code !== "pickup")
     .map((sh) => ({
       "@type": "OfferShippingDetails",

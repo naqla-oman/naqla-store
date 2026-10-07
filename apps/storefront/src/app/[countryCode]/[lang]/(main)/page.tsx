@@ -6,15 +6,22 @@ import Decor from "@modules/common/components/decor"
 import { listCollections } from "@lib/data/collections"
 import { getRegion } from "@lib/data/regions"
 import { getStoreConfig } from "@/i18n/store-config"
+import { langAlternates, ogLocale } from "@lib/seo/alternates"
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata(props: { params: Promise<{ countryCode: string; lang: string }> }): Promise<Metadata> {
   const sc = await getStoreConfig()
-  return { title: `${sc.name} — ${sc.tagline}`, description: sc.description }
+  const { countryCode, lang } = await props.params
+  return {
+    title: `${sc.name} — ${sc.tagline}`,
+    description: sc.description,
+    alternates: await langAlternates(countryCode, lang, ""),
+    openGraph: { title: `${sc.name} — ${sc.tagline}`, description: sc.description, ...(await ogLocale(lang)) },
+  }
 }
 
 
-export default async function Home(props: { params: Promise<{ countryCode: string }> }) {
-  const { countryCode } = await props.params
+export default async function Home(props: { params: Promise<{ countryCode: string; lang: string }> }) {
+  const { countryCode, lang } = await props.params
   const sc = await getStoreConfig()
   const region = await getRegion(countryCode)
   const { collections } = await listCollections({ fields: "id, handle, title" })
@@ -26,8 +33,8 @@ export default async function Home(props: { params: Promise<{ countryCode: strin
 
   return (
     <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(siteGraph(countryCode))} />
-      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(localBusiness(countryCode))} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(siteGraph(countryCode, lang, sc))} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScript(localBusiness(countryCode, lang, sc))} />
       <Hero />
       <Decor className="wrap" />
       <div className="pb-8">
