@@ -2,6 +2,7 @@ import type { MedusaContainer } from "@medusajs/framework/types"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { addShippingMethodToCartWorkflow, addToCartWorkflow, completeCartWorkflow, listShippingOptionsForCartWithPricingWorkflow, updateCartPromotionsWorkflow, updateLineItemInCartWorkflow } from "@medusajs/medusa/core-flows"
 import { client } from "../../lib/client"
+import { storeError } from "../../lib/store-errors"
 
 /**
  * C5: المخزون يُفحص على مجموع كميات المتغيّر في كل أسطر السلة — لا لكل سطر وحده.
@@ -57,7 +58,7 @@ function assertLength(metadata: any) {
   const max = Number(lf.max ?? 200)
   const v = Number(metadata.length_cm)
   if (!Number.isInteger(v) || v < min || v > max) {
-    throw new MedusaError(MedusaError.Types.INVALID_DATA, `الطول يجب أن يكون بين ${min} و${max} سم`)
+    throw storeError(MedusaError.Types.INVALID_DATA, "length_range", { min, max })
   }
 }
 
@@ -69,7 +70,7 @@ async function assertServiceItems(container: MedusaContainer, items: any[]) {
   const service = new Set((data as any[]).filter((v) => v.product?.metadata?.service).map((v) => v.id))
   for (const it of items) {
     if (service.has(it.variant_id) && !it.metadata?.tailoring?.for_handle) {
-      throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "التفصيل الخاص يُطلب من صفحة القطعة المراد تفصيلها")
+      throw storeError(MedusaError.Types.NOT_ALLOWED, "tailoring_from_product")
     }
   }
 }
@@ -148,7 +149,7 @@ function assertExclusive(codes: string[]) {
   const manual = [...new Set(codes.map((c) => c.toUpperCase()))]
   const solo = manual.find((c) => R.get(c)?.exclusive)
   if (solo && manual.length > 1) {
-    throw new MedusaError(MedusaError.Types.NOT_ALLOWED, `الكود ${solo} لا يُجمع مع أكواد خصم أخرى`)
+    throw storeError(MedusaError.Types.NOT_ALLOWED, "code_not_combinable", { code: solo })
   }
 }
 
@@ -157,7 +158,7 @@ async function assertFirstOrder(container: MedusaContainer, cart: any, codes: st
   const first = codes.map((c) => c.toUpperCase()).find((c) => R.get(c)?.firstOrderOnly)
   if (!first) return
   if (await hasPreviousOrder(container, { customer_id: cart.customer_id, email: cart.email, phone: cart.shipping_address?.phone })) {
-    throw new MedusaError(MedusaError.Types.NOT_ALLOWED, `الكود ${first} لأول طلب فقط`)
+    throw storeError(MedusaError.Types.NOT_ALLOWED, "code_first_order_only", { code: first })
   }
 }
 
@@ -190,7 +191,7 @@ completeCartWorkflow.hooks.validate(async ({ input }, { container }) => {
       const o: any = (result as any[])?.[0]
       const expected = Number(o?.calculated_price?.calculated_amount ?? o?.amount ?? m.amount)
       if (Number(m.amount) + 0.0005 < expected) {
-        throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "تغيّر سعر التوصيل بعد تعديل السلة — أعد اختيار طريقة التوصيل")
+        throw storeError(MedusaError.Types.NOT_ALLOWED, "shipping_price_changed")
       }
     }
   }

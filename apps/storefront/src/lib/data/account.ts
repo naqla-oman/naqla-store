@@ -7,17 +7,15 @@ import { transferCart } from "./customer"
 import { storeConfig } from "../../store.config"
 import { g } from "@lib/voice"
 import { getT, localeHeader } from "@/i18n/t"
+import { serverErrorOr } from "@lib/util/server-error"
 
 export type Result<T = undefined> = { ok: true; data?: T } | { ok: false; error: string }
 
 const PLACEHOLDER = "@phone.invalid"
 const phoneRe = new RegExp(storeConfig.checkout.phone.pattern)
 const full = (p: string) => `${storeConfig.checkout.phone.prefix}${p}`
-const msg = (e: unknown, fallback: string) => {
-  const m = String((e as any)?.message ?? "")
-  // رسائل الخلفية عربية أصلاً؛ رسائل النظام الإنجليزية تُستبدل برسالة عامة
-  return /[\u0600-\u06FF]/.test(m) ? m : fallback
-}
+// المرحلة 4: أخطاء الخادم رموز ثابتة تُترجم بلغة الصفحة؛ غير المرمَّزة ← الرسالة العامة
+const msg = (e: unknown, fallback: string) => serverErrorOr(e, fallback)
 const jwtPayload = (token: string) => {
   try {
     return JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString("utf8")) as { actor_id?: string }
@@ -47,7 +45,7 @@ export async function requestOtp(phone: string): Promise<Result> {
     await sdk.client.fetch("/auth/customer/phone-auth", { method: "POST", body: { phone: full(phone) } })
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: msg(e, t("s382a9e")) }
+    return { ok: false, error: await msg(e, t("s382a9e")) }
   }
 }
 
@@ -65,7 +63,7 @@ export async function verifyOtp(phone: string, otp: string, localWishlist: strin
     await afterLogin(localWishlist)
     return { ok: true, data: { needsProfile: false } }
   } catch (e) {
-    return { ok: false, error: msg(e, t("s524dd7")) }
+    return { ok: false, error: await msg(e, t("s524dd7")) }
   }
 }
 
@@ -88,7 +86,7 @@ export async function completeProfile(input: { firstName: string; lastName: stri
     await afterLogin(localWishlist)
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: msg(e, t("s1f8a64")) }
+    return { ok: false, error: await msg(e, t("s1f8a64")) }
   }
 }
 
@@ -134,7 +132,7 @@ export async function redeemPoints(): Promise<Result<{ code: string }>> {
     revalidateTag(await getCacheTag("customers"))
     return { ok: true, data: r }
   } catch (e) {
-    return { ok: false, error: msg(e, t("s9e0c3f")) }
+    return { ok: false, error: await msg(e, t("s9e0c3f")) }
   }
 }
 
@@ -153,7 +151,7 @@ export async function updateEmail(email: string, onlyIfPlaceholder = false): Pro
     await refreshCustomer()
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: msg(e, t("s1dec61")) }
+    return { ok: false, error: await msg(e, t("s1dec61")) }
   }
 }
 
@@ -165,7 +163,7 @@ export async function updateName(firstName: string, lastName: string): Promise<R
     await refreshCustomer()
     return { ok: true }
   } catch (e) {
-    return { ok: false, error: msg(e, t("sde0332")) }
+    return { ok: false, error: await msg(e, t("sde0332")) }
   }
 }
 
@@ -203,7 +201,7 @@ export async function toggleWishlist(productId: string): Promise<Result<{ ids: s
     await saveWishlist(ids)
     return { ok: true, data: { ids } }
   } catch (e) {
-    return { ok: false, error: msg(e, t("sc98c4d")) }
+    return { ok: false, error: await msg(e, t("sc98c4d")) }
   }
 }
 
@@ -241,7 +239,7 @@ export async function trackOrder(number: string, phone: string): Promise<Result<
     })
     return { ok: true, data: order }
   } catch (e) {
-    return { ok: false, error: msg(e, t("s6c7fa0")) }
+    return { ok: false, error: await msg(e, t("s6c7fa0")) }
   }
 }
 

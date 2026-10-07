@@ -3,11 +3,12 @@ import { ContainerRegistrationKeys, MedusaError, Modules } from "@medusajs/frame
 import { awardOrderPointsWorkflow } from "../../../../../workflows/loyalty"
 import { syncLoyaltyTierWorkflow } from "../../../../../workflows/sync-loyalty-tier"
 import { claimOrdersByPhone } from "../../../../../lib/claim-orders"
+import { storeError } from "../../../../../lib/store-errors"
 
 /** POST /store/customers/me/claim-orders — بعد كل دخول: نسب طلبات الضيف الجديدة بنفس الرقم */
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const customer = await req.scope.resolve(Modules.CUSTOMER).retrieveCustomer(req.auth_context.actor_id)
-  if (!customer.phone) throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "لا يوجد رقم هاتف في الحساب")
+  if (!customer.phone) throw storeError(MedusaError.Types.NOT_ALLOWED, "no_phone_on_account")
   const claimed = await claimOrdersByPhone(req.scope, customer.id, customer.phone)
   // استكمال نقاط طلبات الحساب التي لا قيد لها (آمن للتكرار: فهرس فريد لكل طلب)
   const { data: orders } = await req.scope.resolve(ContainerRegistrationKeys.QUERY).graph({

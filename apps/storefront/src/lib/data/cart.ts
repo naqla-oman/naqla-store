@@ -16,6 +16,7 @@ import {
 import { getRegion } from "./regions"
 import { localeQuery, localizeSnapshots, medusaCartLocale, shippingOptionTranslations, shippingTypeTranslations } from "@/i18n/t"
 import { getT } from "@/i18n/t"
+import { translateServerError } from "@lib/util/server-error"
 
 /**
  * Retrieves a cart by its ID. If no ID is provided, it will use the cart ID from the cookies.
@@ -126,7 +127,9 @@ async function cartFail(e: unknown): Promise<CartResult> {
   const t = await getT("cartActions")
   const msg = String((e as any)?.message ?? "")
   if (/inventory|stock|غير متوفرة|المخزون|تتوفر/i.test(msg)) return { ok: false, code: "out_of_stock", message: t("s68650b") }
-  // رسائل خادمنا العربية الواضحة (الطول، قفل الدفع…) تُعرض كما هي
+  // أخطاء خادمنا المرمَّزة (الطول، الأكواد، قفل الدفع…) تُترجم بلغة الصفحة
+  const coded = await translateServerError(msg)
+  if (coded) return { ok: false, code: "invalid", message: coded }
   if (/[\u0600-\u06FF]/.test(msg)) return { ok: false, code: "invalid", message: msg.slice(0, 160) }
   return { ok: false, code: "error", message: t("sb6ef29") }
 }
@@ -346,7 +349,7 @@ export async function submitPromotionForm(
   try {
     await applyPromotions([code])
   } catch (e: any) {
-    return e.message
+    return (await translateServerError(e.message)) ?? e.message
   }
 }
 
@@ -395,7 +398,7 @@ export async function setAddresses(currentState: unknown, formData: FormData) {
       }
     await updateCart(data)
   } catch (e: any) {
-    return e.message
+    return (await translateServerError(e.message)) ?? e.message
   }
 
   redirect(

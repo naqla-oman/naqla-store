@@ -358,6 +358,57 @@ async function stage3() {
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 
+async function stage4() {
+  console.log("\n— المرحلة 4: الخادم والإشعارات —")
+  const t = tok()
+  settings({ languages: ["ar", "en"], defaultLanguage: "ar" }, t)
+  let en = curl("/om/en")
+  for (let i = 0; i < 14 && attrs(en.html).lang !== "en"; i++) { await sleep(5000); en = curl("/om/en") }
+  // 1) الخادم يعيد رموزاً ثابتة لا نصوصاً عربية
+  const reg = sapi("GET", "/store/regions").regions[0].id
+  const cart = sapi("POST", "/store/carts", { region_id: reg }).cart
+  const bad = sapi("POST", `/store/carts/${cart.id}`, { shipping_address: { first_name: "T", last_name: "T", address_1: "x", city: "ولاية-غير-موجودة", province: storeJson.checkout.governorates[0].code, country_code: "om", phone: "+96891234567" } })
+  ok(/^wilayat_mismatch \{/.test(bad.message ?? ""), "الخادم: الولاية الخاطئة → رمز wilayat_mismatch مع معاملاته", bad.message)
+  const bad2 = sapi("POST", `/store/carts/${cart.id}`, { shipping_address: { first_name: "T", last_name: "T", address_1: "x", city: "x", province: "om-xx", country_code: "om", phone: "+96891234567" } })
+  ok(bad2.message === "governorate_unknown", "الخادم: محافظة غير معروفة → governorate_unknown", bad2.message)
+  const tr = sapi("POST", "/store/track", { number: "999999", phone: "90000000" })
+  ok(tr.message === "order_not_found_track", "الخادم: تتبع بلا نتيجة → order_not_found_track", tr.message)
+  const otp1 = JSON.parse(execFileSync("curl", ["-s", "-m", "30", "-X", "POST", `${B}/auth/customer/phone-auth`, "-H", "Content-Type: application/json", "-d", JSON.stringify({ phone: "+96890000001" })]).toString())
+  const otp2 = JSON.parse(execFileSync("curl", ["-s", "-m", "30", "-X", "POST", `${B}/auth/customer/phone-auth`, "-H", "Content-Type: application/json", "-d", JSON.stringify({ phone: "+96890000001" })]).toString())
+  ok(/^otp_(cooldown \{"wait":\d+\}|device_limit|daily_limit)$/.test(otp2.message ?? ""), "الخادم: طلب رمز ثانٍ → otp_cooldown {wait}", `${JSON.stringify(otp1).slice(0, 40)} ثم ${otp2.message}`)
+  // 2) الواجهة تترجم الرموز بلغة الصفحة (رمز الدخول، والسلة عبر server action)
+  const phone = String(90000000 + Math.floor(Math.random() * 9000000))
+  const py = PY_HEAD + `
+async def flow(b, path):
+    m = await (await b.new_context()).new_page(); m.set_default_timeout(120000)
+    await m.goto(S + path, wait_until="domcontentloaded"); await m.wait_for_selector("#lPhone"); await m.wait_for_load_state("networkidle")
+    out = {}
+    for attempt in range(6):
+        await m.fill("#lPhone", "${phone}"); await m.click("[data-testid=send-otp]")
+        try:
+            await m.wait_for_selector("[data-testid=otp-0]", timeout=8000); break
+        except Exception:
+            if attempt == 5: out["sendErr"] = await m.locator("#lErr").inner_text()
+    if "sendErr" not in out:
+        await m.click("button.linkbtn"); await m.wait_for_selector("#lPhone")
+        await m.fill("#lPhone", "${phone}"); await m.click("[data-testid=send-otp]")
+        await m.wait_for_function("document.querySelector('#lErr') && document.querySelector('#lErr').innerText.trim().length > 0", timeout=30000)
+        out["cooldown"] = await m.locator("#lErr").inner_text()
+    return out
+async def main():
+    async with async_playwright() as p:
+        b = await p.chromium.launch()
+        print(json.dumps({"en": await flow(b, "/om/en/account"), "ar": await flow(b, "/om/account")}))
+        await b.close()
+asyncio.run(main())`
+  const r = JSON.parse(execFileSync("python3", ["-c", py], { timeout: 400000 }).toString().trim().split("\n").pop())
+  const rawCode = (x) => /^[a-z_]+( \{.*\})?$/.test((x ?? "").trim()) || /^errors\./.test(x ?? "")
+  const enMsg = r.en.cooldown ?? r.en.sendErr, arMsg = r.ar.cooldown ?? r.ar.sendErr
+  ok(!!enMsg && !rawCode(enMsg) && !/[؀-ۿ]/.test(enMsg), "الواجهة الإنجليزية: خطأ الرمز مترجم (لا رمز خام ولا عربي)", enMsg)
+  ok(!!arMsg && !rawCode(arMsg) && /[؀-ۿ]/.test(arMsg), "الواجهة العربية: خطأ الرمز بالعربية (ICU حسب المخاطبة)", arMsg)
+  settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
+}
+
 /** لقطة الواجهة العربية (متجر بلغة واحدة): تُسجَّل بـ --snapshot وتُقارَن بعدها — الأرقام وتسميات المبدّل مستثناة */
 async function arSnapshot() {
   console.log("\n— لقطة الواجهة العربية —")
@@ -384,7 +435,7 @@ async function arSnapshot() {
     ok(same, `الواجهة العربية كما كانت: ${p}`, diff)
   }
 }
-const sections = { stage0, stage1, stage2, stage3, arSnapshot }
+const sections = { stage0, stage1, stage2, stage3, stage4, arSnapshot }
 for (const s of (process.argv[3] && !process.argv[3].startsWith("--") ? [process.argv[3]] : Object.keys(sections))) await sections[s]()
 console.log(`\n${failn ? "✖" : "✔"} ${pass} نجح، ${failn} فشل`)
 process.exit(failn ? 1 : 0)

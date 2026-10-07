@@ -1,6 +1,7 @@
 import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { updateCartWorkflow } from "@medusajs/medusa/core-flows"
+import { storeError } from "../../../../../lib/store-errors"
 
 /**
  * POST /store/carts/:id/payment-lock { session_id } — قفل السلة قبل التحويل إلى ثواني (H2)
@@ -14,7 +15,7 @@ async function cartWithSessions(req: MedusaRequest) {
     filters: { id: req.params.id },
   })
   const cart: any = data[0]
-  if (!cart || cart.completed_at) throw new MedusaError(MedusaError.Types.NOT_FOUND, "السلة غير موجودة")
+  if (!cart || cart.completed_at) throw storeError(MedusaError.Types.NOT_FOUND, "cart_not_found")
   return cart
 }
 
@@ -22,7 +23,7 @@ export const POST = async (req: MedusaRequest<{ session_id?: string }>, res: Med
   const cart = await cartWithSessions(req)
   const sid = String(req.body?.session_id ?? "")
   const s = (cart.payment_collection?.payment_sessions ?? []).find((x: any) => x.provider_id === "pp_thawani_thawani" && x.data?.session_id === sid)
-  if (!s) throw new MedusaError(MedusaError.Types.INVALID_DATA, "جلسة ثواني غير موجودة لهذه السلة")
+  if (!s) throw storeError(MedusaError.Types.INVALID_DATA, "thawani_session_missing")
   const lock = { provider: "thawani", session_id: sid, amount_baisa: s.data?.amount_baisa ?? null, at: Date.now() }
   await updateCartWorkflow(req.scope).run({ input: { id: cart.id, metadata: { ...(cart.metadata ?? {}), payment_lock: lock } } })
   res.json({ locked: true })

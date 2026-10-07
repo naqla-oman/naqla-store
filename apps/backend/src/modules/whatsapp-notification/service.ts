@@ -1,5 +1,6 @@
 import { secretFromSettings, whatsappCreds } from "../../lib/credentials"
 import { AbstractNotificationProviderService, MedusaError } from "@medusajs/framework/utils"
+import { storeError } from "../../lib/store-errors"
 import type {
   Logger,
   ProviderSendNotificationDTO,
@@ -62,7 +63,7 @@ class WhatsappNotificationService extends AbstractNotificationProviderService {
 
     if (!this.enabled) {
       if (process.env.NODE_ENV === "production") {
-        throw new MedusaError(MedusaError.Types.NOT_ALLOWED, "WhatsApp غير مفعّل — لا يمكن إرسال الرمز")
+        throw storeError(MedusaError.Types.NOT_ALLOWED, "otp_disabled")
       }
       const preview = (n.data as any)?.preview
       this.logger_.info(

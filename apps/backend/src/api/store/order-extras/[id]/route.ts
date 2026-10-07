@@ -2,6 +2,7 @@ import type { MedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
 import { LOYALTY_MODULE } from "../../../../modules/loyalty"
 import type LoyaltyModuleService from "../../../../modules/loyalty/service"
+import { storeError } from "../../../../lib/store-errors"
 
 /** حقول metadata المسموح عرضها للزبونة في صفحة النجاح فقط */
 const PUBLIC_KEYS = ["gift", "gift_message", "courier_note", "payment_channel", "shipping_code"] as const
@@ -19,7 +20,7 @@ export const GET = async (req: MedusaRequest, res: MedusaResponse) => {
   })
   const order = data[0]
   if (!order) {
-    throw new MedusaError(MedusaError.Types.NOT_FOUND, "الطلب غير موجود")
+    throw storeError(MedusaError.Types.NOT_FOUND, "order_not_found")
   }
   const meta = (order.metadata ?? {}) as Record<string, unknown>
   const extras = Object.fromEntries(PUBLIC_KEYS.filter((k) => k in meta).map((k) => [k, meta[k]]))
