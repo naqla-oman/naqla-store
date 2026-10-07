@@ -2,10 +2,12 @@ import Image from "next/image"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Icon from "@modules/common/components/icon"
 import Ticker from "@modules/layout/components/ticker"
-import { clientAsset, storeConfig as c } from "../../../../store.config"
+import { clientAsset } from "../../../../store.config"
+import { useStoreConfig } from "@/i18n/store-config"
 
 /** الواجهة الرئيسية — نصوصها وصورها من store.json → home */
 const Hero = () => {
+  const c = useStoreConfig()
   const { hero, tiles, trust } = c.home
   return (
     <div className="wrap">

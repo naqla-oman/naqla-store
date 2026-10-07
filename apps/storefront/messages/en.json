@@ -452,7 +452,8 @@
     "freeOver": "Free delivery on orders over {amount}",
     "exchangeDays": "Free exchange within {count, plural, one {# day} other {# days}}",
     "withCode": "with code {code}",
-    "theme": "Appearance"
+    "theme": "Appearance",
+    "naqlaName": "Naqla Digital Solutions"
   },
   "store": {
     "s115428": "Sort",

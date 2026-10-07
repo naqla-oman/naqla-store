@@ -36,7 +36,7 @@ export const POST = async (req: MedusaRequest<Body>, res: MedusaResponse) => {
       "id", "display_id", "status", "created_at", "total", "metadata",
       "customer_id", "shipping_address.phone", "shipping_address.province", "shipping_address.city",
       "shipping_methods.name", "shipping_methods.shipping_option_id",
-      "items.id", "items.product_id", "items.variant.options.option_value_id", "items.variant.options.value", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
+      "items.id", "items.product_id", "items.product_title", "items.variant_title", "items.quantity", "items.unit_price", "items.thumbnail",
       "fulfillments.packed_at", "fulfillments.shipped_at", "fulfillments.delivered_at", "fulfillments.canceled_at", "fulfillments.created_at",
       "fulfillments.labels.tracking_number", "fulfillments.labels.tracking_url",
     ],

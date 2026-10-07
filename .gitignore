@@ -81,3 +81,4 @@ clients/*
 !clients/_template/
 !clients/layan/
 !clients/demo-perfume/
+.i18n-snapshots/

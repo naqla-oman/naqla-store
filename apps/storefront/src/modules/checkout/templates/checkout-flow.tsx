@@ -255,7 +255,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               <div className="n">
                 <div>{i.product_title}</div>
                 <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? t("lengthNote", { len }) : ""}</div>
-                {tailoringNote(i.metadata, t) && <div className="q tnote">{tailoringNote(i.metadata, t)}</div>}
+                {tailoringNote(i.metadata, t, sc) && <div className="q tnote">{tailoringNote(i.metadata, t, sc)}</div>}
               </div>
               <span className="price num" style={{ fontSize: 13.5 }}>{formatAmount(i.unit_price * i.quantity)}</span>
             </div>
@@ -424,7 +424,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               {sc.features.gift && (<>
               <button type="button" className={`giftrow ${form.gift ? "on" : ""}`} role="switch" aria-checked={form.gift} onClick={() => set("gift", !form.gift)}>
                 <Icon name="gift" size={22} />
-                <span><b>{t("sdb8be7")}</b><span className="d">{checkout.giftNote}</span></span>
+                <span><b>{t("sdb8be7")}</b><span className="d">{loc.giftNote}</span></span>
                 <span className="sw" aria-hidden="true" />
               </button>
               {form.gift && (

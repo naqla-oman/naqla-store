@@ -452,7 +452,8 @@
     "freeOver": "توصيل مجاني للطلبات فوق {amount}",
     "exchangeDays": "استبدال مجاني خلال {count, plural, one {يوم واحد} two {يومين} few {# أيام} many {# يوماً} other {# يوم}}",
     "withCode": "بكود {code}",
-    "theme": "المظهر"
+    "theme": "المظهر",
+    "naqlaName": "نقلة للحلول الرقمية"
   },
   "store": {
     "s115428": "ترتيب",

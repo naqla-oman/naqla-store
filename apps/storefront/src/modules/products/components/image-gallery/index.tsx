@@ -16,7 +16,8 @@ import { useT } from "@/i18n/t"
 type Props = {
   images: HttpTypes.StoreProductImage[]
   title: string
-  badge?: React.ReactNode
+  /** بيانات لا عنصر JSX: عنصر مُمرَّر كخاصية من مكوّن خادم كان يطلق تحذير «unique key» بعد كل تحديث RSC */
+  badge?: { text: string; red?: boolean } | null
   /** النص البديل (الاسم + القسم + الألوان) — الافتراضي العنوان */
   alt?: string
 }
@@ -86,7 +87,7 @@ export default function ImageGallery({ images, title, badge, alt }: Props) {
               />
             ))}
           </div>
-          {badge}
+          {badge && <span className={`ptag ${badge.red ? "red" : ""}`}>{badge.red ? <bdi dir="ltr">{badge.text}</bdi> : badge.text}</span>}
           {n > 1 && <div className="dots" aria-hidden="true">{list.map((img, i) => <i key={`${img.id ?? img.url}-${i}`} className={i === shot ? "on" : ""} />)}</div>}
           <span className="zoomhint"><Icon name="zoom" size={13} /> {t("s068e54")}</span>
         </div>

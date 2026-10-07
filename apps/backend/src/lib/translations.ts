@@ -1,5 +1,5 @@
 import type { MedusaContainer } from "@medusajs/framework/types"
-import { Modules } from "@medusajs/framework/utils"
+import { ContainerRegistrationKeys, Modules } from "@medusajs/framework/utils"
 
 /**
  * المرحلة 2: ترجمات Medusa (وحدة translation) — القراءة والكتابة (upsert) من كودنا.
@@ -56,7 +56,8 @@ export async function upsertTranslations(container: MedusaContainer, items: { re
 /**
  * لقطات الطلب/السلة (product_title, variant_title, shipping_methods.name) مخزّنة بالعربية.
  * بلغة غير العربية تُستبدل من ترجمات المنتج وقيم الخيارات وخيار الشحن (ما لا ترجمة له يبقى عربياً).
- * يحتاج الحقول: items.product_id, items.variant.options.option_value_id, shipping_methods.shipping_option_id
+ * variant_title نصّ («50 / أسود») لا معرّفات، فتُطابَق أجزاؤه بنص القيمة العربية.
+ * يحتاج الحقول: items.product_id, shipping_methods.shipping_option_id
  */
 export async function localizeSnapshots(container: MedusaContainer, o: any, locale?: string | null) {
   if (!o || !locale || locale.startsWith("ar")) return o
@@ -65,12 +66,16 @@ export async function localizeSnapshots(container: MedusaContainer, o: any, loca
     readTranslations(container, "product_option_value", locale),
     readTranslations(container, "shipping_option", locale),
   ])
+  const byText = new Map<string, string>()
+  if (v.size) {
+    const query = container.resolve(ContainerRegistrationKeys.QUERY)
+    const { data } = await query.graph({ entity: "product_option_value", fields: ["id", "value"], filters: { id: [...v.keys()] } })
+    for (const row of data as { id: string; value: string }[]) if (v.get(row.id)?.value) byText.set(row.value, v.get(row.id)!.value)
+  }
   for (const i of o.items ?? []) {
     const title = i.product_id && p.get(i.product_id)?.title
     if (title) i.product_title = title
-    const opts: any[] = i.variant?.options ?? []
-    const vals = opts.map((x) => (x.option_value_id && v.get(x.option_value_id)?.value) || x.value).filter(Boolean)
-    if (vals.length) i.variant_title = vals.join(" / ")
+    if (i.variant_title && byText.size) i.variant_title = String(i.variant_title).split(" / ").map((x) => byText.get(x) ?? x).join(" / ")
   }
   for (const m of o.shipping_methods ?? []) {
     const name = m.shipping_option_id && s.get(m.shipping_option_id)?.name

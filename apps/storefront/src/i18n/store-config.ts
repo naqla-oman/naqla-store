@@ -1,7 +1,6 @@
 import { useLocale } from "next-intl"
 import { getLocale } from "next-intl/server"
-import { storeConfig, type StoreConfig } from "@/store.config"
-import raw from "@client/store.json"
+import { buildFrom, storeConfig, type StoreConfig } from "@/store.config"
 import clientEn from "@client-en"
 
 /**
@@ -9,8 +8,7 @@ import clientEn from "@client-en"
  * أي حقل ناقص يبقى بالعربية (لا مفاتيح خام). للعربية يُعاد storeConfig نفسه دون نسخ.
  *
  * المصفوفات: إن كانت كل عناصر الطبقة مُعرَّفة بـ key/id/code تُطابَق بها، وإلا بالترتيب (الفهرس).
- * جذر store.json (location, shipping, returnDays) يقابل storeConfig.seo.*؛ وshipping في seo مُرشَّح بالميزات
- * فتُمنح عناصر الطبقة رموزها (code) من store.json بالفهرس قبل المطابقة.
+ * الطبقة بشكل store.json نفسه (قسم store في locales/en.json) وتُطبَّق قبل البناء.
  */
 type AnyObj = Record<string, unknown>
 const isObj = (v: unknown): v is AnyObj => !!v && typeof v === "object" && !Array.isArray(v)
@@ -37,27 +35,16 @@ function overlay<T>(base: T, over: unknown): T {
 }
 
 let cache: { key: string; value: StoreConfig } | null = null
-function englishOverlay(): AnyObj {
-  const en = ((clientEn as AnyObj).store ?? {}) as AnyObj
-  const { location, shipping, returnDays, promotions: _p, tags: _t, ...rest } = en as AnyObj & { promotions?: unknown; tags?: unknown }
-  const rawShipping = ((raw as AnyObj).shipping ?? []) as AnyObj[]
-  const seo: AnyObj = {}
-  if (location) seo.location = location
-  if (Array.isArray(shipping)) seo.shipping = shipping.map((s, i) => (isObj(s) ? { code: rawShipping[i]?.code, ...s } : s)).filter((s) => isObj(s) && s.code)
-  if (returnDays != null) seo.returnDays = returnDays
-  return Object.keys(seo).length ? { ...rest, seo } : rest
-}
-
 export function localizedStoreConfig(lang: string): StoreConfig {
   if (lang === "ar") return storeConfig
-  // storeConfig وكيل (Proxy) يتبع إعدادات اللوحة: نسخة عادية من مفاتيحه ثم الطبقة فوقها
-  const plain: AnyObj = {}
-  for (const k of Object.keys(storeConfig)) plain[k] = (storeConfig as unknown as AnyObj)[k]
-  const key = JSON.stringify(plain)
-  if (cache && cache.key === key) return cache.value
-  const value = overlay(plain, englishOverlay()) as unknown as StoreConfig
-  cache = { key, value }
-  return value
+  // الطبقة تُطبَّق على store.json الفعلي (مع إعدادات اللوحة) ثم يُبنى الإعداد كاملاً، فتتبعها الحقول المشتقة
+  // (freeShippingTier، tierPerks، shipping المُرشَّح…) بلا معالجة خاصة
+  const en = ((clientEn as AnyObj).store ?? {}) as AnyObj
+  const { promotions: _p, tags: _t, ...layer } = en as AnyObj & { promotions?: unknown; tags?: unknown }
+  const built = buildFrom((c) => overlay(c as unknown as AnyObj, layer) as unknown as typeof c)
+  if (cache && cache.key === built.key) return cache.value
+  cache = { key: built.key, value: built.value }
+  return built.value
 }
 
 /** في مكوّنات العميل والخادم المتزامنة */

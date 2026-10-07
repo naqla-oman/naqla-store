@@ -4,13 +4,14 @@ import Brand from "@modules/common/components/brand"
 import Icon from "@modules/common/components/icon"
 import BottomTabs from "@modules/layout/components/bottom-tabs"
 import Decor from "@modules/common/components/decor"
-import { storeConfig as c } from "../../../../store.config"
+import { useStoreConfig } from "@/i18n/store-config"
+import type { StoreConfig } from "../../../../store.config"
 import { g } from "@lib/voice"
 import LangSwitch from "@modules/layout/components/lang-switch"
 import { useT } from "@/i18n/t"
 
 type T = (k: string, v?: Record<string, string | number>) => string
-const colsOf = (t: T) => [
+const colsOf = (t: T, c: StoreConfig) => [
   { title: t("s82d4b8"), links: c.nav.map((n) => ({ label: n.label, href: n.href })) },
   { title: t("sbf40d0"), links: [
     { label: t("s9241c5"), href: "/track" },
@@ -28,7 +29,8 @@ const colsOf = (t: T) => [
 
 export default function Footer() {
   const t = useT("layout")
-  const COLS = colsOf(t)
+  const c = useStoreConfig()
+  const COLS = colsOf(t, c)
   return (
     <>
       <footer className="site">
@@ -91,7 +93,7 @@ export default function Footer() {
             )}
             <PrivacyLink />
             <span className="flex gap-4"><LocalizedClientLink href="/pages/terms">{t("s862d75")}</LocalizedClientLink><LocalizedClientLink href="/pages/privacy">{t("se43dd2")}</LocalizedClientLink></span>
-            <span>{t("s107b8c")} <a href={c.builtBy.url} target="_blank" rel="noreferrer"><b>{c.builtBy.name}</b></a></span>
+            <span>{t("s107b8c")} <a href={c.builtBy.url} target="_blank" rel="noreferrer"><b>{t("naqlaName")}</b></a></span>
           </div>
         </div>
         <Decor className="wrap" />

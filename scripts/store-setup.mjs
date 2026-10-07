@@ -44,6 +44,8 @@ const env = {
   REVALIDATE_SECRET: strong(prev.REVALIDATE_SECRET) ? prev.REVALIDATE_SECRET : randomBytes(32).toString("base64url"),
   // تشفير أسرار «إعدادات المتجر» (ثواني، واتساب) — مستقل عن JWT_SECRET فلا يبطلها تغييره؛ لا يُغيَّر بعد الإطلاق
   SETTINGS_ENCRYPTION_KEY: strong(prev.SETTINGS_ENCRYPTION_KEY) ? prev.SETTINGS_ENCRYPTION_KEY : randomBytes(32).toString("base64url"),
+  // توقيع رموز الدخول بواتساب (HMAC) — لكل متجر؛ كان يُقرأ من apps/backend/.env (غير متتبَّع) فيفشل الإعداد على نسخة نظيفة
+  PHONE_AUTH_SECRET: strong(prev.PHONE_AUTH_SECRET) ? prev.PHONE_AUTH_SECRET : randomBytes(32).toString("base64url"),
   // المرحلة 2 (لغات): وحدة ترجمة Medusa مفعّلة لكل المتاجر (بلا أثر في متجر بلغة واحدة)
   MEDUSA_FF_TRANSLATION: "true",
   DATABASE_URL: dbUrl,

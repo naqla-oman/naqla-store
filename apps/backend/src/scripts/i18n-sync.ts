@@ -15,7 +15,7 @@ import { medusaLocale, upsertTranslations } from "../lib/translations"
  *   options:     { "<عنوان الخيار العربي>": { title: "Color", values: { "أسود": "Black", … } } }   ← مشترك بين المنتجات
  *   categories:  { "<handle>": { name, description? } }
  *   collections: { "<handle>": { title } }
- *   shipping:    { "<type code>": "Standard delivery" }
+ *   shipping:    { "<type code>": "Standard delivery" | { name, desc } }   (الاسم على shipping_option، والوصف على shipping_option_type)
  * ويضبط محلّيات المتجر المدعومة (ar-SA للوحة، en-US).
  */
 export default async function run({ container }: ExecArgs) {
@@ -43,8 +43,14 @@ export default async function run({ container }: ExecArgs) {
   for (const c of cats as any[]) if (en.categories?.[c.handle]) items.push({ reference: "product_category", reference_id: c.id, locale_code: locale, translations: pick(en.categories[c.handle], ["name", "description"]) })
   const { data: cols } = await query.graph({ entity: "product_collection", fields: ["id", "handle"], pagination: { take: 500 } })
   for (const c of cols as any[]) if (en.collections?.[c.handle]) items.push({ reference: "product_collection", reference_id: c.id, locale_code: locale, translations: pick(en.collections[c.handle], ["title"]) })
-  const { data: opts } = await query.graph({ entity: "shipping_option", fields: ["id", "type.code"], pagination: { take: 100 } })
-  for (const o of opts as any[]) if (en.shipping?.[o.type?.code]) items.push({ reference: "shipping_option", reference_id: o.id, locale_code: locale, translations: { name: en.shipping[o.type.code] } })
+  const { data: opts } = await query.graph({ entity: "shipping_option", fields: ["id", "type.id", "type.code"], pagination: { take: 100 } })
+  for (const o of opts as any[]) {
+    const sh = en.shipping?.[o.type?.code]
+    if (!sh) continue
+    const name = typeof sh === "string" ? sh : sh.name, desc = typeof sh === "string" ? undefined : sh.desc
+    if (name) items.push({ reference: "shipping_option", reference_id: o.id, locale_code: locale, translations: { name } })
+    if (o.type?.id && (name || desc)) items.push({ reference: "shipping_option_type", reference_id: o.type.id, locale_code: locale, translations: { ...(name ? { label: name } : {}), ...(desc ? { description: desc } : {}) } })
+  }
 
   const r = await upsertTranslations(container, items)
   logger.info(`i18n-sync: ${items.length} عنصراً — أُنشئ ${r.created}، حُدِّث ${r.updated}`)

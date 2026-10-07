@@ -1,14 +1,13 @@
 import { HttpTypes } from "@medusajs/types"
 import Icon from "@modules/common/components/icon"
-import { storeConfig } from "../../../../store.config"
 import { useT } from "@/i18n/t"
 import { useStoreConfig } from "@/i18n/store-config"
 
-const cfg = storeConfig.product
 
 /** المزايا + أقسام قابلة للطي: التفاصيل، دليل المقاسات، الشحن والإرجاع */
 export default function ProductDetails({ product }: { product: HttpTypes.StoreProduct }) {
   const sc = useStoreConfig()
+  const cfg = sc.product
   const t = useT("product")
   const category = product.categories?.[0]?.handle ?? ""
   const guide = cfg.sizeGuides[category]

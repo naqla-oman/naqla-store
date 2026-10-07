@@ -49,34 +49,42 @@ export async function localeQuery(): Promise<Record<string, string>> {
 }
 
 type TrMap = Record<string, Record<string, string>>
-async function fetchTranslations(reference: string): Promise<TrMap> {
+type TrRes = { translations: TrMap; sources?: Record<string, string> }
+async function fetchTranslationsRes(reference: string): Promise<TrRes> {
   const q = await localeQuery()
-  if (!q.locale) return {}
+  if (!q.locale) return { translations: {} }
   const base = process.env.MEDUSA_BACKEND_URL || "http://localhost:9000"
   try {
     const r = await fetch(`${base}/store/naqla/translations?reference=${reference}&locale=${q.locale}`, {
       headers: { "x-publishable-api-key": process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY || "" },
       next: { revalidate: 60 },
     })
-    if (!r.ok) return {}
-    return ((await r.json()) as { translations: TrMap }).translations ?? {}
-  } catch { return {} }
+    if (!r.ok) return { translations: {} }
+    const j = (await r.json()) as TrRes
+    return { translations: j.translations ?? {}, sources: j.sources }
+  } catch { return { translations: {} } }
 }
+const fetchTranslations = async (reference: string) => (await fetchTranslationsRes(reference)).translations
 
 /**
  * ترجمات لقطات السلة/الطلب (variant_title وproduct_title مخزّنة بالعربية في Medusa):
  * values: id قيمة الخيار ← القيمة المترجمة، products: id المنتج ← العنوان المترجم. للعربية خرائط فارغة.
  */
 export async function itemTranslations() {
-  const [v, p] = await Promise.all([fetchTranslations("product_option_value"), fetchTranslations("product")])
+  const [v, p] = await Promise.all([fetchTranslationsRes("product_option_value"), fetchTranslations("product")])
   const values: Record<string, string> = {}, products: Record<string, string> = {}
-  for (const [id, t] of Object.entries(v)) if (t.value) values[id] = t.value
+  for (const [id, t] of Object.entries(v.translations)) if (t.value) values[id] = t.value
   for (const [id, t] of Object.entries(p)) if (t.title) products[id] = t.title
-  return { values, products }
+  // valuesByText: القيمة العربية ← المترجمة (لقطة variant_title نصّ «50 / أسود»)
+  return { values, products, valuesByText: v.sources ?? {} }
 }
 /** ترجمات خيارات الشحن: id ← { name } */
 export async function shippingOptionTranslations() {
   return fetchTranslations("shipping_option")
+}
+/** ترجمات أنواع الشحن (الوصف تحت الخيار في الدفع): type id ← { label, description } */
+export async function shippingTypeTranslations() {
+  return fetchTranslations("shipping_option_type")
 }
 /** خريطة واحدة id ← نص (قيم الخيارات وعناوين المنتجات) تُمرَّر لمكوّنات العميل (valueMap) */
 export async function optionValueTranslations(): Promise<Record<string, string>> {
@@ -93,20 +101,21 @@ export async function localeHeader(): Promise<Record<string, string>> {
 /**
  * لقطات السلة/الطلب (product_title, variant_title, shipping_methods[].name) مخزّنة بالعربية؛
  * بالإنجليزية تُستبدل من الترجمات (ما لا ترجمة له يبقى عربياً). للعربية يُعاد الكائن كما هو.
- * يحتاج *items.variant.options في الحقول المطلوبة.
+ * variant_title نصّ لا معرّفات (Store API لا يعيد variant.options للسلة) فتُطابَق أجزاؤه بنص القيمة.
  */
 type Snap = { items?: any[] | null; shipping_methods?: any[] | null } | null | undefined
 export async function localizeSnapshots<T extends Snap>(o: T): Promise<T> {
   if (!o) return o
   const q = await localeQuery()
   if (!q.locale) return o
-  const [{ values, products }, ship] = await Promise.all([itemTranslations(), shippingOptionTranslations()])
+  const [{ values, products, valuesByText }, ship] = await Promise.all([itemTranslations(), shippingOptionTranslations()])
   for (const i of o.items ?? []) {
     const title = i.product_id && products[i.product_id]
     if (title) i.product_title = title
     const opts: any[] = i.variant?.options ?? []
-    const vals = opts.map((x) => (x.option_value_id && values[x.option_value_id]) || x.value).filter(Boolean)
+    const vals = opts.map((x) => values[x.option_value_id ?? x.id] || x.value).filter(Boolean)
     if (vals.length) i.variant_title = vals.join(" / ")
+    else if (i.variant_title) i.variant_title = String(i.variant_title).split(" / ").map((x: string) => valuesByText[x] ?? x).join(" / ")
   }
   for (const m of o.shipping_methods ?? []) {
     const name = m.shipping_option_id && ship[m.shipping_option_id]?.name

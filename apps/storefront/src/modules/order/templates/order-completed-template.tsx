@@ -39,14 +39,14 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
   const shipCode: string | undefined = extras.shipping_code
   const pickup = shipCode === "pickup"
   const providerId = order.payment_collections?.[0]?.payment_sessions?.[0]?.provider_id
-  const pay = checkout.payments.find((p) => p.id === providerId || p.key === extras.payment_channel)
+  const pay = sc.checkout.payments.find((p) => p.id === providerId || p.key === extras.payment_channel)
   const isWa = pay?.key === "whatsapp" || via === "whatsapp"
   const items = order.items ?? []
   const subtotal = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
   const shipDiscount = (order as any).shipping_discount_total ?? 0
   const itemDiscount = Math.max(0, (order.discount_total ?? 0) - shipDiscount)
   const ship = order.shipping_methods?.[0]
-  const placedAt = new Intl.DateTimeFormat("ar-OM", {
+  const placedAt = new Intl.DateTimeFormat(locale === "ar" ? "ar-OM" : "en-GB", {
     timeZone: sc.product.delivery.timezone,
     hour: "numeric",
     minute: "2-digit",
@@ -166,7 +166,7 @@ export default function OrderCompletedTemplate({ order, extras, via }: Props) {
                   <div>
                     {i.product_title}
                     <div className="q">{i.variant_title?.replace(" / ", " · ")} × {i.quantity}{len ? ` · ${t("common.lengthCm", { len })}` : ""}</div>
-                    {tailoringNote(i.metadata, t) && <div className="q tnote">{tailoringNote(i.metadata, t)}</div>}
+                    {tailoringNote(i.metadata, t, sc) && <div className="q tnote">{tailoringNote(i.metadata, t, sc)}</div>}
                   </div>
                   <span className="pr">{formatAmount(i.unit_price * i.quantity)}</span>
                 </div>

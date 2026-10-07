@@ -1,6 +1,6 @@
 // pnpm store:dev <slug> — يشغّل خلفية المتجر وواجهته بمنفذيه وقاعدته (من .stores/<slug>.env)
 import { spawn } from "node:child_process"
-import { existsSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { join } from "node:path"
 import { BACKEND, STOREFRONT, c, fail, readEnv, slugArg, storeEnvFile } from "./lib.mjs"
 
@@ -32,6 +32,9 @@ const start = (name, cmd, args, cwd, extra = {}) => {
 }
 
 console.log(c.b(`▶ «${slug}»: المتجر ${env.STOREFRONT_URL} — اللوحة ${env.MEDUSA_BACKEND_URL}/app`))
+// ذاكرة Turbopack المستمرة تُفسد وحدات next/font/google بعد إعادة التشغيل («queries have exactly one entry» ← 500)؛
+// تُحذف ذاكرته (.next-<port>/cache) عند كل تشغيل ويُعاد التجميع في ثوانٍ
+rmSync(join(STOREFRONT, `.next-${env.STOREFRONT_PORT}`, "cache"), { recursive: true, force: true })
 const procs = [
   start("backend", "npx", ["medusa", "develop", "-p", env.BACKEND_PORT], BACKEND),
   // مجلد بناء لكل منفذ حتى لا يتصادم متجران يعملان من المجلد نفسه

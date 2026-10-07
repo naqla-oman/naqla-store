@@ -1,5 +1,5 @@
 {
-  "$schema": "ترجمات العميل الإنجليزية: store (بنفس شكل store.json، يُدمج فوقه)، products/categories/collections بالـ handle، options بعنوانها العربي، shipping برمز النوع، messages لتجاوز نصوص الواجهة",
+  "$schema": "ترجمات العميل الإنجليزية: store (بنفس شكل store.json، يُدمج فوقه)، products/categories/collections بالـ handle، options بعنوانها العربي، shipping برمز النوع ({name, desc} أو نص الاسم)، messages لتجاوز نصوص الواجهة",
   "store": {
     "tagline": "Perfumes, oud oils and bakhoor with an Omani soul",
     "description": "Dar Abaq: perfumes, oud oils and bakhoor carefully selected in Muscat, in sizes for every occasion, delivered to your door across the Sultanate.",
@@ -372,9 +372,18 @@
     }
   },
   "shipping": {
-    "standard": "Standard delivery",
-    "pickup": "Pickup from the shop",
-    "express": "Same-day express"
+    "standard": {
+      "name": "Standard delivery",
+      "desc": "Within 24–48 hours"
+    },
+    "pickup": {
+      "name": "Pickup from the shop",
+      "desc": "Muttrah — ready within an hour"
+    },
+    "express": {
+      "name": "Same-day express",
+      "desc": "Within Muscat — for orders before 3 pm"
+    }
   },
   "messages": {}
 }

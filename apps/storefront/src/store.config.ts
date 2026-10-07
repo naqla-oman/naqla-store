@@ -230,7 +230,11 @@ function build(c: ClientStore) {
       governorates: c.checkout.governorates,
       phone: c.checkout.phone,
       shipping: c.checkout.shipping,
-      payments: PAYMENTS.filter((p) => on(p.feature)),
+      // نصوص القنوات ثابتة في المنصة؛ store.json (أو طبقة اللغة) قد يتجاوزها بالمفتاح: checkout.payments[{ key, title, desc, cta }]
+      payments: PAYMENTS.filter((p) => on(p.feature)).map((p) => {
+        const o = ((c.checkout as any).payments as { key: string; title?: string; desc?: string; cta?: string }[] | undefined)?.find((x) => x.key === p.key)
+        return o ? { ...p, ...(o.title ? { title: o.title } : {}), ...(o.desc ? { desc: o.desc } : {}), ...(o.cta ? { cta: o.cta } : {}) } : p
+      }),
       giftNote: c.checkout.giftNote,
     },
 
@@ -252,13 +256,19 @@ function build(c: ClientStore) {
 
 let current = build(raw as ClientStore)
 let currentKey = "{}"
+let currentRaw = raw as ClientStore
 
 /** إعدادات اللوحة: الخادم يمررها من التخطيط الجذري (وسم store-settings)، والمتصفح من window.__NAQLA_SETTINGS__ */
 export function applyStoreOverrides(o: Record<string, unknown> | null | undefined) {
   const key = JSON.stringify(o ?? {})
   if (key === currentKey) return
   currentKey = key
-  current = build(deepMerge(raw as ClientStore, (o ?? {}) as Record<string, unknown>))
+  currentRaw = deepMerge(raw as ClientStore, (o ?? {}) as Record<string, unknown>) as ClientStore
+  current = build(currentRaw)
+}
+/** المرحلة 2 (لغات): بناء الإعداد من store.json الفعلي (مع إعدادات اللوحة) بعد تحويله — للطبقة الإنجليزية */
+export function buildFrom(transform: (c: ClientStore) => ClientStore) {
+  return { key: currentKey, value: build(transform(structuredClone(currentRaw))) }
 }
 if (typeof window !== "undefined" && (window as any).__NAQLA_SETTINGS__) applyStoreOverrides((window as any).__NAQLA_SETTINGS__)
 

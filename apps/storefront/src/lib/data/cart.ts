@@ -14,7 +14,7 @@ import {
   setCartId,
 } from "./cookies"
 import { getRegion } from "./regions"
-import { localeQuery, localizeSnapshots, medusaCartLocale, shippingOptionTranslations } from "@/i18n/t"
+import { localeQuery, localizeSnapshots, medusaCartLocale, shippingOptionTranslations, shippingTypeTranslations } from "@/i18n/t"
 import { getT } from "@/i18n/t"
 
 /**
@@ -489,8 +489,11 @@ export async function listCartOptions() {
     cache: "no-store",
   })
   // Store API لا يطبّق ترجمات خيارات الشحن بنفسه: نأخذها من /store/naqla/translations (فارغة للعربية)
-  const tr = await shippingOptionTranslations()
-  if (Object.keys(tr).length)
-    res.shipping_options = res.shipping_options.map((o) => (tr[o.id]?.name ? { ...o, name: tr[o.id].name } : o))
+  const [tr, trType] = await Promise.all([shippingOptionTranslations(), shippingTypeTranslations()])
+  if (Object.keys(tr).length || Object.keys(trType).length)
+    res.shipping_options = res.shipping_options.map((o) => {
+      const ty = o.type, tt = ty?.id ? trType[ty.id] : undefined
+      return { ...o, ...(tr[o.id]?.name ? { name: tr[o.id].name } : {}), ...(ty && tt ? { type: { ...ty, label: tt.label ?? ty.label, description: tt.description ?? ty.description } } : {}) }
+    })
   return res
 }

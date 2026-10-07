@@ -21,12 +21,12 @@ type Props = {
   disabled?: boolean
 }
 
-const cfg = storeConfig.product
 const waLink = (text: string) =>
   `https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(text)}`
 
 export default function ProductActions({ product, disabled }: Props) {
   const sc = useStoreConfig()
+  const cfg = sc.product
   const t = useT("product")
   const CUR = useCurrencyLabel()
   const countryCode = useParams().countryCode as string

@@ -10,10 +10,10 @@ export type TailoringMeta = {
 
 /** «لـ عباءة كلاسيكية · الطول 160 · الصدر 100 …» أو «… · سنتواصل لأخذ المقاسات» */
 type Tr = (key: string, vals?: Record<string, string | number>) => string
-export function tailoringNote(meta: unknown, tr: Tr): string | null {
+export function tailoringNote(meta: unknown, tr: Tr, sc: { tailoring?: { measurements: { key: string; label: string }[] } | null } = storeConfig): string | null {
   const t = (meta as any)?.tailoring as TailoringMeta | undefined
   if (!t) return null
-  const defs = storeConfig.tailoring?.measurements ?? []
+  const defs = sc.tailoring?.measurements ?? []
   const parts = [t.for ? tr("common.forItem", { item: t.for }) : null]
   if (t.contact) parts.push(tr("common.willContact"))
   else if (t.measurements) {

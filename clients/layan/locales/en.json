@@ -1,5 +1,5 @@
 {
-  "$schema": "ترجمات العميل الإنجليزية: store (بنفس شكل store.json، يُدمج فوقه)، products/categories/collections بالـ handle، options بعنوانها العربي، shipping برمز النوع، messages لتجاوز نصوص الواجهة",
+  "$schema": "ترجمات العميل الإنجليزية: store (بنفس شكل store.json، يُدمج فوقه)، products/categories/collections بالـ handle، options بعنوانها العربي، shipping برمز النوع ({name, desc} أو نص الاسم)، messages لتجاوز نصوص الواجهة",
   "store": {
     "tagline": "Abayas and dresses, carefully tailored in Muscat",
     "description": "An Omani boutique for abayas and dresses with exclusive designs tailored with care in Muscat, delivered to your door across the Sultanate.",
@@ -382,6 +382,14 @@
         "رملي": "Sand",
         "زمردي": "Emerald"
       }
+    },
+    "الخدمة": {
+      "title": "Service",
+      "values": {
+        "تفصيل عباية": "Abaya tailoring",
+        "تفصيل فستان": "Dress tailoring",
+        "تعديل مقاس": "Size adjustment"
+      }
     }
   },
   "products": {
@@ -460,9 +468,18 @@
     }
   },
   "shipping": {
-    "standard": "Standard delivery",
-    "express": "Same-day express",
-    "pickup": "Pickup from the atelier"
+    "standard": {
+      "name": "Standard delivery",
+      "desc": "Within 24–48 hours by a Layan courier"
+    },
+    "express": {
+      "name": "Same-day express",
+      "desc": "Within Muscat — for orders before 3 pm"
+    },
+    "pickup": {
+      "name": "Pickup from the atelier",
+      "desc": "Al Khuwair — Layan complex · ready within two hours"
+    }
   },
   "messages": {}
 }

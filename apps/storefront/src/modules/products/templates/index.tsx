@@ -31,7 +31,8 @@ const ProductTemplate: React.FC<ProductTemplateProps> = ({ product, region, imag
   const { price, old } = variantPricing(product)
   const pct = old ? Math.round((1 - price / old) * 100) : 0
   const tag = product.collection?.handle ? TAG[product.collection.handle] : null
-  const badge = pct > 0 ? <span className="ptag red"><bdi dir="ltr">-{pct}%</bdi></span> : tag ? <span className="ptag">{tag}</span> : null
+  // بيانات الشارة (لا عنصر JSX): عنصر مُمرَّر كخاصية عبر RSC كان يطلق تحذير «unique key» في ImageGallery بعد الإضافة إلى السلة
+  const badge = pct > 0 ? { text: `-${pct}%`, red: true } : tag ? { text: tag } : null
 
   return (
     <div className="wrap" data-testid="product-container">
