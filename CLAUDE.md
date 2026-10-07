@@ -28,8 +28,8 @@ pnpm install --frozen-lockfile
 pnpm store:setup <slug>            # قاعدة + أسرار تطوير + ترحيل + بذرة + ترجمات (layan، demo-perfume)
 pnpm store:dev <slug>              # الخلفية 9000 + الواجهة 8000
 pnpm i18n:sync <slug>              # زرع locales/en.json في وحدة الترجمة
-pnpm check:i18n                    # نصوص عربية مباشرة في الواجهة + مفاتيح en الناقصة — المعيار 0/0
-pnpm test:i18n <slug> [stage0|stage1|stage2|stage3|arSnapshot] [--snapshot]
+pnpm check:i18n                    # نصوص عربية مباشرة في الواجهة ولوحة التاجر + مفاتيح en الناقصة — المعيار 0/0
+pnpm test:i18n <slug> [stage0|stage1|stage2|stage3|stage4|stage5|arSnapshot] [--snapshot]
 pnpm test:console                  # يحتاج console:setup + console:worker + next start
 ```
 
@@ -52,7 +52,7 @@ pnpm test:console                  # يحتاج console:setup + console:worker +
 ## مبادئ اللغات (أساس كل عمل قادم)
 
 - العربية أصل الكيان والإنجليزية طبقة فوقها؛ أي نص ناقص يظهر بالعربية، ولا تظهر مفاتيح خام.
-- لا نص عربي مكتوب مباشرة في المكوّنات — كل نص واجهة في `messages/{ar,en}.json` عبر `useT/getT` (المخاطبة ICU select، الجمع ICU plural).
+- لا نص عربي مكتوب مباشرة في المكوّنات — كل نص واجهة في `messages/{ar,en}.json` عبر `useT/getT` (المخاطبة ICU select، الجمع ICU plural)، ونص لوحة التاجر في `src/admin/i18n/json/{ar,en}.json` عبر `useNaqlaT` (البيانات في `<Data>`، والمحتوى العربي الأصيل `lang="ar"`).
 - المطابقة بمفاتيح ثابتة (`metadata.key` للخيارات، `metadata.hex` للألوان)، لا بالنص العربي.
 - الأسعار عبر `convertToLocale` و`locale` إلزامي (ر.ع / OMR).
 - لقطات السلة/الطلب (اسم المنتج، `variant_title`) محفوظة بلغة لحظة الإضافة — تُترجم عند العرض والإشعارات حسب `order.locale` بمعرّف المنتج/القيمة.
@@ -60,4 +60,4 @@ pnpm test:console                  # يحتاج console:setup + console:worker +
 ## خارطة الطريق
 
 المرجع الكامل في مستندات مشروع claude.ai («المتاجر الالكترونية»): `naqla-platform-roadmap.md` و`naqla-store-progress.md`.
-الحالي: اللغات المرحلة 4 (رموز أخطاء ثابتة في الخادم، إشعارات واتساب/البريد حسب `order.locale`، نصوص قوالب واتساب الإنجليزية) ← المرحلة 5 (اللوحات) ← النشر ← العملات ← ما قبل البيع.
+الحالي: اللغات المرحلة 5 (لوحة التاجر باللغتين: `src/admin/i18n/json/{ar,en}.json` تحت `naqla.*`، رموز أخطاء اللوحة في `lib/admin-i18n.ts` — قرارات 35–40؛ لوحة نقلة الرئيسية `apps/console` تبقى عربية) ← النشر ← العملات ← ما قبل البيع.

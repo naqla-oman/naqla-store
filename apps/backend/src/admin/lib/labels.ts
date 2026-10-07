@@ -1,19 +1,21 @@
 import { useEffect, useState } from "react"
-import { GOVERNORATES, PAYMENT, SHIPPING } from "./oman"
+import { type Lang, naqlaApi, useNaqlaT } from "./naqla-i18n"
 
 /**
- * أسماء المحافظات والتوصيل من إعداد العميل (/admin/naqla/labels)، والثابتة احتياطاً حتى تصل.
- * أسماء الدفع خاصة بالمنصة (ثابتة لكل العملاء).
+ * أسماء المحافظات والتوصيل من إعداد العميل بلغة اللوحة (/admin/naqla/labels + x-naqla-lang)؛ قبل وصولها يظهر الرمز.
+ * أسماء الدفع خاصة بالمنصة (ثابتة لكل العملاء) من naqla.payment.<channel>.
  */
-let cache: { governorates: Record<string, string>; shipping: Record<string, string> } | null = null
+type Labels = { governorates: Record<string, string>; shipping: Record<string, string>; wilayats: Record<string, string> }
+const cache: Partial<Record<Lang, Labels>> = {}
+const PAYMENT = ["cod", "whatsapp", "thawani"]
 export function useStoreLabels() {
-  const [labels, setLabels] = useState(cache ?? { governorates: GOVERNORATES, shipping: SHIPPING })
+  const { t, lang } = useNaqlaT()
+  const [labels, setLabels] = useState<Labels>(cache[lang] ?? { governorates: {}, shipping: {}, wilayats: {} })
   useEffect(() => {
-    if (cache) return
-    fetch("/admin/naqla/labels", { credentials: "include" })
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => { if (d) { cache = d; setLabels(d) } })
+    if (cache[lang]) return setLabels(cache[lang]!)
+    naqlaApi<Labels>("/admin/naqla/labels", lang)
+      .then((d) => { cache[lang] = d; setLabels(d) })
       .catch(() => null)
-  }, [])
-  return { ...labels, payment: PAYMENT }
+  }, [lang])
+  return { ...labels, payment: Object.fromEntries(PAYMENT.map((k) => [k, t(`payment.${k}`)])) as Record<string, string> }
 }

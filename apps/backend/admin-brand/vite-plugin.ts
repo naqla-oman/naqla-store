@@ -5,7 +5,9 @@ type Plugin = { name: string; transformIndexHtml: (html: string) => { html: stri
 /**
  * هوية «لوحة نقلة» على لوحة Medusa دون نسخ كودها — كل التعديلات في رأس الصفحة فقط:
  *  - العنوان والأيقونة، خط IBM Plex Sans Arabic، ألوان نقلة عبر متغيرات @medusajs/ui (لا المكوّنات)
- *  - العربية افتراضياً (localStorage.lng) ما لم يختر المستخدم لغة
+ *  - العربية افتراضياً (localStorage.lng) ما لم يختر المستخدم لغة — Medusa يقرأ كوكي «lng» ثم localStorage «lng»
+ *  - المرحلة 5: الاتجاه يضبطه Medusa على <html> حسب اللغة؛ استبدالات النصوص العربية ورمز العملة العربي
+ *    وعنوان «لوحة نقلة» للعربية فقط، والإنجليزية (وغيرها) «Naqla» بلا تعريب
  *  - إخفاء شعار Medusa في الدخول، وهوية نقلة + شعار العميل في رأس القائمة
  *  - عنوان المتبويب: Medusa يضيف « - Medusa» نصاً ثابتاً، فيُستبدل بـ«لوحة نقلة»
  * عند تحديث Medusa: راجعي المحدِّدات في BRAND_CSS فقط (مُعلَّمة بـ «محدِّد»).
@@ -51,6 +53,7 @@ aside .sticky.top-0::before {
   content: ""; display: block; height: 34px; margin: 14px 14px 2px;
   background: url(/naqla-brand/logo-horizontal.png) no-repeat right center / contain;
 }
+html[dir="ltr"] aside .sticky.top-0::before { background-position: left center; }
 .dark aside .sticky.top-0::before { background-image: url(/naqla-brand/logo-horizontal-white.png); }
 /* شعار العميل الصغير بدل الحرف الأول (محدِّد: زر قائمة المتجر في الرأس) */
 aside .sticky.top-0 button[aria-haspopup="menu"] > span:first-child > span {
@@ -69,15 +72,24 @@ const HEAD_SCRIPT = String.raw`
     try { window.top.location.replace(window.self.location.href); } catch (e) { document.documentElement.style.display = "none"; }
     return;
   }
+  // لغة اللوحة: كوكي lng (أول ما يقرأه كاشف Medusa) ثم localStorage lng؛ العربية إن لم يختر المستخدم
+  var LNG = /(?:^|;\s*)lng=([^;]*)/;
   try {
-    if (!localStorage.getItem("lng") && document.cookie.indexOf("i18next=") < 0) localStorage.setItem("lng", "ar");
+    if (!localStorage.getItem("lng") && !LNG.test(document.cookie)) localStorage.setItem("lng", "ar");
   } catch (e) {}
+  var stored = function () {
+    var m = document.cookie.match(LNG);
+    if (m && m[1]) return decodeURIComponent(m[1]);
+    try { return localStorage.getItem("lng") || "ar"; } catch (e) { return "ar"; }
+  };
+  // بعد التحميل يضبط Medusa lang على <html> (ويتبع تغيير اللغة من الملف الشخصي)
+  var isAr = function () { return (document.documentElement.getAttribute("lang") || stored()).indexOf("ar") === 0; };
   var fix = function () {
-    var t = document.title;
-    if (t.indexOf("Medusa") < 0) return;
+    var t = document.title, brand = isAr() ? "لوحة نقلة" : "Naqla";
+    if (t.indexOf("Medusa") < 0) { if (t === "لوحة نقلة" && brand !== t) document.title = brand; return; }
     var base = t.replace(/\s*-\s*Medusa\s*$/, "");
-    // «مرحباً بك في لوحة نقلة» لا تحتاج لاحقة، وغيرها: «الطلبات — لوحة نقلة»
-    var next = base.indexOf("لوحة نقلة") >= 0 ? base : (base && base !== "Medusa" ? base + " — لوحة نقلة" : "لوحة نقلة");
+    // «مرحباً بك في لوحة نقلة» لا تحتاج لاحقة، وغيرها: «الطلبات — لوحة نقلة» / «Orders — Naqla»
+    var next = base.indexOf(brand) >= 0 ? base : (base && base !== "Medusa" ? base + " — " + brand : brand);
     // حارس: لا كتابة إلا عند تغيّر فعلي (وإلا يعيد المراقب استدعاء الدالة بلا نهاية)
     if (next !== t) document.title = next;
   };
@@ -94,10 +106,11 @@ const HEAD_SCRIPT = String.raw`
     var code = opts && opts.style === "currency" && opts.currencyDisplay === "narrowSymbol" && String(opts.currency || "").toUpperCase();
     if (!code || !SYM[code] || f.format(0).indexOf(code) < 0) return f;
     // format في Intl.NumberFormat خاصية getter فقط على النموذج: الإسناد العادي يفشل بصمت، لذا defineProperty
+    // الرمز العربي في اللوحة العربية فقط (يُقرَّر عند كل تنسيق: تغيير اللغة لا يعيد إنشاء المنسِّقات)
     var w = Object.create(f);
     var def = function (k, fn) { Object.defineProperty(w, k, { value: fn, configurable: true }); };
-    def("format", function (n) { return f.format(n).replace(code, SYM[code]); });
-    def("formatToParts", function (n) { return f.formatToParts(n).map(function (p) { return p.type === "currency" ? { type: p.type, value: SYM[code] } : p; }); });
+    def("format", function (n) { return isAr() ? f.format(n).replace(code, SYM[code]) : f.format(n); });
+    def("formatToParts", function (n) { return isAr() ? f.formatToParts(n).map(function (p) { return p.type === "currency" ? { type: p.type, value: SYM[code] } : p; }) : f.formatToParts(n); });
     def("resolvedOptions", function () { return f.resolvedOptions(); });
     return w;
   };
@@ -105,7 +118,7 @@ const HEAD_SCRIPT = String.raw`
   Wrapped.supportedLocalesOf = NF.supportedLocalesOf;
   Intl.NumberFormat = Wrapped;
 
-  // نصوص ثابتة خارج الترجمة (من @medusajs/ui وإضافة المسودات): تُستبدل عند التطابق التام فقط
+  // نصوص ثابتة خارج الترجمة (من @medusajs/ui وإضافة المسودات): تُستبدل عند التطابق التام فقط، وفي العربية فقط
   var TEXT = { "Not fulfilled": "غير منفّذ", "Fulfilled": "منفّذ", "Partially fulfilled": "منفّذ جزئياً", "Shipped": "تم الشحن", "Partially shipped": "شُحن جزئياً", "Delivered": "تم التسليم", "Partially delivered": "سُلِّم جزئياً", "Canceled": "ملغى", "Returned": "مُرتجع", "Partially returned": "مُرتجع جزئياً", "Not paid": "غير مدفوع", "Awaiting": "بانتظار الدفع", "Authorized": "مفوَّض", "Partially authorized": "مفوَّض جزئياً", "Captured": "مُحصَّل", "Partially captured": "مُحصَّل جزئياً", "Refunded": "مُسترد", "Partially refunded": "مُسترد جزئياً", "Requires action": "يتطلب إجراء", "Pending": "معلّق", "Completed": "مكتمل", "Draft": "مسودة", "Archived": "مؤرشف", "Items": "المنتجات", "Shipping from": "الشحن من", "Manual": "يدوي", "Tracking": "التتبّع", "Oman": "عُمان", "Omani Rial": "ريال عُماني", "Drafts": "المسودات", "Show password": "إظهار كلمة المرور", "Hide password": "إخفاء كلمة المرور" };
   // H16: روابط ملفات التصدير الخاصة ← مسار التنزيل المحمي (الملف ليس في static)
   var PRIV = /\/static\/[^\/]+\/(private-[A-Za-z0-9._-]+)/;
@@ -122,13 +135,16 @@ const HEAD_SCRIPT = String.raw`
     // M32: بريد زبونات الهاتف الداخلي (968XXXXXXXX@phone.invalid) ← رقم الهاتف منسّقاً
     var PH = /^(?:\+?)968(\d{4})(\d{4})@phone\.invalid$/;
     var phoneOf = function (t) { var m = t.trim().match(PH); return m ? "+968 " + m[1] + " " + m[2] : null; };
-    // منخفضة: «ر․ع․ 15.300 OMR» (رمز Intl + رمز العملة من Medusa) ← «15.300 ر.ع» بصيغة المتجر
-    var OMR = /^(-?)\s*ر[․.]ع[․.]?\s*(-?[\d٠-٩.,]+)\s*OMR$/;
-    var moneyOf = function (t) { var m = t.trim().match(OMR); return m ? (m[1] || "") + m[2] + " ر.ع" : null; };
-    if (node.nodeType === 3) { var mo = moneyOf(node.nodeValue); if (mo) { node.nodeValue = mo; return; } var ph = phoneOf(node.nodeValue); if (ph) { node.nodeValue = ph; return; } var v = TEXT[node.nodeValue.trim()]; if (v) node.nodeValue = v; return; }
+    // منخفضة: «ر․ع․ 15.300 OMR» (رمز Intl + رمز العملة من Medusa) ← «15.300 ر.ع» بصيغة المتجر؛
+    // وفي الإنجليزية «OMR 15.300 OMR» ← «15.300 OMR» (مبدأ المنصة: ر.ع / OMR حسب اللغة)
+    var OMR = /^(-?)\s*ر[․.]ع[․.]?\s*(-?[\d٠-٩.,]+)\s*OMR$/, OMR_EN = /^(-?)\s*OMR\s*(-?[\d.,]+)\s*OMR$/;
+    var moneyOf = function (t) { var m = t.trim().match(OMR); if (m) return (m[1] || "") + m[2] + " ر.ع"; m = t.trim().match(OMR_EN); return m ? (m[1] || "") + m[2] + " OMR" : null; };
+    var ar = isAr();
+    var text = function (t) { return ar ? TEXT[t.trim()] : null; };
+    if (node.nodeType === 3) { var mo = moneyOf(node.nodeValue); if (mo) { node.nodeValue = mo; return; } var ph = phoneOf(node.nodeValue); if (ph) { node.nodeValue = ph; return; } var v = text(node.nodeValue); if (v) node.nodeValue = v; return; }
     if (node.nodeType !== 1) return;
     var it = document.createTreeWalker(node, 4), t;
-    while ((t = it.nextNode())) { var m2 = moneyOf(t.nodeValue); if (m2) { t.nodeValue = m2; continue; } var p2 = phoneOf(t.nodeValue); if (p2) { t.nodeValue = p2; continue; } var r = TEXT[t.nodeValue.trim()]; if (r) t.nodeValue = r; }
+    while ((t = it.nextNode())) { var m2 = moneyOf(t.nodeValue); if (m2) { t.nodeValue = m2; continue; } var p2 = phoneOf(t.nodeValue); if (p2) { t.nodeValue = p2; continue; } var r = text(t.nodeValue); if (r) t.nodeValue = r; }
   };
   var start = function () {
     swap(document.body);
