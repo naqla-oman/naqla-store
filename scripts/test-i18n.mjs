@@ -488,6 +488,8 @@ async function stage5() {
     { name: "customer-card", path: `/app/customers/${order2.customer_id}`, sel: "[data-testid=customer-phone-card]" },
     { name: "product-widgets", path: `/app/products/${product}`, sel: "[data-testid=translation-widget], [data-testid=seo-product]" },
     { name: "products-untranslated", path: "/app/products", sel: "[data-testid=untranslated-indicator]" },
+    // فرع «الناقص» في ويدجت الترجمة (خيار وقيمة باسمهما العربي داخل نص مترجم — Trans)
+    { name: "product-missing-translation", path: `/app/products/${draft.id}`, sel: "[data-testid=translation-widget] li" },
     ...(category ? [{ name: "category-seo", path: `/app/categories/${category}`, sel: "[data-testid=seo-category]" }] : []),
   ]
   const py = `import asyncio, json, sys, re
@@ -573,7 +575,7 @@ asyncio.run(main())`
   }
   const AR = /[؀-ۿ]/
   // مفتاح خام: naqla.قسم.مفتاح أو {{معامل}} لم يُستبدل ({{1}} متغيرات قوالب Meta مقصودة)
-  const raw = (x) => (x.match(/\bnaqla\.[a-zA-Z_]+\.[\w.]+|\{\{[a-zA-Z_]\w*\}\}/g) ?? [])
+  const raw = (x) => (x.match(/\bnaqla\.[a-zA-Z_]+\.[\w.]+|\{\{[a-zA-Z_]\w*\}\}|<\/?d>/g) ?? [])
   const enJ = JSON.parse(readFileSync(new URL("../apps/backend/src/admin/i18n/json/en.json", import.meta.url), "utf8")).naqla
   const arJ = JSON.parse(readFileSync(new URL("../apps/backend/src/admin/i18n/json/ar.json", import.meta.url), "utf8")).naqla
   for (const lang of ["ar", "en"]) {
