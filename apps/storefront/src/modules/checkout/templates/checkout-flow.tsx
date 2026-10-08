@@ -311,7 +311,7 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
             </button>
             <div className="trustrow">
               <span><Icon name="lock" size={12} /> {t("sa97f7e")}</span>
-              <span><Icon name="refresh" size={12} /> {t("sab4bcb")}</span>
+              <span><Icon name="refresh" size={12} /> {t("sab4bcb", { days: sc.seo.returnDays || 14 })}</span>
               <span><Icon name="whatsapp" size={12} /> {t("s80bb43")}</span>
             </div>
           </>

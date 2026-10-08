@@ -36,10 +36,11 @@ export default async function product_images({ container }: { container: MedusaC
   }
 
   const uploaded = new Map<string, string>()
+  const missing: string[] = []
   for (const rel of wanted) {
     const path = join(dir, rel)
     if (!existsSync(path)) {
-      logger.warn(`product-images: الملف غير موجود ${path}`)
+      missing.push(path)
       continue
     }
     const [file] = await files.createFiles([
@@ -52,6 +53,9 @@ export default async function product_images({ container }: { container: MedusaC
     ])
     uploaded.set(rel, file.url)
   }
+
+  // كتالوج مستورد بلا صوره المنزّلة: سطر واحد بالعدد وأمثلة بدل سطر لكل صورة
+  if (missing.length) logger.warn(`product-images: ${missing.length} ملفاً غير موجود (مثل ${missing.slice(0, 3).join("، ")})`)
 
   let changed = 0
   for (const p of products as any[]) {

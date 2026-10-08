@@ -176,14 +176,17 @@ export default async function initial_data_seed({ container }: { container: Medu
 
   // ---------- الخيارات (من store.options: مقاس/لون للأزياء، حجم للعطور، وزن/نكهة للحلويات…) ----------
   const optionDefs = data.options.filter((o) => data.products.some((p) => p.options?.[o.key]?.length));
-  const { result: options } = await createProductOptionsWorkflow(container).run({
-    input: {
-      product_options: optionDefs.map((o) => ({
-        title: o.title,
-        values: [...new Set(data.products.flatMap((p) => p.options?.[o.key] ?? []))],
-      })),
-    },
-  });
+  // كتالوج بلا خيارات (منتجات العناية بمتغيّر واحد): لا خيارات مشتركة
+  const { result: options } = optionDefs.length
+    ? await createProductOptionsWorkflow(container).run({
+        input: {
+          product_options: optionDefs.map((o) => ({
+            title: o.title,
+            values: [...new Set(data.products.flatMap((p) => p.options?.[o.key] ?? []))],
+          })),
+        },
+      })
+    : { result: [] as { id: string; title: string }[] };
   const optionId = (key: string) => options.find((o) => o.title === optionDefs.find((d) => d.key === key)!.title)!.id;
 
   // ---------- المنتجات ----------
@@ -202,55 +205,61 @@ export default async function initial_data_seed({ container }: { container: Medu
     const latin = head.replace(/[^A-Za-z0-9]/g, "").toUpperCase().slice(0, 8);
     return `${handle.replace(/-/g, "").toUpperCase().slice(0, 10)}-${latin || "V"}-${vi}`;
   };
-  const { result: products } = await createProductsWorkflow(container).run({
-    input: {
-      products: data.products.map((p) => {
-        const list = combos(p);
-        const first = list[0]?.keys[0];
+  // كتالوج مستورد بالمئات: خرائط بدل البحث الخطي، والإنشاء على دفعات (معاملة واحدة لـ 1441 منتجاً تستنزف الذاكرة)
+  const categoryId = new Map(categories.map((c) => [c.handle, c.id]));
+  const collectionId = new Map(collections.map((c) => [c.handle, c.id]));
+  const tagId = new Map(tags.map((t) => [t.value, t.id]));
+  const toCreate = data.products.map((p) => {
+    const list = combos(p);
+    const first = list[0]?.keys[0];
+    return {
+      title: p.title,
+      handle: p.handle,
+      description: p.description,
+      status: ProductStatus.PUBLISHED,
+      shipping_profile_id: shippingProfile.id,
+      category_ids: [categoryId.get(p.category)!],
+      collection_id: p.collection ? collectionId.get(p.collection) : undefined,
+      tag_ids: (p.tags ?? []).map((t) => tagId.get(t)!),
+      images: p.images.map((url) => ({ url })),
+      thumbnail: p.images[0],
+      options: list[0]?.keys.map((k) => ({ id: optionId(k) })) ?? [],
+      sales_channels: [{ id: salesChannel.id }],
+      metadata: {
+        compare_at_price: p.compare_at ?? null,
+        rating: p.rating ?? null,
+        reviews: p.reviews ?? null,
+        sold_week: p.sold_week ?? null,
+        complements: p.complements ?? [],
+        // السطر اللاتيني تحت اسم المنتج (اختياري)
+        title_en: p.title_en ?? null,
+        // ترتيب عرض قيم الخيارات كما في store.json (Medusa لا يحفظ ترتيب المتغيّرات للواجهة)
+        option_order: Object.fromEntries(optionDefs.filter((d) => p.options?.[d.key]?.length).map((d) => [d.title, p.options[d.key]])),
+      },
+      variants: list.map(({ keys, values }, vi) => {
+        const head = first ? values[first] : "default";
+        const titleOf = (k: string) => optionDefs.find((d) => d.key === k)!.title;
+        const sku = p.sku && list.length === 1 ? p.sku : skuOf(p.handle, head, vi);
+        stockBySku.set(sku, p.stock?.[head] ?? p.stock?.default ?? 10);
         return {
-          title: p.title,
-          handle: p.handle,
-          description: p.description,
-          status: ProductStatus.PUBLISHED,
-          shipping_profile_id: shippingProfile.id,
-          category_ids: [categories.find((c) => c.handle === p.category)!.id],
-          collection_id: p.collection ? collections.find((c) => c.handle === p.collection)?.id : undefined,
-          tag_ids: (p.tags ?? []).map((t) => tags.find((x) => x.value === t)!.id),
-          images: p.images.map((url) => ({ url })),
-          thumbnail: p.images[0],
-          options: list[0]?.keys.map((k) => ({ id: optionId(k) })) ?? [],
-          sales_channels: [{ id: salesChannel.id }],
-          metadata: {
-            compare_at_price: p.compare_at ?? null,
-            rating: p.rating ?? null,
-            reviews: p.reviews ?? null,
-            sold_week: p.sold_week ?? null,
-            complements: p.complements ?? [],
-            // السطر اللاتيني تحت اسم المنتج (اختياري)
-            title_en: p.title_en ?? null,
-            // ترتيب عرض قيم الخيارات كما في store.json (Medusa لا يحفظ ترتيب المتغيّرات للواجهة)
-            option_order: Object.fromEntries(optionDefs.filter((d) => p.options?.[d.key]?.length).map((d) => [d.title, p.options[d.key]])),
-          },
-          variants: list.map(({ keys, values }, vi) => {
-            const head = first ? values[first] : "default";
-            const titleOf = (k: string) => optionDefs.find((d) => d.key === k)!.title;
-            const sku = skuOf(p.handle, head, vi);
-            stockBySku.set(sku, p.stock?.[head] ?? p.stock?.default ?? 10);
-            return {
-              title: keys.map((k) => values[k]).join(" / ") || p.title,
-              sku,
-              options: Object.fromEntries(keys.map((k) => [titleOf(k), values[k]])),
-              manage_inventory: true,
-              // M21: وزن الشحن بالجرام (المنتج ← القسم ← الافتراضي)
-              weight: weightFor(p),
-              prices: [{ amount: p.prices?.[head] ?? p.price, currency_code: cur }],
-              metadata: { compare_at_price: p.compare_at ?? null },
-            };
-          }),
+          title: keys.map((k) => values[k]).join(" / ") || p.title,
+          sku,
+          options: Object.fromEntries(keys.map((k) => [titleOf(k), values[k]])),
+          manage_inventory: true,
+          // M21: وزن الشحن بالجرام (المنتج ← القسم ← الافتراضي)
+          weight: weightFor(p),
+          prices: [{ amount: p.prices?.[head] ?? p.price, currency_code: cur }],
+          metadata: { compare_at_price: p.compare_at ?? null },
         };
       }),
-    },
+    };
   });
+  const products: { id: string }[] = [];
+  for (let i = 0; i < toCreate.length; i += 200) {
+    const { result } = await createProductsWorkflow(container).run({ input: { products: toCreate.slice(i, i + 200) } });
+    products.push(...result);
+    if (toCreate.length > 200) logger.info(`Products ${products.length}/${toCreate.length}`);
+  }
 
   // ---------- المخزون ----------
   const { data: inventoryItems } = await query.graph({

@@ -29,7 +29,7 @@ export default async function Home(props: { params: Promise<{ countryCode: strin
   // ترتيب المجموعات من store.json → home.collectionsOrder (غير المذكورة في الآخر)
   const order = sc.home.collectionsOrder ?? []
   const rank = (h?: string | null) => (order.indexOf(h ?? "") < 0 ? 99 : order.indexOf(h ?? ""))
-  const ordered = [...collections].sort((a, b) => rank(a.handle) - rank(b.handle))
+  const ordered = [...collections].sort((a, b) => rank(a.handle) - rank(b.handle)).slice(0, sc.home.collectionsMax ?? collections.length)
 
   return (
     <>

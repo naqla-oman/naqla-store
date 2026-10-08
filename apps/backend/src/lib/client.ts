@@ -32,6 +32,8 @@ export type ClientProduct = {
   complements?: string[]
   /** اسم لاتيني اختياري يُعرض تحت اسم المنتج (fonts.latin) */
   title_en?: string
+  /** رمز المخزون من المتجر السابق (store:import) — للمنتج بمتغيّر واحد، وإلا يُولَّد */
+  sku?: string
 }
 export type ClientTier = { key: string; name: string; min: number; perk?: string; group?: string; freeShipping?: boolean; promoCode?: string; tailoringDiscount?: number }
 export type ClientShipping = { code: string; name: string; desc: string; amount: number; free_over?: number; provinces?: string[] }
@@ -100,6 +102,14 @@ export function deepMerge<T>(base: T, over: Record<string, unknown>): T {
 export function clientDefaults(): ClientStore {
   if (!cache) {
     cache = JSON.parse(readFileSync(join(clientDir(), "store.json"), "utf-8")) as ClientStore
+    // كتالوج مستورد (pnpm store:import) في ملف مستقل حتى لا يدخل حزمة الواجهة مع store.json — يُضاف إلى ما في store.json
+    const catalog = join(clientDir(), "catalog.json")
+    if (existsSync(catalog)) {
+      const cat = JSON.parse(readFileSync(catalog, "utf-8")) as Partial<Pick<ClientStore, "categories" | "collections" | "tags" | "products">>
+      for (const k of ["categories", "collections", "tags", "products"] as const) {
+        if (cat[k]?.length) (cache as any)[k] = [...((cache as any)[k] ?? []), ...cat[k]!]
+      }
+    }
     // الهوية الافتراضية: اللوحة والخط المطابقان لملفات العميل (أو custom) — تبويب «الهوية»
     // (استيراد دائري آمن مع themes.ts: الدوال تُستدعى بعد اكتمال التحميل)
     ;(cache as any).theme = { palette: detectPalette(), font: detectFont((cache as any).fonts), ...((cache as any).theme ?? {}) }

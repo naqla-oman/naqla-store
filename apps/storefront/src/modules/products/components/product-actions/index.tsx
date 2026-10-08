@@ -299,7 +299,7 @@ export default function ProductActions({ product, disabled }: Props) {
 
         <div className="stockrow">
           <span><i className={left > 0 ? "" : "off"} />{left > 0 ? cfg.availability.inStock : cfg.availability.outOfStock}</span>
-          <span><Icon name="shield" size={13} /> {t("s65df19")}</span>
+          <span><Icon name="shield" size={13} /> {t("s65df19", { days: sc.seo.returnDays || 14 })}</span>
         </div>
       </div>
 

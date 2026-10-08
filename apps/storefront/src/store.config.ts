@@ -68,6 +68,8 @@ type ClientStore = {
     tiles: { image: string; title: string; text: string; href: string }[]
     trust: { icon: string; title: string; text: string }[]
     collectionsOrder: string[]
+    /** أقصى عدد لصفوف المجموعات في الرئيسية (كتالوج بمئات البراندات كمجموعات) — بلا قيمة: كلها */
+    collectionsMax?: number
   }
   features: Partial<Features>
   options: Option[]
