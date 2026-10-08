@@ -3,6 +3,7 @@ import { MedusaError } from "@medusajs/framework/utils"
 import { TRACKING_MODULE } from "../../../../../modules/tracking"
 import type TrackingModuleService from "../../../../../modules/tracking/service"
 import { SENDERS, type Platform } from "../../../../../lib/server-events"
+import { adminError } from "../../../../../lib/admin-i18n"
 
 /**
  * POST /admin/tracking/test/:platform — «إرسال حدث تجريبي».
@@ -11,7 +12,7 @@ import { SENDERS, type Platform } from "../../../../../lib/server-events"
  */
 export const POST = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const platform = req.params.platform as Platform
-  if (!(platform in SENDERS)) throw new MedusaError(MedusaError.Types.INVALID_DATA, "منصة غير معروفة")
+  if (!(platform in SENDERS)) throw adminError(MedusaError.Types.INVALID_DATA, "platform_unknown")
   const creds = await req.scope.resolve<TrackingModuleService>(TRACKING_MODULE).getSettings()
   const now = Date.now()
   const result = await SENDERS[platform](

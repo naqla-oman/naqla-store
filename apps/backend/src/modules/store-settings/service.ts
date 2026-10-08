@@ -1,8 +1,9 @@
 import { MedusaService } from "@medusajs/framework/utils"
 import { clientDefaults, deepMerge, setClientOverrides } from "../../lib/client"
 import { queueRevalidate } from "../../lib/revalidate"
+import type { AdminErrorCode } from "../../lib/admin-i18n"
 import { SCHEMA, SettingsError, checkSecret, crossCheck, getPath, setPath } from "../../lib/store-settings-schema"
-const fail = (m: string): never => { throw new SettingsError(m) }
+const fail = (code: AdminErrorCode, params?: Record<string, string>): never => { throw new SettingsError(code, params) }
 import { StoreSettings, StoreSettingsChange } from "./models/store-settings"
 import { SECRET_KEYS, secretFromSettings, setSealedSecrets, type SecretKey } from "../../lib/credentials"
 import { seal } from "../../lib/secret-box"
@@ -25,7 +26,7 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
     const changes: Change[] = []
     for (const [key, raw] of Object.entries(patch ?? {})) {
       const spec = SCHEMA[key]
-      if (!spec) throw new SettingsError(`المفتاح «${key}» غير قابل للتعديل من اللوحة`)
+      if (!spec) throw new SettingsError("key_not_editable", { key })
       const value = spec.check(raw)
       // «غير موجود» و null سواء (حقل فارغ لمفتاح غير موجود في store.json لا يُحفظ)
       // القائمة الفارغة كالغياب أيضاً (merchantPhones: [] لمفتاح غير موجود في store.json)
@@ -52,7 +53,7 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
    * فحذف مفتاح (العودة للافتراضي) لا يُحفظ — تحديث مباشر يستبدل الحقل كاملاً (العمود غير قابل لـ null).
    */
   async replaceJson(pg: any, id: string, field: "overrides" | "secrets", value: Record<string, unknown>) {
-    if (!pg) throw new SettingsError("اتصال القاعدة مطلوب للحفظ")
+    if (!pg) throw new SettingsError("db_required")
     await pg.raw(`update store_settings set ${field} = ?::jsonb, updated_at = now() where id = ?`, [JSON.stringify(value), id])
   }
 
@@ -71,8 +72,8 @@ class StoreSettingsModuleService extends MedusaService({ StoreSettings, StoreSet
     const sealed: Record<string, string> = { ...(row.secrets ?? {}) }
     const changes: Change[] = []
     for (const [key, raw] of Object.entries(patch ?? {})) {
-      if (!(SECRET_KEYS as readonly string[]).includes(key)) throw new SettingsError(`المفتاح «${key}» غير قابل للتعديل`)
-      const v = typeof raw === "string" ? raw.trim() : raw == null ? "" : fail(`${key}: قيمة نصية مطلوبة`)
+      if (!(SECRET_KEYS as readonly string[]).includes(key)) throw new SettingsError("key_not_editable", { key })
+      const v = typeof raw === "string" ? raw.trim() : raw == null ? "" : fail("field_text", { field: key })
       if (v.startsWith("••••")) continue
       if (!v) {
         if (sealed[key]) { delete sealed[key]; changes.push({ key, from: "••••", to: "حُذف (يعود للإعداد التقني)" }) }

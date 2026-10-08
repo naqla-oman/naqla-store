@@ -1,14 +1,17 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys } from "@medusajs/framework/utils"
+import { adminLang, clientIn, currencyLabelIn } from "../../../../lib/admin-i18n"
 import { client } from "../../../../lib/client"
 import { memo } from "../../../../lib/memo"
 
 /**
  * GET /admin/naqla/loyalty — قواعد الولاء من store.json + أعضاء كل مستوى + مجاميع النقاط.
  * M31: SQL مجمّع (كان يحمّل حتى 100000 قيد ثم يجمع في الذاكرة) مع ذاكرة 60 ثانية.
+ * المرحلة 5: أسماء المستويات وامتيازاتها ووحدة العملة بلغة اللوحة (x-naqla-lang).
  */
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
   const c = client() as any
+  const lang = adminLang(req)
   const body = await memo(`loyalty:${c.slug}`, 60_000, async () => {
     const pg = req.scope.resolve(ContainerRegistrationKeys.PG_CONNECTION)
     const [t] = (await pg.raw(`select count(distinct customer_id) as members,
@@ -35,5 +38,10 @@ export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) 
       source: `clients/${c.slug}/store.json → loyalty`,
     }
   })
-  res.json(body)
+  const local = (clientIn(lang) as any).loyalty?.tiers ?? []
+  res.json({
+    ...body,
+    rules: { ...body.rules, currencyLabel: currencyLabelIn(lang) },
+    tiers: body.tiers.map((x: any) => { const l = local.find((t: any) => t.key === x.key) ?? {}; return { ...x, name: l.name ?? x.name, perk: l.perk ?? x.perk, group: l.group ?? x.group } }),
+  })
 }

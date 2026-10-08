@@ -1,4 +1,5 @@
 import crypto from "crypto"
+import { adminErrorMessage } from "./admin-i18n"
 
 /**
  * إرسال الأحداث من الخادم: Meta CAPI، Snap CAPI (v3)، TikTok Events API (v1.3)، GA4 Measurement Protocol.
@@ -98,7 +99,7 @@ async function post(url: string, body: unknown, headers: Record<string, string> 
 // ---------- Meta Conversions API ----------
 export async function sendMeta(c: TrackingCreds, e: ServerEvent, opts: SendOpts = {}): Promise<SendResult> {
   const testCode = activeTestCode(c.meta_test_event_code, c.meta_test_event_code_at, opts)
-  if (!c.meta_pixel_id || !c.meta_access_token) return { platform: "meta", ok: false, status: 0, skipped: "لا يوجد Pixel ID أو رمز وصول" }
+  if (!c.meta_pixel_id || !c.meta_access_token) return { platform: "meta", ok: false, status: 0, skipped: adminErrorMessage("tracking_no_pixel") }
   const u = e.user ?? {}
   const body = {
     data: [
@@ -136,7 +137,7 @@ export async function sendMeta(c: TrackingCreds, e: ServerEvent, opts: SendOpts 
 
 // ---------- Snap Conversions API v3 ----------
 export async function sendSnap(c: TrackingCreds, e: ServerEvent, _opts: SendOpts = {}): Promise<SendResult> {
-  if (!c.snap_pixel_id || !c.snap_access_token) return { platform: "snap", ok: false, status: 0, skipped: "لا يوجد Pixel ID أو رمز وصول" }
+  if (!c.snap_pixel_id || !c.snap_access_token) return { platform: "snap", ok: false, status: 0, skipped: adminErrorMessage("tracking_no_pixel") }
   const u = e.user ?? {}
   const body = {
     data: [
@@ -168,7 +169,7 @@ export async function sendSnap(c: TrackingCreds, e: ServerEvent, _opts: SendOpts
 // ---------- TikTok Events API v1.3 ----------
 export async function sendTikTok(c: TrackingCreds, e: ServerEvent, opts: SendOpts = {}): Promise<SendResult> {
   const testCode = activeTestCode(c.tiktok_test_event_code, c.tiktok_test_event_code_at, opts)
-  if (!c.tiktok_pixel_id || !c.tiktok_access_token) return { platform: "tiktok", ok: false, status: 0, skipped: "لا يوجد Pixel ID أو رمز وصول" }
+  if (!c.tiktok_pixel_id || !c.tiktok_access_token) return { platform: "tiktok", ok: false, status: 0, skipped: adminErrorMessage("tracking_no_pixel") }
   const u = e.user ?? {}
   const body = {
     event_source: "web",
@@ -204,7 +205,7 @@ export async function sendTikTok(c: TrackingCreds, e: ServerEvent, opts: SendOpt
 
 // ---------- GA4 Measurement Protocol ----------
 export async function sendGa4(c: TrackingCreds, e: ServerEvent, opts: SendOpts = {}): Promise<SendResult> {
-  if (!c.ga4_measurement_id || !c.ga4_api_secret) return { platform: "ga4", ok: false, status: 0, skipped: "لا يوجد Measurement ID أو API secret" }
+  if (!c.ga4_measurement_id || !c.ga4_api_secret) return { platform: "ga4", ok: false, status: 0, skipped: adminErrorMessage("tracking_no_ga4") }
   const u = e.user ?? {}
   const body = {
     // client_id من كوكي _ga في المتصفح إن وُجد، وإلا معرّف ثابت من الطلب

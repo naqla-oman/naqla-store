@@ -1,5 +1,6 @@
 import type { AuthenticatedMedusaRequest, MedusaResponse } from "@medusajs/framework/http"
 import { ContainerRegistrationKeys, MedusaError } from "@medusajs/framework/utils"
+import { adminLang, clientIn } from "../../../../../lib/admin-i18n"
 import { client } from "../../../../../lib/client"
 import { queueRevalidate } from "../../../../../lib/revalidate"
 import { readShipping, writeShipping, type ShippingInput } from "../../../../../lib/shipping-settings"
@@ -9,8 +10,8 @@ import type StoreSettingsModuleService from "../../../../../modules/store-settin
 
 /** GET — إعدادات التوصيل من Medusa (+ وقت الإغلاق وأيام العطل من إعدادات المتجر) */
 export const GET = async (req: AuthenticatedMedusaRequest, res: MedusaResponse) => {
-  const c = client() as any
-  res.json({ ...(await readShipping(req.scope)), all: (c.checkout?.governorates ?? []).map((x: any) => ({ code: x.code, name: x.name })), pickupProvince: c.location?.province ?? null })
+  const c = client() as any, names = clientIn(adminLang(req)) as any
+  res.json({ ...(await readShipping(req.scope)), all: (names.checkout?.governorates ?? []).map((x: any) => ({ code: x.code, name: x.name })), pickupProvince: c.location?.province ?? null })
 }
 
 /** POST — { standard, express, governorates, cutoffHour, deliveryOffDays } */

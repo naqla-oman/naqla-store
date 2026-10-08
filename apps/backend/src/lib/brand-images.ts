@@ -17,10 +17,10 @@ export const brandUrlPrefix = () => `${process.env.MEDUSA_BACKEND_URL || "http:/
 
 export async function processBrandImage(kind: "logo" | "icon", dataUrl: string, background = "#ffffff") {
   const m = /^data:image\/[a-z+]+;base64,(.+)$/.exec(dataUrl ?? "")
-  if (!m) throw new SettingsError("ملف صورة غير صالح")
+  if (!m) throw new SettingsError("image_invalid")
   const buf = Buffer.from(m[1], "base64")
-  if (buf.length > MAX) throw new SettingsError("حجم الصورة أكبر من 5 ميغابايت")
-  if (!sniffImage(buf)) throw new SettingsError("الصورة يجب أن تكون PNG أو JPEG أو WebP (لا SVG)")
+  if (buf.length > MAX) throw new SettingsError("image_too_large")
+  if (!sniffImage(buf)) throw new SettingsError("image_type")
   const meta = await sharp(buf).metadata()
   const w = meta.width ?? 0, h = meta.height ?? 0
   const hash = createHash("sha256").update(buf).digest("hex").slice(0, 10)
@@ -30,12 +30,12 @@ export async function processBrandImage(kind: "logo" | "icon", dataUrl: string, 
   const clear = { r: 0, g: 0, b: 0, alpha: 0 }
 
   if (kind === "logo") {
-    if (Math.max(w, h) < 64) throw new SettingsError("الشعار صغير جداً — 64 بكسل على الأقل")
+    if (Math.max(w, h) < 64) throw new SettingsError("logo_too_small")
     const out = await sharp(buf).resize({ width: 600, height: 600, fit: "inside", withoutEnlargement: true }).png().toBuffer()
     return { "brand.logo": put(`logo-${hash}.png`, out) }
   }
-  if (Math.min(w, h) < 192) throw new SettingsError("الأيقونة صغيرة جداً — 192×192 بكسل على الأقل")
-  if (w / h > 1.25 || h / w > 1.25) throw new SettingsError("الأيقونة يجب أن تكون مربعة تقريباً")
+  if (Math.min(w, h) < 192) throw new SettingsError("icon_too_small")
+  if (w / h > 1.25 || h / w > 1.25) throw new SettingsError("icon_not_square")
   const sq = (size: number) => sharp(buf).resize(size, size, { fit: "contain", background: clear }).png().toBuffer()
   // maskable: المحتوى داخل 80% (منطقة الأمان) على خلفية معتمة؛ وiPhone لا يدعم الشفافية
   const inner = await sharp(buf).resize(410, 410, { fit: "contain", background: clear }).png().toBuffer()

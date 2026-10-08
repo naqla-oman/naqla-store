@@ -4,7 +4,6 @@ import { updateShippingOptionsWorkflow } from "@medusajs/medusa/core-flows"
 import { client } from "./client"
 import { shippingPrices } from "./shipping-prices"
 import { SettingsError } from "./store-settings-schema"
-import { g } from "./voice"
 
 /**
  * تبويب «التوصيل»: Medusa هو المصدر الوحيد — الأسعار وحد المجاني في أسعار خيارات الشحن وقواعدها،
@@ -53,8 +52,8 @@ export type ShippingInput = {
 
 const money = (v: unknown, label: string) => {
   const n = Number(v)
-  if (!Number.isFinite(n) || n < 0 || n > 1000) throw new SettingsError(`${label}: رقم بين 0 و1000`)
-  if (Math.abs(Math.round(n * 1000) - n * 1000) > 1e-6) throw new SettingsError(`${label}: 3 منازل عشرية كحد أقصى`)
+  if (!Number.isFinite(n) || n < 0 || n > 1000) throw new SettingsError("amount_range", { field: label })
+  if (Math.abs(Math.round(n * 1000) - n * 1000) > 1e-6) throw new SettingsError("amount_decimals", { field: label })
   return n
 }
 
@@ -63,7 +62,7 @@ export async function writeShipping(container: MedusaContainer, input: ShippingI
   const c = client() as any
   const allCodes: string[] = (c.checkout?.governorates ?? []).map((x: any) => x.code)
   const known = (list: unknown, label: string) => {
-    if (!Array.isArray(list) || !list.every((x) => allCodes.includes(String(x)))) throw new SettingsError(`${label}: محافظة غير معروفة`)
+    if (!Array.isArray(list) || !list.every((x) => allCodes.includes(String(x)))) throw new SettingsError("governorate_unknown_in", { field: label })
     return [...new Set(list.map(String))]
   }
   const before = await readShipping(container)
@@ -81,9 +80,9 @@ export async function writeShipping(container: MedusaContainer, input: ShippingI
   }
 
   if (input.standard && byCode.standard) {
-    const amount = money(input.standard.amount, "سعر التوصيل العادي")
-    const free_over = input.standard.free_over == null || (input.standard.free_over as any) === "" ? null : money(input.standard.free_over, "حد التوصيل المجاني")
-    if (free_over !== null && free_over <= amount) throw new SettingsError("حد التوصيل المجاني يجب أن يكون أكبر من سعر التوصيل")
+    const amount = money(input.standard.amount, "shipping.standard.amount")
+    const free_over = input.standard.free_over == null || (input.standard.free_over as any) === "" ? null : money(input.standard.free_over, "shipping.standard.free_over")
+    if (free_over !== null && free_over <= amount) throw new SettingsError("free_over_gt_amount")
     if (amount !== before.standard?.amount || free_over !== before.standard?.free_over) {
       await updateShippingOptionsWorkflow(container).run({ input: [{ id: byCode.standard.id, prices: shippingPrices({ amount, free_over: free_over ?? undefined }, c.currency, region.id) } as any] })
       if (amount !== before.standard?.amount) changes.push({ key: "shipping.standard.amount", from: before.standard?.amount, to: amount })
@@ -91,9 +90,9 @@ export async function writeShipping(container: MedusaContainer, input: ShippingI
     }
   }
   if (input.express && byCode.express) {
-    const amount = money(input.express.amount, "سعر التوصيل السريع")
-    const provinces = known(input.express.provinces, "محافظات التوصيل السريع")
-    if (!provinces.length) throw new SettingsError(g("اختاري محافظة واحدة على الأقل للتوصيل السريع أو أطفئيه من الميزات", "اختر محافظة واحدة على الأقل للتوصيل السريع أو أطفئه من الميزات"))
+    const amount = money(input.express.amount, "shipping.express.amount")
+    const provinces = known(input.express.provinces, "shipping.express.provinces")
+    if (!provinces.length) throw new SettingsError("express_province_required")
     if (amount !== before.express?.amount) {
       await updateShippingOptionsWorkflow(container).run({ input: [{ id: byCode.express.id, prices: shippingPrices({ amount }, c.currency, region.id) } as any] })
       changes.push({ key: "shipping.express.amount", from: before.express?.amount, to: amount })
@@ -104,8 +103,8 @@ export async function writeShipping(container: MedusaContainer, input: ShippingI
     }
   }
   if (input.governorates && byCode.standard) {
-    let list = known(input.governorates, "المحافظات المفعّلة")
-    if (!list.length) throw new SettingsError(g("فعّلي محافظة واحدة على الأقل", "فعّل محافظة واحدة على الأقل"))
+    let list = known(input.governorates, "shipping.governorates")
+    if (!list.length) throw new SettingsError("governorate_required")
     // محافظة موقع الاستلام تبقى مفعّلة (عنوان طلبات الاستلام)
     const loc = c.location?.province
     if (loc && !list.includes(loc)) list = [...list, loc]

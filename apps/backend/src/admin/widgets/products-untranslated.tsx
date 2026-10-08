@@ -1,6 +1,7 @@
 import { defineWidgetConfig } from "@medusajs/admin-sdk"
 import { Badge, Container, Text } from "@medusajs/ui"
 import { useEffect, useState } from "react"
+import { Data, useNaqlaT } from "../lib/naqla-i18n"
 
 /**
  * المرحلة 2: مؤشر «بلا ترجمة» أعلى قائمة المنتجات — عدد المنتجات بلا اسم إنجليزي (en-US) وأسماؤها.
@@ -15,6 +16,7 @@ async function api<T>(path: string): Promise<T> {
 }
 
 const ProductsUntranslatedWidget = () => {
+  const { t } = useNaqlaT()
   const [state, setState] = useState<{ names: string[]; total: number } | null>(null)
 
   useEffect(() => {
@@ -38,8 +40,11 @@ const ProductsUntranslatedWidget = () => {
   if (!state || state.names.length === 0) return null
   return (
     <Container className="flex items-center gap-3 px-6 py-3" data-testid="untranslated-indicator">
-      <Badge color="orange" size="2xsmall">بلا ترجمة</Badge>
-      <Text size="small">{state.names.length} من {state.total} منتجاً بلا اسم إنجليزي: {state.names.slice(0, 6).join("، ")}{state.names.length > 6 ? ` و${state.names.length - 6} أخرى` : ""}</Text>
+      <Badge color="orange" size="2xsmall">{t("untranslated.badge")}</Badge>
+      <Text size="small">
+        {t("untranslated.count", { n: state.names.length, count: state.total })} <Data>{state.names.slice(0, 6).join(t("common.listSep"))}</Data>
+        {state.names.length > 6 ? ` ${t("untranslated.more", { n: state.names.length - 6 })}` : ""}
+      </Text>
     </Container>
   )
 }

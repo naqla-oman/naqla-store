@@ -28,6 +28,23 @@ const cancelTestOrders = async (t, ids, before) => {
   for (let i = 0; i < 10 && now !== before; i++) { await sleep(1000); now = stockOf() }
   ok(st.every((x) => x === "canceled") && now === before, "طلبات الاختبار أُلغيت والمخزون المتاح عاد كما كان", `${st.join(",")} ${now === before ? "" : `${before} ← ${now}`}`)
 }
+// طلب عبر Store API (الدفع عند الاستلام) بلغة locale؛ meta اختياري يُحفظ في metadata السلة فينتقل إلى الطلب
+const placeOrder = async (locale, firstName, meta) => {
+  const reg = sapi("GET", "/store/regions").regions[0].id
+  const c = sapi("POST", "/store/carts", { region_id: reg, locale, email: `t${Date.now()}@phone.invalid` }).cart
+  const vs = sapi("GET", `/store/products?handle=${HANDLE}&region_id=${reg}&fields=*variants,+variants.inventory_quantity,+variants.manage_inventory`).products[0].variants
+  const v = (vs.find((x) => !x.manage_inventory || x.inventory_quantity > 0) ?? vs[0]).id
+  sapi("POST", `/store/carts/${c.id}/line-items`, { variant_id: v, quantity: 1 })
+  const gov = storeJson.checkout.governorates[0]
+  const addr = { first_name: firstName, last_name: "Test", address_1: "Street 1", city: gov.wilayats[0], province: gov.code, country_code: "om", phone: "+96891234567" }
+  sapi("POST", `/store/carts/${c.id}`, { shipping_address: addr, billing_address: addr, ...(meta ? { metadata: meta } : {}) })
+  const so = sapi("GET", `/store/shipping-options?cart_id=${c.id}`).shipping_options.find((o) => o.type?.code === "standard") ?? sapi("GET", `/store/shipping-options?cart_id=${c.id}`).shipping_options[0]
+  sapi("POST", `/store/carts/${c.id}/shipping-methods`, { option_id: so.id })
+  const pc = sapi("POST", "/store/payment-collections", { cart_id: c.id }).payment_collection
+  sapi("POST", `/store/payment-collections/${pc.id}/payment-sessions`, { provider_id: "pp_cod_offline" })
+  const done = sapi("POST", `/store/carts/${c.id}/complete`)
+  return done.order ?? done
+}
 const VOICE_ADD_FAV = storeJson.voice === "f" ? "أضيفي للمفضلة" : "أضف للمفضلة"
 
 async function stage0() {
@@ -418,21 +435,6 @@ asyncio.run(main())`
   ok(!!enMsg && !rawCode(enMsg) && !/[؀-ۿ]/.test(enMsg), "الواجهة الإنجليزية: خطأ الرمز مترجم (لا رمز خام ولا عربي)", enMsg)
   ok(!!arMsg && !rawCode(arMsg) && /[؀-ۿ]/.test(arMsg), "الواجهة العربية: خطأ الرمز بالعربية (ICU حسب المخاطبة)", arMsg)
   // 3) إشعار واتساب بلغة الطلب: طلب عبر API بـ locale=en-US ← معاينة إنجليزية (Hello، OMR، /en/track)، وبالعربية «مرحباً»
-  const placeOrder = async (locale, firstName) => {
-    const c = sapi("POST", "/store/carts", { region_id: reg, locale, email: `t${Date.now()}@phone.invalid` }).cart
-    const vs = sapi("GET", `/store/products?handle=${HANDLE}&region_id=${reg}&fields=*variants,+variants.inventory_quantity,+variants.manage_inventory`).products[0].variants
-    const v = (vs.find((x) => !x.manage_inventory || x.inventory_quantity > 0) ?? vs[0]).id
-    sapi("POST", `/store/carts/${c.id}/line-items`, { variant_id: v, quantity: 1 })
-    const gov = storeJson.checkout.governorates[0]
-    const addr = { first_name: firstName, last_name: "Test", address_1: "Street 1", city: gov.wilayats[0], province: gov.code, country_code: "om", phone: "+96891234567" }
-    sapi("POST", `/store/carts/${c.id}`, { shipping_address: addr, billing_address: addr })
-    const so = sapi("GET", `/store/shipping-options?cart_id=${c.id}`).shipping_options.find((o) => o.type?.code === "standard") ?? sapi("GET", `/store/shipping-options?cart_id=${c.id}`).shipping_options[0]
-    sapi("POST", `/store/carts/${c.id}/shipping-methods`, { option_id: so.id })
-    const pc = sapi("POST", "/store/payment-collections", { cart_id: c.id }).payment_collection
-    sapi("POST", `/store/payment-collections/${pc.id}/payment-sessions`, { provider_id: "pp_cod_offline" })
-    const done = sapi("POST", `/store/carts/${c.id}/complete`)
-    return done.order ?? done
-  }
   const notices = (orderId) => (aapi("GET", "/admin/notifications?limit=50&order=-created_at", t).notifications ?? []).filter((n) => n.resource_id === orderId)
   // رقم تاجر مؤقت حتى يُرسل تنبيه merchant_new_order فعلاً (يُعاد الأصلي بعد الطلبين مهما حدث)
   const payments = (b) => aapi(b ? "POST" : "GET", "/admin/naqla/store-settings/payments", t, b)
@@ -451,6 +453,150 @@ asyncio.run(main())`
   const mEn = nEn.find((n) => n.template === "merchant_new_order")
   ok(mEn?.to === "+96890000009" && /^طلب جديد/.test(mEn.data?.preview ?? "") && mEn.data?.lang !== "en", "تنبيه التاجر لطلب إنجليزي يبقى عربياً (merchant_new_order)", (mEn?.data?.preview ?? "لم يُرسل تنبيه").slice(0, 50))
   await cancelTestOrders(t, [enOrder.id, arOrder.id], stockBefore)
+  settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
+}
+
+/**
+ * المرحلة 5: لوحة التاجر (صفحات نقلة وويدجتاتها في لوحة Medusa) باللغتين — كوكي lng الذي يقرؤه Medusa.
+ * لكل صفحة/ويدجت: الاتجاه يتبع اللغة (rtl/ltr على <html>)، لا عربي في الإنجليزية، لا مفاتيح خام (naqla.… أو {{…}}).
+ * المستثنى عن قصد: البيانات [data-content] (أسماء المنتجات والزبائن والقيم المحفوظة) والمحتوى العربي الأصيل [lang=ar]
+ * (معاينة قوالب واتساب العربية، عيّنات الخط ومعاينة الواجهة العربية). ورسالتا خطأ ونجاح فعليتان من الخادم مترجمتان.
+ * طلب الاختبار (إنجليزي، بهدية ومصدر زيارة لتغطية ويدجت التوصيل) يُلغى بعد الفحص ويُتحقق من عودة المخزون.
+ */
+async function stage5() {
+  console.log("\n— المرحلة 5: لوحة التاجر —")
+  const t = tok()
+  settings({ languages: ["ar", "en"], defaultLanguage: "ar" }, t)
+  const stockBefore = stockOf()
+  const order = await placeOrder("en-US", "Hind", { gift: true, gift_message: "Happy Eid", courier_note: "Call before arriving", shipping_code: "standard", payment_channel: "cod",
+    attribution: { last: { gclid: "test-gclid", utm_campaign: "eid", landing: "/om/en", ts: Date.now() }, consent: { ads: true, analytics: false } } })
+  ok(!!order?.id, "طلب اختبار إنجليزي للوحة", order?.id ?? JSON.stringify(order).slice(0, 80))
+  const order2 = aapi("GET", `/admin/orders/${order.id}?fields=id,customer_id,items.product_id`, t).order
+  const product = order2.items[0].product_id
+  const category = aapi("GET", "/admin/product-categories?limit=1&fields=id", t).product_categories[0]?.id
+  // منتج مسودة بلا ترجمة: يُظهر مؤشر «بلا ترجمة» أعلى قائمة المنتجات (يُحذف بعد الفحص)
+  const draft = aapi("POST", "/admin/products", t, { title: `منتج اختبار بلا ترجمة ${Date.now()}`, status: "draft", options: [{ title: "اختبار", values: ["أ"] }] }).product
+  const pages = [
+    { name: "dashboard", path: "/app/naqla", sel: "[data-testid=naqla-dashboard]" },
+    { name: "settings", path: "/app/naqla-store-settings", sel: "[data-testid=naqla-store-settings]", tabs: ["identity", "features", "voice", "shipping", "payments", "store"] },
+    { name: "whatsapp", path: "/app/naqla-whatsapp", sel: "[data-testid=naqla-whatsapp]" },
+    { name: "loyalty", path: "/app/naqla-loyalty", sel: "[data-testid=naqla-loyalty]" },
+    { name: "support", path: "/app/naqla-support", sel: "[data-testid=naqla-support]" },
+    { name: "tracking", path: "/app/tracking", sel: "[data-testid=tracking-page]" },
+    { name: "orders-kpi", path: "/app/orders", sel: "[data-testid=orders-kpi-strip]" },
+    { name: "order-delivery", path: `/app/orders/${order.id}`, sel: "[data-testid=order-delivery-details]" },
+    { name: "customer-card", path: `/app/customers/${order2.customer_id}`, sel: "[data-testid=customer-phone-card]" },
+    { name: "product-widgets", path: `/app/products/${product}`, sel: "[data-testid=translation-widget], [data-testid=seo-product]" },
+    { name: "products-untranslated", path: "/app/products", sel: "[data-testid=untranslated-indicator]" },
+    // فرع «الناقص» في ويدجت الترجمة (خيار وقيمة باسمهما العربي داخل نص مترجم — Trans)
+    { name: "product-missing-translation", path: `/app/products/${draft.id}`, sel: "[data-testid=translation-widget] li" },
+    ...(category ? [{ name: "category-seo", path: `/app/categories/${category}`, sel: "[data-testid=seo-category]" }] : []),
+  ]
+  const py = `import asyncio, json, sys, re
+from playwright.async_api import async_playwright
+cfg = json.loads(sys.argv[1])
+B = cfg["B"]
+SHOTS = cfg.get("shots")
+# نص المكوّن الظاهر بلا البيانات (data-content) ولا المحتوى العربي الأصيل (lang=ar) — يُحسب في المتصفح
+TEXT_JS = """([sel, lang]) => {
+  const els = [...document.querySelectorAll(sel)]
+  if (!els.length) return null
+  return els.map((el) => {
+    const c = el.cloneNode(true)
+    c.querySelectorAll('[data-content]' + (lang === 'en' ? ', [lang=ar]' : '')).forEach((x) => x.replaceWith(' '))
+    return c.innerText ?? c.textContent
+  }).join('\\\\n')
+}"""
+PAGES = cfg["pages"]
+async def settle(m, sel):
+    await m.wait_for_selector(sel, timeout=240000)
+    # انتظار انتهاء «جارٍ التحميل…» وطلبات الشبكة
+    try: await m.wait_for_load_state("networkidle", timeout=20000)
+    except Exception: pass
+    await m.wait_for_timeout(800)
+
+async def run(b, lang):
+    ctx = await b.new_context(viewport={"width": 1440, "height": 1000})
+    await ctx.add_cookies([{"name": "lng", "value": lang, "url": B}])
+    out = {"pages": {}}
+    # الدخول: صفحة الدخول أولاً (ويدجت الهوية وعنوان الترحيب)
+    m = await ctx.new_page(); m.set_default_timeout(240000)
+    await m.goto(B + "/app/login", wait_until="domcontentloaded")
+    await settle(m, "[data-testid=login-brand]")
+    out["login"] = {"dir": await m.evaluate("document.documentElement.dir"), "lang": await m.evaluate("document.documentElement.lang"),
+                    "text": await m.evaluate(TEXT_JS, ["body", lang]),
+                    "title": await m.title()}
+    if SHOTS: await m.screenshot(path=f"{SHOTS}/{lang}-login.png")
+    r = await ctx.request.post(B + "/auth/user/emailpass", data={"email": cfg["email"], "password": cfg["password"]})
+    tok = (await r.json())["token"]
+    await ctx.request.post(B + "/auth/session", headers={"Authorization": "Bearer " + tok})
+    for pg in PAGES:
+        await m.goto(B + pg["path"], wait_until="domcontentloaded")
+        await settle(m, pg["sel"])
+        texts = []
+        for tab in pg.get("tabs") or [None]:
+            if tab:
+                await m.click(f"[data-testid=tab-{tab}]"); await m.wait_for_timeout(1200)
+                try: await m.wait_for_load_state("networkidle", timeout=10000)
+                except Exception: pass
+            texts.append(await m.evaluate(TEXT_JS, [pg["sel"], lang]))
+            if SHOTS: await m.screenshot(path=f"{SHOTS}/{lang}-{pg['name']}{'-' + tab if tab else ''}.png", full_page=True)
+        out["pages"][pg["name"]] = {"dir": await m.evaluate("document.documentElement.dir"), "lang": await m.evaluate("document.documentElement.lang"),
+                                    "text": "\\n".join(t or "" for t in texts), "found": all(t is not None for t in texts), "title": await m.title()}
+    out["nav"] = await m.evaluate("() => document.querySelector('aside')?.innerText ?? ''")
+    # رسائل الخطأ والنجاح: حقل بصيغة خاطئة (رمز field_phone + اسم الحقل)، ثم حفظ بلا تغيير
+    await m.goto(B + "/app/naqla-store-settings", wait_until="domcontentloaded"); await settle(m, "[data-testid=naqla-store-settings]")
+    await m.click("[data-testid=tab-store]"); await m.wait_for_timeout(800)
+    await m.fill("[data-testid='set-contact.phone']", "abc")
+    await m.click("[data-testid=save-store]")
+    await m.wait_for_selector("[data-testid=settings-msg]")
+    out["error"] = await m.locator("[data-testid=settings-msg]").inner_text()
+    await m.reload(wait_until="domcontentloaded"); await settle(m, "[data-testid=naqla-store-settings]")
+    await m.click("[data-testid=tab-features]"); await m.wait_for_timeout(500)
+    await m.click("[data-testid=save-features]")
+    await m.wait_for_selector("[data-testid=settings-msg]")
+    out["noChanges"] = await m.locator("[data-testid=settings-msg]").inner_text()
+    await ctx.close()
+    return out
+
+async def main():
+    async with async_playwright() as p:
+        b = await p.chromium.launch()
+        res = {"ar": await run(b, "ar"), "en": await run(b, "en")}
+        await b.close()
+    print(json.dumps(res, ensure_ascii=False))
+asyncio.run(main())`
+  let r
+  try {
+    r = JSON.parse(execFileSync("python3", ["-c", py, JSON.stringify({ B, email: env.ADMIN_EMAIL, password: env.ADMIN_PASSWORD, pages, shots: process.env.STAGE5_SHOTS || null })], { timeout: 1500000, maxBuffer: 64 << 20 }).toString().trim().split("\n").pop())
+  } finally {
+    if (draft?.id) ok(aapi("DELETE", `/admin/products/${draft.id}`, t).deleted === true, "منتج الاختبار المسودة حُذف")
+    await cancelTestOrders(t, [order.id], stockBefore)
+  }
+  const AR = /[؀-ۿ]/
+  // مفتاح خام: naqla.قسم.مفتاح أو {{معامل}} لم يُستبدل ({{1}} متغيرات قوالب Meta مقصودة)
+  const raw = (x) => (x.match(/\bnaqla\.[a-zA-Z_]+\.[\w.]+|\{\{[a-zA-Z_]\w*\}\}|<\/?d>/g) ?? [])
+  const enJ = JSON.parse(readFileSync(new URL("../apps/backend/src/admin/i18n/json/en.json", import.meta.url), "utf8")).naqla
+  const arJ = JSON.parse(readFileSync(new URL("../apps/backend/src/admin/i18n/json/ar.json", import.meta.url), "utf8")).naqla
+  for (const lang of ["ar", "en"]) {
+    const L = r[lang], dir = lang === "ar" ? "rtl" : "ltr"
+    ok(L.login.dir === dir && L.login.lang.startsWith(lang) && (lang === "en" ? /Naqla/.test(L.login.text) && !AR.test(L.login.text) : /نقلة/.test(L.login.text)), `${lang}: صفحة الدخول (${dir})`, `${L.login.dir}/${L.login.lang} «${L.login.text.replace(/\s+/g, " ").trim().slice(0, 60)}»`)
+    for (const [name, pg] of Object.entries(L.pages)) {
+      const left = lang === "en" ? [...new Set(pg.text.match(/[؀-ۿ][؀-ۿ\s]*/g) ?? [])].map((x) => x.trim()).slice(0, 4) : []
+      const keys = raw(pg.text)
+      const good = pg.found && pg.dir === dir && pg.lang.startsWith(lang) && !left.length && !keys.length && (lang === "en" || AR.test(pg.text))
+      ok(good, `${lang}: ${name}`, [`${pg.dir}/${pg.lang}`, pg.found ? "" : "غير موجود", left.length ? `بقي عربي: ${left.join(" | ")}` : "", keys.length ? `مفاتيح خام: ${keys.slice(0, 3)}` : ""].filter(Boolean).join(" — "))
+    }
+    const nav = lang === "en" ? ["Store settings", "Dashboard", "Tracking tools", "Loyalty", "WhatsApp templates", "Support"] : ["إعدادات المتجر", "لوحة المؤشرات", "أدوات التتبع", "إعدادات الولاء", "قوالب واتساب", "الدعم الفني"]
+    const navMiss = nav.filter((x) => !L.nav.includes(x))
+    ok(!navMiss.length && !raw(L.nav).length, `${lang}: قائمة نقلة الجانبية مترجمة`, navMiss.length ? `ناقص: ${navMiss}` : "")
+    const J = lang === "en" ? enJ : arJ
+    const expErr = J.errors.field_phone.replace("{{field}}", J.fields.contact_phone)
+    ok(L.error === expErr, `${lang}: رسالة خطأ الخادم مترجمة (field_phone + اسم الحقل)`, L.error)
+    ok(L.noChanges === J.settings.noChanges, `${lang}: رسالة الحفظ مترجمة`, L.noChanges)
+  }
+  const titles = [r.en.pages.dashboard.title, r.ar.pages.dashboard.title]
+  ok(/Naqla/.test(titles[0]) && !AR.test(titles[0]) && /لوحة نقلة/.test(titles[1]), "عنوان التبويب بلغة اللوحة", titles.join(" | "))
   settings({ languages: ["ar"], defaultLanguage: "ar" }, t)
 }
 
@@ -488,7 +634,7 @@ async function arSnapshot() {
     ok(same, `الواجهة العربية كما كانت: ${p}`, diff)
   }
 }
-const sections = { stage0, stage1, stage2, stage3, stage4, arSnapshot }
+const sections = { stage0, stage1, stage2, stage3, stage4, stage5, arSnapshot }
 for (const s of (process.argv[3] && !process.argv[3].startsWith("--") ? [process.argv[3]] : Object.keys(sections))) await sections[s]()
 console.log(`\n${failn ? "✖" : "✔"} ${pass} نجح، ${failn} فشل`)
 process.exit(failn ? 1 : 0)

@@ -1,38 +1,36 @@
 import { Container, Heading, Text } from "@medusajs/ui"
 import { ReactNode, useEffect, useState } from "react"
+import { naqlaApi, useNaqlaT } from "../lib/naqla-i18n"
 
-/** أدوات مشتركة لصفحات قسم «نقلة» في اللوحة */
+/** أدوات مشتركة لصفحات قسم «نقلة» في اللوحة — البيانات بلغة اللوحة، وتُعاد عند تغيّرها */
 export function useNaqla<T>(path: string) {
+  const { lang, errorText } = useNaqlaT()
   const [data, setData] = useState<T | null>(null)
   const [error, setError] = useState<string | null>(null)
   useEffect(() => {
-    fetch(path, { credentials: "include" })
-      .then(async (r) => { const j = await r.json(); if (!r.ok) throw new Error(j.message ?? `HTTP ${r.status}`); return j })
-      .then(setData)
-      .catch((e) => setError(e.message))
-  }, [path])
+    let alive = true
+    naqlaApi<T>(path, lang)
+      .then((d) => { if (alive) { setData(d); setError(null) } })
+      .catch((e) => { if (alive) setError(errorText(e.message)) })
+    return () => { alive = false }
+  }, [path, lang, errorText])
   return { data, error }
 }
 
 /**
- * العدد مع المعدود بقواعد العربية (Intl.PluralRules): «طلب واحد / طلبان / 3 طلبات / 11 طلباً / 100 طلب».
- * الصيغ: zero, one, two, few (3–10), many (11–99), other (100، 101…)؛ {n} يُستبدل بالعدد.
+ * العدد مع المعدود بقواعد اللغة (i18next + Intl.PluralRules): naqla.plural.<name>_zero/_one/_two/_few/_many/_other
+ * — «طلب واحد / طلبان / 3 طلبات / 11 طلباً / 100 طلب» و«1 order / 3 orders».
  */
-type Forms = { zero: string; one: string; two: string; few: string; many: string; other: string }
-const AR_RULES = new Intl.PluralRules("ar")
-export const count = (n: number, f: Forms) => f[AR_RULES.select(n) as keyof Forms].replace("{n}", String(n))
-export const N = {
-  orders: { zero: "لا طلبات", one: "طلب واحد", two: "طلبان", few: "{n} طلبات", many: "{n} طلباً", other: "{n} طلب" },
-  pieces: { zero: "لا قطع", one: "قطعة واحدة", two: "قطعتان", few: "{n} قطع", many: "{n} قطعة", other: "{n} قطعة" },
-  customers: { zero: "لا أحد", one: "زبون واحد", two: "زبونين", few: "{n} زبائن", many: "{n} زبوناً", other: "{n} زبون" },
-  codes: { zero: "لم يُستبدل أي كود", one: "كود واحد استُبدل", two: "كودان استُبدلا", few: "{n} أكواد استُبدلت", many: "{n} كوداً استُبدل", other: "{n} كود استُبدل" },
-  members: { zero: "لا أعضاء", one: "عضو واحد", two: "عضوان", few: "{n} أعضاء", many: "{n} عضواً", other: "{n} عضو" },
-} satisfies Record<string, Forms>
+export type Countable = "orders" | "pieces" | "customers" | "codes" | "members"
+export function useCount() {
+  const { t } = useNaqlaT()
+  return (n: number, name: Countable) => t(`plural.${name}`, { count: n })
+}
 
 export const money = (n: number, label = "") =>
   `${new Intl.NumberFormat("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }).format(n || 0)}${label ? ` ${label}` : ""}`
 
-export const PageHead = ({ title, sub, children }: { title: string; sub?: string; children?: ReactNode }) => (
+export const PageHead = ({ title, sub, children }: { title: string; sub?: ReactNode; children?: ReactNode }) => (
   <Container className="flex items-center justify-between gap-4 px-6 py-4">
     <div>
       <Heading level="h1">{title}</Heading>
@@ -54,14 +52,15 @@ export const Kpi = ({ label, value, hint, tone = "teal", testid }: { label: stri
   )
 }
 
-/** شريط أفقي لكل عنصر بنسبة من الأكبر */
-export const BarList = ({ rows, label }: { rows: { name: string; value: number; sub?: string }[]; label: (n: number) => string }) => {
+/** شريط أفقي لكل عنصر بنسبة من الأكبر — الاسم بيانات (Data) أو نص مترجم */
+export const BarList = ({ rows, label }: { rows: { key: string; name: ReactNode; value: number; sub?: string }[]; label: (n: number) => string }) => {
+  const { t } = useNaqlaT()
   const max = Math.max(1, ...rows.map((r) => r.value))
-  if (!rows.length) return <Text size="small" className="text-ui-fg-muted">لا بيانات بعد</Text>
+  if (!rows.length) return <Text size="small" className="text-ui-fg-muted">{t("common.noData")}</Text>
   return (
     <div className="flex flex-col gap-2">
       {rows.map((r) => (
-        <div key={r.name}>
+        <div key={r.key}>
           <div className="flex justify-between gap-3">
             <Text size="small" weight="plus" className="truncate">{r.name}</Text>
             <Text size="small" className="shrink-0 text-ui-fg-subtle">{label(r.value)}{r.sub ? ` · ${r.sub}` : ""}</Text>
@@ -75,7 +74,7 @@ export const BarList = ({ rows, label }: { rows: { name: string; value: number; 
   )
 }
 
-export const Card = ({ title, children, testid }: { title: string; children: ReactNode; testid?: string }) => (
+export const Card = ({ title, children, testid }: { title: ReactNode; children: ReactNode; testid?: string }) => (
   <Container className="px-6 py-4" data-testid={testid}>
     <Heading level="h2" className="mb-3">{title}</Heading>
     {children}
