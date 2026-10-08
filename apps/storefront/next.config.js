@@ -38,9 +38,12 @@ const S3_PATHNAME = process.env.MEDUSA_CLOUD_S3_PATHNAME
 /**
  * @type {import('next').NextConfig}
  */
+// الصور تُقدَّم من العنوان العام للخلفية (روابطها يولّدها Medusa من MEDUSA_BACKEND_URL الخاص به)؛ في الحاويات
+// تتصل الواجهة بالخلفية بعنوان داخلي (http://backend-<slug>:9000) فيُعطى العام في MEDUSA_PUBLIC_URL
 const BACKEND_HOST = (() => {
   try {
-    return process.env.MEDUSA_BACKEND_URL ? new URL(process.env.MEDUSA_BACKEND_URL) : null
+    const url = process.env.MEDUSA_PUBLIC_URL || process.env.MEDUSA_BACKEND_URL
+    return url ? new URL(url) : null
   } catch {
     return null
   }

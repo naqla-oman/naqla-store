@@ -4,6 +4,7 @@ import Shell from "@/components/shell"
 import { Status, when } from "@/components/status"
 import { q } from "@/lib/db"
 import { driver } from "@/lib/provisioner"
+import { storeUrls } from "@/lib/store-urls"
 import Actions from "./actions"
 
 export const dynamic = "force-dynamic"
@@ -16,6 +17,7 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
     q(`select id, kind, status, created_at from jobs where store_slug=$1 order by id desc limit 10`, [slug]),
     driver().logs(slug, 40),
   ])
+  const urls = storeUrls(s)
   return (
     <Shell active="/stores">
       <h1>{s.name} <Status s={s.status} /></h1>
@@ -27,8 +29,8 @@ export default async function StorePage({ params }: { params: Promise<{ slug: st
       </div>
       <div className="card grid" style={{ gap: 12 }}>
         <div className="actions">
-          {s.backend_port && <a className="btn" href={`http://localhost:${s.backend_port}/app`} target="_blank" rel="noreferrer">فتح لوحة المتجر</a>}
-          {s.storefront_port && <a className="btn ghost" href={`http://localhost:${s.storefront_port}`} target="_blank" rel="noreferrer">فتح المتجر</a>}
+          {urls.panel && <a className="btn" href={urls.panel} target="_blank" rel="noreferrer">فتح لوحة المتجر</a>}
+          {urls.store && <a className="btn ghost" href={urls.store} target="_blank" rel="noreferrer">فتح المتجر</a>}
         </div>
         <Actions slug={slug} status={s.status} backups={backups.map((b) => ({ ...b, id: Number(b.id), size: Number(b.size) }))} />
       </div>

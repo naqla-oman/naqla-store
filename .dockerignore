@@ -1,0 +1,20 @@
+# سياق بناء صور نقلة: الكود فقط — لا اعتماديات ولا مخرجات بناء ولا بيانات خادم ولا أسرار
+**/node_modules
+**/.next
+**/.next-*
+**/.medusa
+**/tsconfig.tsbuildinfo
+**/.env
+**/.env.*
+!**/.env.template
+!**/.env.example
+.git
+.stores
+.backups
+.archive
+.i18n-snapshots
+apps/backend/static
+apps/backend/private
+deploy/.env
+deploy/stores
+deploy/sites

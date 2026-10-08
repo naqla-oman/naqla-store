@@ -1,6 +1,7 @@
 import { q } from "./db"
 import { driver, type StoreSpec } from "./provisioner"
 import type { Log } from "./provisioner/types"
+import { storeUrls } from "./store-urls"
 import { sendStoreReady } from "./whatsapp"
 
 /**
@@ -32,9 +33,8 @@ export const JOBS: Record<string, { title: string; steps: Step[]; rollback?: (c:
         c.log("المتجر جاهز")
       } },
       { key: "notify", title: "رسالة واتساب للعميل", run: async (c) => {
-        const [s] = await q(`select backend_port from stores where slug=$1`, [c.spec.slug])
-        const panel = `http://localhost:${s.backend_port}/app`
-        await sendStoreReady({ phone: c.spec.phone, name: c.spec.name, panel, reset: c.state.resetUrl }, c.log)
+        const [s] = await q(`select slug, domain, backend_port from stores where slug=$1`, [c.spec.slug])
+        await sendStoreReady({ phone: c.spec.phone, name: c.spec.name, panel: storeUrls(s).panel ?? "", reset: c.state.resetUrl }, c.log)
         delete c.state.resetUrl // لا يبقى الرابط في حالة المهمة بعد الإرسال
       } },
     ],
@@ -81,8 +81,8 @@ export const JOBS: Record<string, { title: string; steps: Step[]; rollback?: (c:
     title: "رابط تعيين كلمة مرور جديد",
     steps: [{ key: "reset", title: "توليد الرابط وإرساله", run: async (c) => {
       const url = await driver().resetLink(c.spec.slug, c.log)
-      const [s] = await q(`select backend_port from stores where slug=$1`, [c.spec.slug])
-      await sendStoreReady({ phone: c.spec.phone, name: c.spec.name, panel: `http://localhost:${s.backend_port}/app`, reset: url }, c.log)
+      const [s] = await q(`select slug, domain, backend_port from stores where slug=$1`, [c.spec.slug])
+      await sendStoreReady({ phone: c.spec.phone, name: c.spec.name, panel: storeUrls(s).panel ?? "", reset: url }, c.log)
     } }],
   },
   delete: {
