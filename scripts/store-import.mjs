@@ -1,4 +1,4 @@
-// pnpm store:import <slug> <file.xlsx> [--images] [--sheet <اسم الورقة>]
+// pnpm store:import <slug> <file.xlsx> [--images] [--limit N] [--sheet <اسم الورقة>]
 // يحوّل جدول منتجات (تصدير متجر سابق) إلى clients/<slug>/catalog.json حسب قواعد clients/<slug>/import.json:
 // الأعمدة، تنظيف العناوين (titleStrip)، الأقسام (قواعد نصية بالترتيب)، توحيد البراندات (تصبح مجموعات)، المخزون، وتنسيق الوصف.
 // --images ينزّل الصور إلى clients/<slug>/images/products/ (يتخطى الموجود) فلا يبقى المتجر معتمداً على مستضيف المتجر السابق؛
@@ -31,7 +31,9 @@ const col = Object.fromEntries(Object.entries(R.columns).map(([k, name]) => {
   return [k, i]
 }))
 const cell = (row, k) => { const v = col[k] >= 0 ? row[col[k]] : null; return typeof v === "string" ? v.trim() || null : v }
-const rows = body.filter((r) => cell(r, "title"))
+// --limit N: أول N منتجاً فقط (متجر تجريبي أسرع إعداداً) — البراندات والصور تتبعها
+const limit = Number(arg("--limit")) || Infinity
+const rows = body.filter((r) => cell(r, "title")).slice(0, limit)
 
 // ---------- الأقسام ----------
 const rx = (list) => (list ?? []).map((s) => new RegExp(s, "i"))
@@ -186,7 +188,8 @@ if (process.argv.includes("--images") && downloads.length) {
   await Promise.all(Array.from({ length: 8 }, async () => {
     for (let d; (d = queue.shift());) {
       try {
-        const res = await fetch(d.url, { signal: AbortSignal.timeout(30000) })
+        // روابط http في التصدير (نطاق المتجر نفسه) تُطلب بـ https: الوكلاء ومزودو CDN يرفضون http غالباً
+        const res = await fetch(d.url.replace(/^http:\/\//, "https://"), { signal: AbortSignal.timeout(30000) })
         if (!res.ok) throw new Error(String(res.status))
         const buf = Buffer.from(await res.arrayBuffer())
         const ext = sniff(buf)

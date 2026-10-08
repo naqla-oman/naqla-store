@@ -8,7 +8,8 @@ const TYPES: Record<string, string> = {
   ".avif": "image/avif", ".svg": "image/svg+xml", ".ico": "image/x-icon", ".gif": "image/gif",
 }
 // المسموح من مجلد العميل: الصور والأيقونات ونسخ الشعار والرمز وصورة المشاركة فقط (لا store.json ولا غيره)
-const ALLOWED = /^(images|icons)\/[^/]+$|^(logo[\w-]*\.svg|symbol\.svg|og\.jpg)$/
+// الشعار PNG/WebP أيضاً: معالج اللوحة يحفظ الشعار المرفوع logo.png
+const ALLOWED = /^(images|icons)\/[^/]+$|^(logo[\w-]*\.(svg|png|webp)|symbol\.svg|og\.jpg)$/
 
 /** يقدّم ملفات العميل من clients/<STORE>/ — /client-assets/images/hero.jpg */
 export async function GET(_: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {

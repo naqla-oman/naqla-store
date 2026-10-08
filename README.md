@@ -107,7 +107,7 @@ pnpm store:new <slug>          # مثال: pnpm store:new demo-perfume
 ```bash
 # 1) قواعد الاستيراد في clients/<slug>/import.json: أسماء الأعمدة، قواعد الأقسام، توحيد البراندات، خيار العبوة
 # 2) تنزيل الصور وبناء الكتالوج (أعيديه حتى «لم تُنزَّل» = 0؛ يتخطى الموجود)
-pnpm store:import <slug> <file.xlsx> --images
+pnpm store:import <slug> <file.xlsx> --images            # --limit 100 لمتجر تجريبي؛ خلف وكيل: NODE_USE_ENV_PROXY=1
 # 3) ثم الإعداد كالمعتاد
 pnpm store:setup <slug>
 ```
