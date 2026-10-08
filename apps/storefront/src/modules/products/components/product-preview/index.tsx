@@ -6,6 +6,7 @@ import { HttpTypes } from "@medusajs/types"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Icon from "@modules/common/components/icon"
 import WishButton from "@modules/common/components/wish-button"
+import QuickActions from "@modules/products/components/quick-actions"
 import { storeConfig } from "../../../../store.config"
 import { getLocale } from "next-intl/server"
 import { getT } from "@/i18n/t"
@@ -35,23 +36,30 @@ export default async function ProductPreview({
   const pct = old && old > price ? Math.round((1 - price / old) * 100) : 0
   const cat = product.categories?.[0]?.name
 
+  const href = `/products/${product.handle}`
+  // البطاقة عنصر div: الأزرار (المفضلة، الإضافة والعرض السريعان) لا تكون داخل رابط — الصورة والنص رابطان منفصلان
   return (
-    <LocalizedClientLink href={`/products/${product.handle}`} className="pcard" data-testid="product-wrapper">
+    <div className="pcard" data-testid="product-wrapper">
       <div className="ph">
-        {product.thumbnail && (
-          <Image src={product.thumbnail} alt={productAlt(product)} fill priority={priority} sizes="(max-width: 700px) 50vw, (max-width: 1024px) 33vw, 25vw" />
-        )}
+        <LocalizedClientLink href={href} className="phlink" tabIndex={-1} aria-hidden="true">
+          {product.thumbnail && (
+            <Image src={product.thumbnail} alt={productAlt(product)} fill priority={priority} sizes="(max-width: 700px) 50vw, (max-width: 1024px) 33vw, 25vw" />
+          )}
+        </LocalizedClientLink>
         {pct > 0 ? <span className="tag red"><bdi dir="ltr">-{pct}%</bdi></span> : tag ? <span className="tag">{tag}</span> : null}
         <WishButton productId={product.id} />
+        <QuickActions product={product} />
       </div>
-      <div className="pb">
+      <LocalizedClientLink href={href} className="pb">
         {cat && <div className="cat">{cat}</div>}
         <div className="nm" data-testid="product-title">{product.title}</div>
-        <div className="meta">
-          {storeConfig.features.reviews && meta.rating && <span className="st"><Icon name="star" size={12} /> {meta.rating}</span>}
-          {storeConfig.features.reviews && meta.reviews && <span>({meta.reviews})</span>}
-          {meta.sold_week >= 15 && <span className="ms-auto flex items-center gap-1"><Icon name="fire" size={12} /> {t("soldThisWeek", { count: meta.sold_week })}</span>}
-        </div>
+        {storeConfig.features.reviews && meta.rating && (
+          <div className="meta">
+            <span className="st"><Icon name="star" size={12} /> {meta.rating}</span>
+            {meta.reviews && <span>({meta.reviews})</span>}
+          </div>
+        )}
+        {meta.sold_week >= 15 && <div className="sold"><Icon name="fire" size={12} /> <span>{t("soldThisWeek", { count: meta.sold_week })}</span></div>}
         <div className="pr">
           <span className="price" data-testid="price">{convertToLocale({ amount: price, currency_code: cur, locale })}</span>
           {old && old > price && (
@@ -61,7 +69,7 @@ export default async function ProductPreview({
             </>
           )}
         </div>
-      </div>
-    </LocalizedClientLink>
+      </LocalizedClientLink>
+    </div>
   )
 }

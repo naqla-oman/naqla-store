@@ -360,8 +360,8 @@ export default function CheckoutFlow({ cart, shippingOptions, providers, country
               {/* منخفضة: استلام من المحل بلا عنوان */}
               {sc.seo.shipping.some((s) => s.code === "pickup") && (
                 <div className="seg2" role="radiogroup" aria-label={t("sdf3035")} data-testid="pickup-toggle">
-                  <button type="button" role="radio" aria-checked={!form.pickup} className={!form.pickup ? "on" : ""} onClick={() => set("pickup", false)}>{t("s3a3dce")}</button>
-                  <button type="button" role="radio" aria-checked={!!form.pickup} className={form.pickup ? "on" : ""} onClick={() => set("pickup", true)}>{t("pickupFrom", { place: sc.seo.location.name })}</button>
+                  <button type="button" role="radio" aria-checked={!form.pickup} className={!form.pickup ? "on" : ""} onClick={() => set("pickup", false)}><b>{t("s3a3dce")}</b><small>{t("deliverSub")}</small></button>
+                  <button type="button" role="radio" aria-checked={!!form.pickup} className={form.pickup ? "on" : ""} onClick={() => set("pickup", true)}><b>{t("pickupLabel")}</b><small>{sc.seo.location.name}</small></button>
                 </div>
               )}
               {!form.pickup && (

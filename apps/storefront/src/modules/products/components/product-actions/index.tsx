@@ -19,12 +19,14 @@ type Props = {
   product: HttpTypes.StoreProduct
   region: HttpTypes.StoreRegion
   disabled?: boolean
+  /** العرض السريع: بلا مزامنة الرابط ولا شريط الشراء المثبّت ولا دليل المقاسات والتقسيط والمشغل (تبقى في صفحة المنتج) */
+  compact?: boolean
 }
 
 const waLink = (text: string) =>
   `https://wa.me/${storeConfig.contact.whatsapp}?text=${encodeURIComponent(text)}`
 
-export default function ProductActions({ product, disabled }: Props) {
+export default function ProductActions({ product, disabled, compact = false }: Props) {
   const sc = useStoreConfig()
   const cfg = sc.product
   const t = useT("product")
@@ -48,7 +50,7 @@ export default function ProductActions({ product, disabled }: Props) {
   const lowStock = left > 0 && left <= cfg.lowStockAt
   const canBuy = !!variant && left > 0 && !disabled
   // دليل المقاسات يرافق أول خيار من نوع أزرار له أكثر من قيمة، إن وُجد جدول لقسم المنتج
-  const guideKey = cfg.sizeGuides[category] ? m.defs.find((d) => d.type === "buttons" && d.values.length > 1)?.key : undefined
+  const guideKey = !compact && cfg.sizeGuides[category] ? m.defs.find((d) => d.type === "buttons" && d.values.length > 1)?.key : undefined
   const wantsLength = cfg.lengthField.categories.includes(category)
   const sold = Number((product.metadata as any)?.sold_week) || 0
 
@@ -57,13 +59,13 @@ export default function ProductActions({ product, disabled }: Props) {
 
   // مزامنة المتغيّر في الرابط دون إعادة تحميل الصفحة (للمشاركة)
   useEffect(() => {
-    if (!variant?.id) return
+    if (!variant?.id || compact) return
     const url = new URL(window.location.href)
     if (url.searchParams.get("v_id") === variant.id) { setPageUrl(url.toString()); return }
     url.searchParams.set("v_id", variant.id)
     window.history.replaceState(null, "", url.toString())
     setPageUrl(url.toString())
-  }, [variant?.id])
+  }, [variant?.id, compact])
 
   // شريط الشراء المثبّت يظهر عندما يخرج زر الإضافة من الشاشة
   useEffect(() => {
@@ -73,11 +75,12 @@ export default function ProductActions({ product, disabled }: Props) {
       const el = buyRef.current
       if (el) setShowSticky(el.getBoundingClientRect().bottom < 0)
     }
+    if (compact) return
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(check) }
     window.addEventListener("scroll", onScroll, { passive: true })
     check()
     return () => { window.removeEventListener("scroll", onScroll); if (raf) cancelAnimationFrame(raf) }
-  }, [])
+  }, [compact])
 
   useEffect(() => {
     if (!toast) return
@@ -173,7 +176,7 @@ export default function ProductActions({ product, disabled }: Props) {
         </span>
       </div>
 
-      {cfg.bnpl.enabled && price > 0 && (
+      {!compact && cfg.bnpl.enabled && price > 0 && (
         <div className="bnpl">
           <div className="tx">
             <strong>{t("installments", { n: cfg.bnpl.installments, amount: `${formatAmount(price / cfg.bnpl.installments)} ${CUR}` })}</strong>
@@ -182,7 +185,7 @@ export default function ProductActions({ product, disabled }: Props) {
         </div>
       )}
 
-      <DeliveryEta />
+      {!compact && <DeliveryEta />}
 
       <div className="selbox" ref={boxRef}>
         {m.defs.map((d) => {
@@ -303,13 +306,13 @@ export default function ProductActions({ product, disabled }: Props) {
         </div>
       </div>
 
-      {cfg.atelier.categories.includes(category) && (
+      {!compact && cfg.atelier.categories.includes(category) && (
         <div className="atelier">
           <a className="pill" href={waAtelier("fitting")} target="_blank" rel="noopener noreferrer"><Icon name="clock" size={14} /> {t("s4ba6f3")}</a>
         </div>
       )}
 
-      <div className={`stickybuy ${showSticky ? "show" : ""}`} aria-hidden={!showSticky}>
+      {!compact && <div className={`stickybuy ${showSticky ? "show" : ""}`} aria-hidden={!showSticky}>
         <div className="min-w-0">
           <div className="muted st-name">{product.title}</div>
           <Money amount={price * qty} />
@@ -317,7 +320,7 @@ export default function ProductActions({ product, disabled }: Props) {
         <button type="button" className="btn" onClick={handleAdd} disabled={!canBuy || adding} tabIndex={showSticky ? 0 : -1}>
           <Icon name="bag" size={16} /> {variant && left === 0 ? t("s5883c3") : t("s8ed342")}
         </button>
-      </div>
+      </div>}
 
       <div className={`ptoast ${toast ? "show" : ""}`} role="status" aria-live="polite">
         {toast && (

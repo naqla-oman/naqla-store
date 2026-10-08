@@ -87,7 +87,9 @@
     "s4ee631": "الدفع",
     "se4d013": "إتمام الطلب",
     "sbb8423": "الصفحة غير موجودة",
-    "secureNote": "دفع آمن ومشفّر"
+    "secureNote": "دفع آمن ومشفّر",
+    "pickupLabel": "استلام من المحل",
+    "deliverSub": "لكل المحافظات"
   },
   "checkoutActions": {
     "sfe3242": "{voice, select, f {أدخلي اسمك الكامل} m {أدخل اسمك الكامل} other {أدخل اسمك الكامل}}",
@@ -141,7 +143,9 @@
     "sea028b": "الكمية:",
     "s8580bc": "تعذّر نقل سلتك إلى حسابك",
     "cartAria": "السلة ({n})",
-    "byAddress": "حسب العنوان"
+    "byAddress": "حسب العنوان",
+    "viewCart": "عرض السلة",
+    "piecesCount": "{count, plural, zero {لا قطع} one {قطعة واحدة} two {قطعتان} few {# قطع} many {# قطعة} other {# قطعة}}"
   },
   "cartActions": {
     "s68650b": "الكمية المطلوبة غير متوفرة حالياً",
@@ -234,7 +238,16 @@
     "ratingOf": "التقييم {rating} من 5",
     "reviewsCount": "{count, plural, one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييماً} other {# تقييم}}",
     "soldThisWeek": "{voice, select, f {اشترتها} m {اشتراها} other {طُلب}} {count, plural, one {زبونة واحدة} two {زبونتان} few {# زبونات} many {# زبونة} other {# زبونة}} هذا الأسبوع",
-    "fromCategory": "من {cat}"
+    "fromCategory": "من {cat}",
+    "qaAdd": "إضافة سريعة",
+    "qaView": "عرض سريع",
+    "qaAddAria": "إضافة سريعة: {title}",
+    "qaViewAria": "عرض سريع: {title}",
+    "qvClose": "إغلاق",
+    "qvLoading": "جارٍ التحميل…",
+    "qvFailed": "تعذّر عرض المنتج الآن",
+    "qvImage": "الصورة {n}",
+    "qvDetails": "التفاصيل الكاملة"
   },
   "account": {
     "sc0f526": "حسابي",
