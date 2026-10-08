@@ -111,7 +111,7 @@ type Ship = {
 }
 const DAYS = [0, 1, 2, 3, 4, 5, 6] // naqla.settings.days.<0–6>: الأحد…السبت
 const ShippingTab = ({ onSaved }: { onSaved: () => void }) => {
-  const { t, lang, errorText } = useNaqlaT()
+  const { t, lang, dir, errorText } = useNaqlaT()
   const api = useApi()
   const [d, setD] = useState<Ship | null>(null)
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null)
@@ -155,7 +155,7 @@ const ShippingTab = ({ onSaved }: { onSaved: () => void }) => {
           <div className="grid grid-cols-2 gap-3">
             <div><Label>{t("fields.shipping_express_amount")}</Label><Input data-testid="ship-express-amount" type="number" step="0.001" value={d.express.amount ?? ""} onChange={(e) => setD({ ...d, express: { ...d.express!, amount: num(e.target.value) } })} /></div>
             <div><Label>{t("settings.cutoff")}</Label>
-              <Select value={String(d.cutoffHour ?? 15)} onValueChange={(v) => setD({ ...d, cutoffHour: Number(v) })}>
+              <Select dir={dir} value={String(d.cutoffHour ?? 15)} onValueChange={(v) => setD({ ...d, cutoffHour: Number(v) })}>
                 <Select.Trigger data-testid="ship-cutoff"><Select.Value /></Select.Trigger>
                 <Select.Content>{Array.from({ length: 16 }, (_, i) => i + 8).map((h) => <Select.Item key={h} value={String(h)}>{h}:00</Select.Item>)}</Select.Content>
               </Select>
@@ -204,7 +204,7 @@ const SECRET_FIELDS: { key: string; group: "thawani" | "whatsapp" }[] = [
   { key: "whatsapp.businessAccountId", group: "whatsapp" },
 ]
 const PaymentsTab = ({ onSaved }: { onSaved: () => void }) => {
-  const { t, lang, errorText } = useNaqlaT()
+  const { t, lang, dir, errorText } = useNaqlaT()
   const api = useApi()
   const [sec, setSec] = useState<Sec | null>(null)
   const [draft, setDraft] = useState<Record<string, string>>({})
@@ -236,7 +236,7 @@ const PaymentsTab = ({ onSaved }: { onSaved: () => void }) => {
       {test[g] && <Text size="small" data-testid={`test-${g}-result`} className={test[g].ok ? "text-ui-fg-interactive" : "text-ui-fg-error"}>{errorText(test[g].message)}</Text>}
       {g === "thawani" && (
         <div className="grid gap-1"><Label>{t("settings.mode")}</Label>
-          <Select value={draft["thawani.mode"] ?? sec["thawani.mode"]?.value ?? "uat"} onValueChange={(v) => setDraft({ ...draft, "thawani.mode": v })}>
+          <Select dir={dir} value={draft["thawani.mode"] ?? sec["thawani.mode"]?.value ?? "uat"} onValueChange={(v) => setDraft({ ...draft, "thawani.mode": v })}>
             <Select.Trigger data-testid="thawani-mode"><Select.Value /></Select.Trigger>
             <Select.Content><Select.Item value="uat">{t("settings.modes.uat")}</Select.Item><Select.Item value="live">{t("settings.modes.live")}</Select.Item></Select.Content>
           </Select></div>
@@ -269,7 +269,7 @@ const PaymentsTab = ({ onSaved }: { onSaved: () => void }) => {
 }
 
 const StoreSettingsPage = () => {
-  const { t, tOr, lang, errorText, token } = useNaqlaT()
+  const { t, tOr, lang, dir, errorText, token } = useNaqlaT()
   const api = useApi()
   const [data, setData] = useState<Data | null>(null)
   const [draft, setDraft] = useState<Record<string, Val>>({})
@@ -434,7 +434,7 @@ const StoreSettingsPage = () => {
       return (
         <div key={f.key} className="grid gap-1 py-2">
           {label}
-          <Select value={(v as string) ?? ""} onValueChange={(x) => { set(f.key, x); if (f.key === "location.province") set("location.wilayat", null) }}>
+          <Select dir={dir} value={(v as string) ?? ""} onValueChange={(x) => { set(f.key, x); if (f.key === "location.province") set("location.wilayat", null) }}>
             <Select.Trigger data-testid={`set-${f.key}`}><Select.Value placeholder={t("settings.choose")} /></Select.Trigger>
             <Select.Content>{opts.map((o) => <Select.Item key={o.value} value={o.value}>{o.label}</Select.Item>)}</Select.Content>
           </Select>
@@ -485,7 +485,7 @@ const StoreSettingsPage = () => {
     <div className="flex flex-col gap-y-3" data-testid="naqla-store-settings">
       <Container className="p-0">
         <div className="px-6 py-4"><Heading>{t("settings.title")}</Heading><Text size="small" className="text-ui-fg-subtle">{t("settings.sub")}</Text></div>
-        <Tabs defaultValue="features" className="px-6 pb-6">
+        <Tabs defaultValue="features" className="px-6 pb-6" dir={dir}>
           <Tabs.List>{TABS.map((tab) => <Tabs.Trigger key={tab.id} value={tab.id} data-testid={`tab-${tab.id}`}>{t(`settings.tabs.${tab.id}`)}</Tabs.Trigger>)}</Tabs.List>
           {TABS.map((tab) => (
             <Tabs.Content key={tab.id} value={tab.id} className="pt-4">
