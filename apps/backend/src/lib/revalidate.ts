@@ -13,7 +13,8 @@ export function queueRevalidate(tags: string[], logger?: Logger) {
     const batch = [...pending]
     pending = new Set()
     timer = null
-    const url = process.env.STOREFRONT_URL
+    // في الحاويات: العنوان الداخلي للواجهة (http://storefront-<slug>:8000) بدل الدوران عبر Caddy والإنترنت
+    const url = process.env.STOREFRONT_INTERNAL_URL || process.env.STOREFRONT_URL
     const secret = process.env.REVALIDATE_SECRET
     if (!url || !secret) return
     try {

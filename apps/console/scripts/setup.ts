@@ -20,7 +20,8 @@ async function main() {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("الاستخدام: pnpm console:setup you@example.com [--password …]")
   const envFile = join(__dirname, "..", ".env.local")
   const local = envOf(envFile)
-  const base = local.CONSOLE_DATABASE_URL || envOf(join(ROOT, "apps", "backend", ".env")).DATABASE_URL
+  // في حاوية الإنتاج: من البيئة (deploy/docker-compose.yml)؛ في التطوير: .env.local أو قاعدة الخلفية
+  const base = process.env.CONSOLE_DATABASE_URL || local.CONSOLE_DATABASE_URL || envOf(join(ROOT, "apps", "backend", ".env")).DATABASE_URL
   if (!base) throw new Error("DATABASE_URL غير موجود في apps/backend/.env")
   const url = new URL(base); url.pathname = "/naqla_console"
   const admin = new URL(base); admin.pathname = "/postgres"
@@ -36,11 +37,11 @@ async function main() {
   if (row) await c.query(`update admins set password_hash=$1, totp_secret=$2, totp_last_step=0 where id=$3`, [hashPassword(password), secret, row.id])
   else await c.query(`insert into admins (email, password_hash, totp_secret) values ($1,$2,$3)`, [email, hashPassword(password), secret])
   await c.end()
-  if (!local.CONSOLE_DATABASE_URL) writeFileSync(envFile, `CONSOLE_DATABASE_URL=${url.toString()}\n` + (existsSync(envFile) ? readFileSync(envFile, "utf8") : ""))
+  if (!local.CONSOLE_DATABASE_URL && !process.env.CONSOLE_DATABASE_URL) writeFileSync(envFile, `CONSOLE_DATABASE_URL=${url.toString()}\n` + (existsSync(envFile) ? readFileSync(envFile, "utf8") : ""))
   const uri = otpauthUri(secret, email)
   console.log(`\n✔ مدير لوحة نقلة: ${email}\n  كلمة المرور: ${arg("--password") ? "(كما أدخلتها)" : password}\n  امسح الرمز بـ Google Authenticator:\n`)
   console.log(await QR.toString(uri, { type: "terminal", small: true }))
-  console.log(`  أو أدخل السر يدوياً: ${secret}\n  التشغيل: pnpm console:dev  ثم http://localhost:7000\n`)
+  console.log(`  أو أدخل السر يدوياً: ${secret}\n  التشغيل: pnpm console:dev (التطوير) أو https://console.<PLATFORM_DOMAIN> (الإنتاج)\n`)
   if (process.argv.includes("--print-secret")) console.log(`TOTP_SECRET=${secret}`)
 }
 main().catch((e) => { console.error("✖", e.message); process.exit(1) })

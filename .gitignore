@@ -82,3 +82,8 @@ clients/*
 !clients/layan/
 !clients/demo-perfume/
 .i18n-snapshots/
+
+# النشر على الخادم (deploy/naqla.mjs): بيانات وملفات مولَّدة — لا تُرفع
+deploy/stores/
+deploy/sites/
+/data/

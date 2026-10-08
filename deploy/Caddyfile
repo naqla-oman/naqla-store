@@ -1,7 +1,7 @@
 # Caddy لمنصة نقلة: HTTPS تلقائي، ترويسات الأمان، وسجلات بلا أسرار.
-# متجر جديد = نسخ كتلتي النطاقين أدناه.
+# لوحة نقلة على console.<PLATFORM_DOMAIN>، وكل متجر في sites/<slug>.caddy (يولّده deploy/naqla.mjs).
 {
-	email {$ACME_EMAIL:info@naqla.tech}
+	email {$ACME_EMAIL}
 }
 
 (security) {
@@ -34,20 +34,15 @@
 	}
 }
 
-# ===== متجر 1: النطاقات من متغيرات البيئة (deploy/.env) =====
-{$STORE1_DOMAIN}, www.{$STORE1_DOMAIN} {
+# ===== لوحة نقلة الرئيسية: لا تضمين في إطار، ولا فهرسة =====
+{$CONSOLE_DOMAIN} {
 	import security
 	import access_log
-	header X-Frame-Options "SAMEORIGIN"
-	header Content-Security-Policy "frame-ancestors 'self'"
-	reverse_proxy storefront-store1:8000
-}
-
-api.{$STORE1_DOMAIN} {
-	import security
-	import access_log
-	# اللوحة (/app) والـAPI: لا تضمين في إطار إطلاقاً (Medusa يقدّم /app خارج middlewares)
 	header X-Frame-Options "DENY"
 	header Content-Security-Policy "frame-ancestors 'none'"
-	reverse_proxy backend-store1:9000
+	header X-Robots-Tag "noindex, nofollow"
+	reverse_proxy console:7000
 }
+
+# ===== المتاجر =====
+import /etc/caddy/sites/*.caddy

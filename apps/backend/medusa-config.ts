@@ -128,6 +128,9 @@ module.exports = defineConfig({
       rolling: true,
     },
     databaseUrl: process.env.DATABASE_URL,
+    // Postgres داخلي بلا SSL (حاويات الإنتاج على شبكة Docker الخاصة): ssl_mode=disable في DATABASE_URL.
+    // Medusa يحذف ssl_mode من العنوان ثم يحسب الافتراض من العنوان المحذوف فيفعّل SSL لغير localhost — الخيار هنا صريح
+    ...(/[?&]ssl_mode=(disable|false)/i.test(process.env.DATABASE_URL ?? '') ? { databaseDriverOptions: { connection: { ssl: false } } } : {}),
     // H6: الجلسات في Redis (تبقى بعد إعادة التشغيل وتعمل مع أكثر من عملية)
     ...(REDIS_URL ? { redisUrl: REDIS_URL, redisPrefix: `${REDIS_PREFIX}sess:` } : {}),
     http: {

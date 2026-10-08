@@ -8,7 +8,12 @@ export async function sendStoreReady(p: { phone: string; name: string; panel: st
   const to = String(p.phone).replace(/\D/g, "")
   const token = process.env.CONSOLE_WHATSAPP_TOKEN, phoneId = process.env.CONSOLE_WHATSAPP_PHONE_ID
   if (!token || !phoneId) {
-    if (process.env.NODE_ENV === "production") throw new Error("واتساب نقلة غير مضبوط (CONSOLE_WHATSAPP_TOKEN)")
+    // الإنتاج بلا رقم نقلة بعد: لا يُهدم متجر جاهز من أجل رسالة — الرابط لا يُحفظ في أي سجل، ويُولَّد في طرفية الخادم
+    if (process.env.NODE_ENV === "production") {
+      const slug = /^https:\/\/api-([a-z0-9-]+)\./.exec(p.panel)?.[1] ?? /^https:\/\/api\.(.+?)\//.exec(p.panel)?.[1] ?? "<slug>"
+      log(`⚠ واتساب نقلة غير مضبوط (CONSOLE_WHATSAPP_TOKEN) — لم تُرسل الرسالة. لوحة العميل: ${p.panel} — رابط تعيين كلمة المرور على الخادم: deploy/naqla.sh reset-link ${slug}`)
+      return
+    }
     // التطوير: الرابط الكامل في مخرجات المنفّذ فقط؛ وسجل الخطوة (في القاعدة) يحمل نسخة مخفية الرمز
     console.log(`[whatsapp:dev] store_ready → +${to} | ${p.panel} | ${p.reset}`)
     log(`[whatsapp:dev] store_ready → +${to} | متجرك «${p.name}» جاهز. لوحتك: ${p.panel} — عيّن كلمة المرور: ${p.reset.replace(/token=[^&]+/, "token=••••")}`)
