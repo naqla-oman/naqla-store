@@ -7,13 +7,15 @@
 //   storefront <slug>     إعادة بناء الواجهة وتشغيلها (بعد تغيير الهوية أو الكود)
 //   start|stop|pause|resume|migrate|ready|logs|remove|reset-link <slug>
 //   backup <slug> [kind]  ← سطر JSON {file,size}؛  backup-all [kind]؛  restore <slug> <file>
-//   build-backend | build-console | up-base | status | console-admin <email> [--reset-totp] | register <slug>
+//   build-backend | build-console | up-base | status | console-admin <email> [--reset-totp] [--password p] | register <slug>
 import { spawn } from "node:child_process"
 import { randomBytes } from "node:crypto"
-import { existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
 
+// كل ما تنشئه الأداة (البيئات والنسخ الاحتياطية وفيها بيانات الزبائن) لمالكه فقط
+process.umask(0o077)
 const DEPLOY = dirname(fileURLToPath(import.meta.url))
 const ROOT = join(DEPLOY, "..")
 const STORES = join(ROOT, ".stores")
@@ -59,8 +61,16 @@ const psql = (sql, db = "postgres") => compose(["exec", "-T", "postgres", "psql"
 const proxyArgs = () => ["HTTPS_PROXY", "HTTP_PROXY", "NO_PROXY", "https_proxy", "http_proxy", "no_proxy"].filter((k) => process.env[k]).flatMap((k) => ["--build-arg", `${k}=${process.env[k]}`])
 
 // ===== الصور =====
-async function buildBackend() { say("▶ بناء صورة الخلفية (naqla-backend)…"); await run("docker", ["build", ...proxyArgs(), "-f", "deploy/backend.Dockerfile", "-t", "naqla-backend", "."]) }
-async function buildConsole() { say("▶ بناء صورة لوحة نقلة (naqla-console)…"); await run("docker", ["build", ...proxyArgs(), "-f", "deploy/console.Dockerfile", "-t", "naqla-console", "."]) }
+async function buildBackend() { say("▶ بناء صورة الخلفية (naqla-backend)…"); await run("docker", ["build", ...proxyArgs(), "-f", "deploy/backend.Dockerfile", "-t", "naqla-backend", "."]); await pruneBuilds() }
+async function buildConsole() { say("▶ بناء صورة لوحة نقلة (naqla-console)…"); await run("docker", ["build", ...proxyArgs(), "-f", "deploy/console.Dockerfile", "-t", "naqla-console", "."]); await pruneBuilds() }
+/**
+ * بعد كل بناء: الصور القديمة بلا وسم (أُزيح وسمها لصورة أحدث) وذاكرة البناء فوق 3GB — قرص الخادم 40GB،
+ * وذاكرة البناء وحدها تجاوزت 20GB في اختبار متجرين قبل هذا التنظيف
+ */
+async function pruneBuilds() {
+  await run("docker", ["image", "prune", "-f"], { quiet: true }).catch(() => {})
+  await run("docker", ["builder", "prune", "-f", "--max-used-space", "3gb"], { quiet: true }).catch(() => {})
+}
 const imageExists = (name) => run("docker", ["image", "inspect", name], { quiet: true }).then(() => true, () => false)
 
 // ===== نطاقات المتجر =====
@@ -95,7 +105,8 @@ function writeStoreFiles(slug, opts = {}) {
     SETTINGS_ENCRYPTION_KEY: secret("SETTINGS_ENCRYPTION_KEY", 32),
     PHONE_AUTH_SECRET: secret("PHONE_AUTH_SECRET", 32),
     MEDUSA_FF_TRANSLATION: "true",
-    DATABASE_URL: `postgres://naqla:${pf.POSTGRES_PASSWORD}@postgres:5432/${dbOf(slug)}`,
+    // ssl_mode=disable: Medusa يفعّل SSL لأي قاعدة ليست localhost، وPostgres الداخلي (شبكة Docker الخاصة) بلا SSL
+    DATABASE_URL: `postgres://naqla:${pf.POSTGRES_PASSWORD}@postgres:5432/${dbOf(slug)}?ssl_mode=disable`,
     REDIS_URL: "redis://redis:6379",
     MEDUSA_BACKEND_URL: api,
     MEDUSA_PUBLIC_URL: api,
@@ -245,6 +256,7 @@ async function buildStorefront(slug) {
     "--build-arg", `NEXT_PUBLIC_BASE_URL=${e.NEXT_PUBLIC_BASE_URL}`, "--build-arg", `MEDUSA_BACKEND_URL=http://backend-${svc}:9000`,
     "--build-arg", `MEDUSA_PUBLIC_URL=${e.MEDUSA_PUBLIC_URL}`,
     "-f", "deploy/storefront.Dockerfile", "-t", `naqla-storefront-${slug}`, "."])
+  await pruneBuilds()
 }
 
 async function deployStore(slug) {
@@ -276,6 +288,8 @@ async function deployStore(slug) {
   if (!(await waitHealthy(`storefront-${svc}`))) fail("لم تجهز الواجهة")
   writeSite(slug, false)
   await reloadCaddy()
+  // في لوحة نقلة (إن لم يكن مسجّلاً — المتاجر التي تنشئها اللوحة مسجّلة أصلاً)
+  await register(slug).catch((e) => say(`⚠ التسجيل في لوحة نقلة: ${e.message.split("\n")[0]}`))
   say(`\n✔ «${slug}» يعمل\n  المتجر:      https://${d.site}\n  لوحة التاجر: https://${d.api}/app\n  المسؤول:     ${env.ADMIN_EMAIL} (كلمة المرور في .stores/${slug}.prod.env — ADMIN_PASSWORD)`)
 }
 
@@ -292,7 +306,7 @@ async function backup(slug, kind = "manual") {
     p.stdout.on("data", (b) => chunks.push(b)); p.stderr.on("data", (b) => { err += b })
     p.on("close", (code) => (code === 0 ? resolve(Buffer.concat(chunks)) : reject(new Error(`pg_dump → ${code}: ${err.slice(-300)}`))))
   })
-  writeFileSync(file, out)
+  writeFileSync(file, out, { mode: 0o600 })
   const uploads = join(DATA, slug, "uploads")
   if (existsSync(uploads)) await run("tar", ["-czf", file.replace(/\.dump$/, ".uploads.tgz"), "-C", join(DATA, slug), "uploads"], { quiet: true })
   const size = statSync(file).size
@@ -320,13 +334,20 @@ async function restore(slug, file) {
   say("✔ استُعيدت القاعدة والصور")
 }
 
+/** نقل إلى الأرشيف — داخل المنفّذ تقع clients/ و.archive/ على تركيبين مختلفين فيُرفض rename (EXDEV): نسخ ثم حذف */
+function moveTo(src, dest) {
+  try { renameSync(src, dest) } catch (e) {
+    if (e.code !== "EXDEV") throw e
+    cpSync(src, dest, { recursive: true }); rmSync(src, { recursive: true, force: true })
+  }
+}
 async function remove(slug) {
   checkSlug(slug)
   const svc = svcOf(slug)
   await compose(["rm", "-sf", `storefront-${svc}`, `backend-${svc}`]).catch(() => {})
   const dest = join(ARCHIVE, `${slug}-${new Date().toISOString().replace(/[:.]/g, "-")}`); mkdirSync(dest, { recursive: true })
   for (const [src, name] of [[join(CLIENTS, slug), "client"], [envFile(slug), `${slug}.prod.env`], [join(DATA, slug), "data"], [join(DEPLOY, "stores", `${slug}.compose.yml`), "compose.yml"], [join(DEPLOY, "sites", `${slug}.caddy`), "site.caddy"]]) {
-    if (existsSync(src)) renameSync(src, join(dest, name))
+    if (existsSync(src)) moveTo(src, join(dest, name))
   }
   await psql(`select pg_terminate_backend(pid) from pg_stat_activity where datname='${dbOf(slug)}' and pid <> pg_backend_pid()`)
   await psql(`drop database if exists "${dbOf(slug)}"`)
@@ -344,7 +365,7 @@ async function register(slug) {
   const s = JSON.parse(readFileSync(join(CLIENTS, slug, "store.json"), "utf8"))
   const esc = (v) => `'${String(v ?? "").replace(/'/g, "''")}'`
   await psql(`insert into stores (slug, name, template, status, domain, phone, email, health, meta) values (${esc(slug)}, ${esc(s.name)}, ${esc(s.template ?? "imported")}, 'running', ${esc(e.STORE_DOMAIN)}, ${esc(s.contact?.whatsapp ?? s.contact?.phone ?? "")}, ${esc(e.ADMIN_EMAIL)}, 'ok', '{"imported":true}'::jsonb)
-    on conflict (slug) do update set domain=excluded.domain, status='running', updated_at=now()`, "naqla_console")
+    on conflict (slug) do update set domain=excluded.domain, updated_at=now()`, "naqla_console")
   say(`✔ «${slug}» مسجّل في لوحة نقلة`)
 }
 
@@ -384,7 +405,7 @@ try {
       const email = a1
       if (!email) fail("الاستخدام: console-admin <email> [--reset-totp]")
       // مخطط القاعدة + المدير (كلمة مرور وسر TOTP ورمز QR) — يطبع في الطرفية فقط
-      await consoleExec(["npx", "tsx", "scripts/setup.ts", email, ...(process.argv.includes("--reset-totp") ? ["--reset-totp"] : [])])
+      await consoleExec(["npx", "tsx", "scripts/setup.ts", email, ...(process.argv.includes("--reset-totp") ? ["--reset-totp"] : []), ...(arg("--password") ? ["--password", arg("--password")] : [])])
       break
     }
     case "register": await register(a1); break

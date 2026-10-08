@@ -32,6 +32,9 @@ chmod 600 deploy/.env
 echo "▶ بناء الصور (قد يستغرق دقائق)…"
 docker build -f deploy/console.Dockerfile -t naqla-console .
 docker build -f deploy/backend.Dockerfile -t naqla-backend .
+# الصور القديمة بلا وسم وذاكرة البناء فوق 3GB (قرص الخادم محدود)
+docker image prune -f >/dev/null
+docker builder prune -f --max-used-space 3gb >/dev/null
 
 echo "▶ تشغيل الأساس: Caddy وPostgres وRedis ولوحة نقلة…"
 "${COMPOSE[@]}" up -d caddy postgres redis console console-worker

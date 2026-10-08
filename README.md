@@ -156,7 +156,7 @@ pnpm store:dev <slug-2>     # المتجر http://localhost:8001 — اللوح�
 - [x] الولاء: نقاط معلّقة حتى التوصيل، استبدال بكود لاستخدام واحد، مستويات عبر مجموعات العملاء مع انضمام تلقائي (التوصيل المجاني امتياز مطبَّق).
 - [x] إشعارات واتساب لمراحل الطلب، وصور المنتجات وwidget تفاصيل التوصيل في لوحة التحكم.
 - [x] **فصل العملاء:** `clients/<slug>/`، `STORE`، مفاتيح التشغيل، الخيارات العامة، الأوامر `store:new` و`store:setup` و`store:dev`.
-- [ ] Docker Compose + Caddy للنشر على Hetzner.
+- [x] النشر على خادم واحد (Docker + Caddy): لوحة نقلة وكل المتاجر، والإنشاء من اللوحة.
 
 ---
 
@@ -172,16 +172,48 @@ pnpm store:dev <slug-2>     # المتجر http://localhost:8001 — اللوح�
 
 ## النشر على خادم (Docker + Caddy)
 
-الملفات في `deploy/`: `backend.Dockerfile`، `storefront.Dockerfile`، `docker-compose.yml`، `Caddyfile`.
+المنصة كلها على خادم واحد: لوحة نقلة الرئيسية وكل المتاجر، خلف Caddy (HTTPS تلقائي). القرارات 41–47 في DECISIONS.md.
 
-1. على الخادم: انسخي المستودع، وأنشئي `deploy/.env` فيه `POSTGRES_PASSWORD` و`ACME_EMAIL` ومعرّفات كل متجر `STORE1_SLUG` و`STORE1_DOMAIN` و`STORE1_PUBLISHABLE_KEY`.
-2. بيئة كل متجر في `.stores/<slug>.prod.env` (صلاحيات 600): الأسرار من `store:setup`، و`DATABASE_URL` على `postgres`، والنطاقات الحقيقية في CORS و`MEDUSA_BACKEND_URL` و`STOREFRONT_URL`، و`NODE_ENV=production`.
-3. `docker compose -f deploy/docker-compose.yml up -d --build`.
+| الصورة | لمن | متى تُبنى |
+|---|---|---|
+| `naqla-backend` | خلفية كل المتاجر (Medusa + لوحة التاجر) — المتجر يُحدَّد وقت التشغيل بـ `STORE` | عند تحديث الكود |
+| `naqla-storefront-<slug>` | واجهة متجر واحد (الخطوط والثيم مدمجة) | عند نشر المتجر أو تغيير هويته، وخلفيته تعمل |
+| `naqla-console` | لوحة نقلة: الويب (`console`) والمنفّذ (`console-worker`) | عند تحديث الكود |
 
-- الخلفية لا تقلع قبل جاهزية Postgres وRedis (`depends_on … service_healthy`)، وتتوقف بخطأ واضح إن لم يتوفر Redis، وصحتها من `/ready`.
-- الصور في volume دائم (`/data/uploads`) يُربط بـ `static` عند كل تشغيل؛ والترحيلات تعمل تلقائياً قبل الخادم.
-- Caddy: HTTPS تلقائي، HSTS، منع تضمين اللوحة (`/app`) في إطار، حذف `X-Powered-By`، وسجلات بلا `otp` ولا التوكنات والكوكيز.
-- متجر جديد = نسخ كتلتي `backend-<slug>`/`storefront-<slug>` في compose وكتلتي النطاقين في Caddyfile.
+**التثبيت الأول** (Ubuntu + Docker، المستودع في `/opt/naqla` إلزامياً، وسجل DNS `*` و`@` ← عنوان الخادم):
+
+```bash
+# مفتاح قراءة المستودع (Deploy key) في ~/.ssh/naqla_deploy — ويبقى للتحديثات (core.sshCommand)
+GIT_SSH_COMMAND="ssh -i ~/.ssh/naqla_deploy" git clone git@github.com:naqla-oman/naqla-store.git /opt/naqla && cd /opt/naqla
+git config core.sshCommand "ssh -i ~/.ssh/naqla_deploy"
+deploy/install.sh omnaqla.shop info@naqla.tech      # deploy/.env + الصور + الأساس + نسخة يومية 03:15
+deploy/naqla.sh console-admin you@naqla.tech        # مدير لوحة نقلة: كلمة مرور + رمز QR لتطبيق المصادقة
+deploy/naqla.sh store <slug>                         # متجر من clients/ ← <slug>.omnaqla.shop و api-<slug>.omnaqla.shop/app
+```
+
+**العناوين:** متجر على نطاق المنصة `<slug>.<PLATFORM_DOMAIN>` وخادمه ولوحة تاجره `api-<slug>.<PLATFORM_DOMAIN>` (سجل `*` واحد يغطيها)؛
+دومين عميل خاص: `<domain>` و`www.<domain>` و`api.<domain>`. لوحة نقلة: `console.<PLATFORM_DOMAIN>`.
+
+**الأوامر** (`deploy/naqla.sh <أمر>` — تُنفَّذ داخل المنفّذ، وهي نفسها التي تستعملها لوحة نقلة):
+
+| الأمر | ما يفعله |
+|---|---|
+| `store <slug> [--domain d] [--admin-email e]` | نشر كامل قابل للتكرار: البيئة والأسرار، القاعدة، الخلفية (ترحيل + بذرة)، الترجمات، المسؤول، مفتاح النشر، بناء الواجهة، موقع Caddy، التسجيل في لوحة نقلة |
+| `storefront <slug>` | إعادة بناء الواجهة (بعد تغيير الهوية أو الكود) |
+| `start` / `stop` / `pause` / `resume <slug>` | الإيقاف المؤقت يعرض صفحة صيانة (503) |
+| `migrate <slug>` | إعادة إنشاء الخلفية بالصورة الحالية (الترحيلات عند الإقلاع) |
+| `backup <slug> [kind]` / `backup-all` / `restore <slug> <file>` | نسخ القاعدة والصور إلى `/opt/naqla/.backups/<slug>/` (صلاحيات 600، آخر 14 يومية) |
+| `logs <slug>` / `ready <slug>` / `status` / `reset-link <slug>` / `remove <slug>` | الحذف يؤرشف في `.archive/` ثم يحذف القاعدة |
+
+**التحديث** بعد `git pull`: `deploy/install.sh --update` (يعيد بناء الصور، ولكل متجر: نسخة احتياطية ← الخلفية ← الواجهة).
+
+**بيانات الخادم** (خارج Git): `deploy/.env` (كلمة مرور Postgres والنطاق)، `.stores/<slug>.prod.env` (أسرار كل متجر وكلمة مرور مسؤوله)،
+`data/<slug>/` (الصور والملفات الخاصة)، `deploy/stores/` و`deploy/sites/` (مولَّدة)، `.backups/` و`.archive/`.
+
+- Postgres وRedis مشتركان: قاعدة لكل متجر (`naqla_<slug>`) وبادئة Redis لكل متجر. Postgres الداخلي بلا SSL (`ssl_mode=disable`).
+- حدود الذاكرة: الخلفية 768MB والواجهة 384MB لكل متجر، لوحة نقلة 256MB والمنفّذ 320MB. المقاس الفعلي: متجر + الأساس ≈ 770MB.
+- المنفّذ وحده يملك مقبس Docker؛ واجهة لوحة نقلة لا (قرار 7).
+- Caddy: HTTPS تلقائي، HSTS، منع تضمين اللوحات في إطار، حذف `X-Powered-By`، وسجلات بلا `otp` ولا التوكنات والكوكيز.
 
 ## اختبار ثواني (UAT)
 

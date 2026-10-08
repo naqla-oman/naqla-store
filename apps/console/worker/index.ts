@@ -8,7 +8,22 @@ for (const l of (existsSync(join(__dirname, "..", ".env.local")) ? readFileSync(
   const i = l.indexOf("="); if (i > 0 && !process.env[l.slice(0, i)]) process.env[l.slice(0, i)] = l.slice(i + 1)
 }
 
+/** قاعدة naqla_console وجداولها قبل أي شيء (الإنتاج: المنفّذ يقلع قبل إنشاء المدير، وأمر المدير يمر عبره) */
+async function ensureSchema() {
+  const url = process.env.CONSOLE_DATABASE_URL
+  if (!url) return
+  const { Client } = await import("pg")
+  const { SCHEMA } = await import("../src/lib/db-schema")
+  const name = new URL(url).pathname.slice(1)
+  const admin = new URL(url); admin.pathname = "/postgres"
+  const c0 = new Client({ connectionString: admin.toString() }); await c0.connect()
+  if (!(await c0.query(`select 1 from pg_database where datname=$1`, [name])).rowCount) await c0.query(`create database "${name.replace(/"/g, "")}"`)
+  await c0.end()
+  const c = new Client({ connectionString: url }); await c.connect(); await c.query(SCHEMA); await c.end()
+}
+
 async function main() {
+  await ensureSchema()
   const { q } = await import("../src/lib/db")
   const { JOBS } = await import("../src/lib/jobs")
   const { driver } = await import("../src/lib/provisioner")
