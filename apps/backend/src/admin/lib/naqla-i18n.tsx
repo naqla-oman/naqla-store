@@ -31,7 +31,9 @@ export function useNaqlaT() {
   }, [i18n, t, tOr])
   /** رمز «~…» من الخادم (مصادر الطلبات، قيم سجل التغييرات) ← naqla.tokens.<…>؛ غيره نص بيانات كما هو */
   const token = useCallback((v: unknown) => (typeof v === "string" && v.startsWith("~") ? tOr(`tokens.${v.slice(1)}`, v) : v), [tOr])
-  return { t, tOr, lang, errorText, token, i18n }
+  // مكوّنات Radix في @medusajs/ui (Tabs, Select) اتجاهها ltr افتراضياً ولا ترث dir من <html> — تُمرَّر لها صراحة
+  const dir: "rtl" | "ltr" = lang === "ar" ? "rtl" : "ltr"
+  return { t, tOr, lang, dir, errorText, token, i18n }
 }
 
 /** fetch لمسارات نقلة بلغة اللوحة (x-naqla-lang): الخادم يعيد الأسماء (محافظات، مستويات، منتجات) بها */

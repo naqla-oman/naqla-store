@@ -87,7 +87,9 @@
     "s4ee631": "Payment",
     "se4d013": "Checkout",
     "sbb8423": "Page not found",
-    "secureNote": "Secure, encrypted payment"
+    "secureNote": "Secure, encrypted payment",
+    "pickupLabel": "Store pickup",
+    "deliverSub": "All governorates"
   },
   "checkoutActions": {
     "sfe3242": "Enter your full name",
@@ -141,7 +143,9 @@
     "sea028b": "Qty:",
     "s8580bc": "Could not move your cart to your account",
     "cartAria": "Cart ({n})",
-    "byAddress": "Based on address"
+    "byAddress": "Based on address",
+    "viewCart": "View cart",
+    "piecesCount": "{count, plural, one {# item} other {# items}}"
   },
   "cartActions": {
     "s68650b": "The requested quantity is not available right now",
@@ -234,7 +238,16 @@
     "ratingOf": "Rated {rating} out of 5",
     "reviewsCount": "{count, plural, one {# review} other {# reviews}}",
     "soldThisWeek": "Bought by {count, plural, one {# customer} other {# customers}} this week",
-    "fromCategory": "From {cat}"
+    "fromCategory": "From {cat}",
+    "qaAdd": "Quick add",
+    "qaView": "Quick view",
+    "qaAddAria": "Quick add: {title}",
+    "qaViewAria": "Quick view: {title}",
+    "qvClose": "Close",
+    "qvLoading": "Loading…",
+    "qvFailed": "Couldn't load this product right now",
+    "qvImage": "Image {n}",
+    "qvDetails": "Full details"
   },
   "account": {
     "sc0f526": "My account",

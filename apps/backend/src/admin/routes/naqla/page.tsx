@@ -36,7 +36,7 @@ const NaqlaDashboard = () => {
             <Kpi testid="kpi-pending" label={t("kpi.pending")} value={d.pending.count} hint={t("dashboard.pendingHint")} tone="gold" />
             <Kpi testid="kpi-low" label={t("kpi.lowStock")} value={d.lowStock.count} hint={t("dashboard.lowHint", { n: d.lowStock.threshold })} tone="green" />
           </div>
-          <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          <div className="grid grid-cols-1 items-start gap-3 xl:grid-cols-2">
             <Card title={t("kpi.pending")} testid="card-pending">
               {d.pending.orders.length ? (
                 <div className="flex flex-col divide-y">

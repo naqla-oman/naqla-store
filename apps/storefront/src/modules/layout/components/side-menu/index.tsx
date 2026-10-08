@@ -1,7 +1,8 @@
 "use client"
 
 import { Popover, PopoverButton, PopoverPanel, Transition } from "@headlessui/react"
-import { Fragment } from "react"
+import { Fragment, useEffect, useState } from "react"
+import { createPortal } from "react-dom"
 import { useParams, useRouter } from "next/navigation"
 import LocalizedClientLink from "@modules/common/components/localized-client-link"
 import Icon from "@modules/common/components/icon"
@@ -25,6 +26,10 @@ const SideMenu = () => {
   const EXTRA = extraOf(t)
   const router = useRouter()
   const { countryCode, lang } = useParams() as { countryCode: string; lang: string }
+  // الدرج خارج الرأس: .hdr عليه backdrop-filter فيصير هو حاوية position:fixed لأبنائه — كان الدرج يُحصر بارتفاع
+  // الرأس (66px) فيظهر شفافاً متراكباً على الصفحة. البوابة إلى body تعيد الحاوية إلى نافذة العرض.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
   return (
     <Popover className="h-full flex">
       {({ open, close }) => (
@@ -32,7 +37,8 @@ const SideMenu = () => {
           <PopoverButton className="iconbtn" aria-label={t("s426510")} data-testid="nav-menu-button">
             <Icon name="menu" />
           </PopoverButton>
-          {open && <div className="fixed inset-0 z-[50] bg-black/40" onClick={close} />}
+          {mounted && createPortal(<>
+          {open && <div className="fixed inset-0 z-[60] bg-black/40" onClick={close} />}
           <Transition
             show={open}
             as={Fragment}
@@ -43,7 +49,7 @@ const SideMenu = () => {
             leaveFrom="opacity-100 translate-x-0"
             leaveTo="opacity-0 -translate-x-6 rtl:translate-x-6"
           >
-            <PopoverPanel className="fixed inset-y-0 start-0 z-[51] w-[86%] max-w-[360px] bg-surface shadow-card flex flex-col rounded-e-lg2">
+            <PopoverPanel className="fixed inset-y-0 start-0 z-[61] w-[86%] max-w-[360px] bg-surface shadow-card flex flex-col rounded-e-lg2 overflow-hidden">
               <div className="flex items-center gap-3 p-4 border-b border-line">
                 <LogoMark className="w-9 h-9" />
                 <b className="font-display text-lg">{sc.shortName}</b>
@@ -53,6 +59,7 @@ const SideMenu = () => {
               <form
                 role="search"
                 className="searchbox m-3 mb-0"
+                style={{ flex: "none" }}
                 onSubmit={(e) => {
                   e.preventDefault()
                   const q = String(new FormData(e.currentTarget).get("q") ?? "").trim()
@@ -63,7 +70,7 @@ const SideMenu = () => {
                 <Icon name="search" size={18} />
                 <input type="search" name="q" placeholder={t("sd9d4bc")} aria-label={t("s45511c")} enterKeyHint="search" data-testid="menu-search" />
               </form>
-              <ul className="p-3 flex flex-col gap-1 overflow-y-auto">
+              <ul className="p-3 flex flex-col gap-1 overflow-y-auto flex-1 min-h-0">
                 {sc.nav.map((n) => (
                   <li key={n.href}>
                     <LocalizedClientLink
@@ -95,6 +102,7 @@ const SideMenu = () => {
               </div>
             </PopoverPanel>
           </Transition>
+          </>, document.body)}
         </>
       )}
     </Popover>

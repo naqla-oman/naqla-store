@@ -31,10 +31,13 @@ h1, h2, h3, h4, .font-display {
 }
 .hdr { background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(14px); border-bottom: 1px solid var(--line); }
 .hsearch { position: relative; flex: 1; max-width: 300px; }
-.hsearch input { width: 100%; height: var(--h-ctl); border: 1px solid var(--line); border-radius: 13px; background: var(--surface-2); padding: 0 42px 0 14px; font-family: inherit; font-size: 13.5px; color: var(--ink); }
+.hsearch input { width: 100%; height: var(--h-ctl); border: 1px solid var(--line); border-radius: 13px; background: var(--surface-2); font-family: inherit; font-size: 13.5px; color: var(--ink); }
 .hsearch input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
-.hsearch button { position: absolute; inset-inline-start: 12px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: var(--muted); cursor: pointer; display: grid; }
-[dir="rtl"] .hsearch input { padding: 0 14px 0 42px; }
+/* الأيقونة في بداية الحقل والنص بعدها — بخصائص فيزيائية لكل اتجاه (كانت الحشوة في الجهة المقابلة فتتراكب الأيقونة على النص) */
+.hsearch button { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); background: none; border: 0; color: var(--muted); cursor: pointer; display: grid; }
+.hsearch input { padding: 0 14px 0 40px; }
+[dir="rtl"] .hsearch button { left: auto; right: 12px; }
+[dir="rtl"] .hsearch input { padding: 0 40px 0 14px; }
 
 .ticker { overflow: hidden; clip-path: inset(0 round 14px); border-radius: 14px; padding: 11px 0; background: var(--accent); color: #fff; position: relative; isolation: isolate; }
 .ticker::before, .ticker::after { content: ""; position: absolute; top: 0; bottom: 0; width: 48px; z-index: 1; pointer-events: none; }
@@ -76,7 +79,7 @@ nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 45; background:
 .sechead a { color: var(--accent); font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
 @media (max-width: 640px) { .sechead h2 { font-size: 22px; } .sechead { margin: 30px 0 14px; } }
 
-.pcard { display: block; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; text-decoration: none; color: inherit; transition: transform .2s, box-shadow .2s; }
+.pcard { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; text-decoration: none; color: inherit; transition: transform .2s, box-shadow .2s; }
 .pcard:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
 .pcard .ph { position: relative; aspect-ratio: 3/4; background: var(--surface-2); overflow: hidden; }
 .pcard .ph img { object-fit: cover; transition: transform .5s; }
@@ -84,12 +87,16 @@ nav.tabs { position: fixed; bottom: 0; inset-inline: 0; z-index: 45; background:
 .pcard .tag { position: absolute; top: 10px; inset-inline-end: 10px; background: var(--surface); color: var(--ink); font-size: 11px; font-weight: 700; padding: 4px 9px; border-radius: 999px; box-shadow: var(--shadow-sm); }
 .pcard .tag.red { background: var(--copper); color: var(--copper-ink); }
 .pcard .wish { position: absolute; top: 10px; inset-inline-start: 10px; width: 36px; height: 36px; border-radius: 50%; background: var(--surface); border: 0; display: grid; place-items: center; color: var(--ink); cursor: pointer; box-shadow: var(--shadow-sm); }
-.pcard .pb { padding: 12px 14px 14px; }
+.pcard .pb { padding: 12px 14px 14px; display: flex; flex-direction: column; flex: 1; color: inherit; text-decoration: none; }
+.pcard .phlink { position: absolute; inset: 0; display: block; }
 .pcard .cat { font-size: 11.5px; color: var(--muted); }
 .pcard .nm { font-size: 14.5px; font-weight: 700; margin: 2px 0 6px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .pcard .meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
 .pcard .meta .st { color: var(--copper); display: inline-flex; align-items: center; gap: 3px; }
-.pcard .pr { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.pcard .pr { display: flex; align-items: center; gap: 8px; margin-top: auto; padding-top: 8px; }
+/* «اشترتها N زبونة هذا الأسبوع» سطر مستقل لا ينكسر (كان يضغط التقييم إلى 4 أسطر على الجوال) */
+.pcard .sold { display: flex; align-items: center; gap: 4px; font-size: 11.5px; color: var(--muted); margin-top: 4px; min-width: 0; }
+.pcard .sold span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pcard .price { font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; }
 .pcard .old { font-size: 12px; color: var(--muted); text-decoration: line-through; }
 .pcard .save { font-size: 11.5px; color: var(--accent); font-weight: 600; }
@@ -132,9 +139,9 @@ footer.site a { color: inherit; text-decoration: none; }
 .social a { width: 42px; height: 42px; border-radius: 12px; border: 1px solid rgba(255,255,255,.14); display: grid; place-items: center; color: var(--footer-ink); }
 .social a:hover { background: rgba(255,255,255,.08); }
 .fcol h4 { font-size: 16px; margin: 0 0 14px; font-weight: 700; }
-.fcol ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; font-size: 13.5px; color: var(--footer-muted); }
+.fcol ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13.5px; color: var(--footer-muted); }
 .fcol li a:hover { color: var(--footer-ink); }
-.fcontact { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: var(--r-lg); padding: 20px; }
+.fcontact { align-self: start; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: var(--r-lg); padding: 20px; }
 .fcontact h4 { margin: 0 0 12px; font-size: 16px; }
 .fcontact div { display: flex; gap: 10px; align-items: flex-start; font-size: 13px; color: var(--footer-muted); margin-bottom: 10px; }
 .fcontact div b { color: var(--footer-ink); display: block; font-weight: 600; }
@@ -151,7 +158,14 @@ footer.site a { color: inherit; text-decoration: none; }
   .fcol details summary::-webkit-details-marker { display: none; }
   .fcol details summary::after { content: ""; width: 8px; height: 8px; border-inline-end: 2px solid var(--footer-muted); border-bottom: 2px solid var(--footer-muted); transform: rotate(45deg); transition: transform .2s; }
   .fcol details[open] summary::after { transform: rotate(-135deg); }
-  .fcol ul { padding: 8px 0 12px; }
+  .fcol ul { padding: 4px 0 10px; }
+  /* الجوال: الدفع والحقوق في الوسط بأسطر مرتبة (كانت الشعارات تلتف إلى البداية بلا ترتيب) */
+  .fbrand { text-align: center; display: grid; justify-items: center; }
+  .fbrand p { margin-inline: auto; }
+  .fpay { flex-direction: column; text-align: center; gap: 12px; }
+  .fpay .logos { justify-content: center; }
+  .fbottom { flex-direction: column; align-items: center; text-align: center; gap: 6px; }
+  .fcontact { text-align: start; }
 }
 
 /* الشعار الكلمة: نسخة نهارية وليلية */
@@ -192,6 +206,10 @@ footer.site a { color: inherit; text-decoration: none; }
 .listing .sechead { margin-top: 12px; }
 .listing .sechead h1 { font-size: 26px; font-weight: 800; margin: 0; line-height: 1.25; }
 .listctl { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+/* الجوال: البحث يأخذ الباقي والترتيب بعرضه — كان الحقل بلا min-width فيدفع الترتيب خارج الشاشة */
+.listctl .searchbox { min-width: 0; }
+.listctl .sortsel { flex: none; }
+.listctl .sortsel select { max-width: 132px; }
 .searchbox { flex: 1; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-md); padding: 0 12px; height: 46px; color: var(--muted); }
 .searchbox:focus-within { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent); }
 .searchbox input { flex: 1; border: 0; outline: 0; background: transparent; font: inherit; color: var(--ink); min-width: 0; }
@@ -228,7 +246,9 @@ body:has(.costicky) .consent { top: calc(12px + env(safe-area-inset-top, 0px)); 
 .pcard .wish { width: 44px; height: 44px; top: 6px; inset-inline-start: 6px; background: transparent; box-shadow: none; display: grid; place-items: center; isolation: isolate; }
 .pcard .wish::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--surface); box-shadow: 0 1px 3px rgb(0 0 0 / 0.12); z-index: -1; }
 /* روابط القوائم (الفوتر والشعار والشبكات) — لا الروابط داخل النص */
-footer.site a { display: inline-flex; align-items: center; min-height: 44px; }
+footer.site a { display: inline-flex; align-items: center; min-height: 32px; }
+/* أهداف اللمس 44px على الشاشات اللمسية فقط — على الكمبيوتر كانت تباعد روابط الفوتر كثيراً */
+@media (pointer: coarse) { footer.site a { min-height: 44px; } footer.site .fcol ul { gap: 0; } }
 footer.site .social a { min-width: 44px; min-height: 44px; justify-content: center; }
 .hdr a[aria-label]:not(.iconbtn) { min-height: 44px; }
 /* منطقة لمس 44px مع بقاء الشكل كما هو: هامش داخلي يقابله هامش سالب مساوٍ */

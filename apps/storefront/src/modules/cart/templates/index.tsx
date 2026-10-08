@@ -9,6 +9,7 @@ import CartLines from "./lines"
 import { storeConfig } from "../../../store.config"
 import { g } from "@lib/voice"
 import { discountLines } from "@lib/util/discounts"
+import { cartItemsDiscount, cartItemsTotal } from "@lib/util/cart-totals"
 import { useCurrencyLabel, useT } from "@/i18n/t"
 import { useStoreConfig } from "@/i18n/store-config"
 
@@ -33,8 +34,8 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
     )
   }
 
-  const subtotal = items.reduce((s, i) => s + i.unit_price * i.quantity, 0)
-  const discount = Math.max(0, (cart.discount_total ?? 0) - ((cart as any).shipping_discount_total ?? 0))
+  const subtotal = cartItemsTotal(cart)
+  const discount = cartItemsDiscount(cart)
   // M19: من قاعدة Medusa عبر الصفحة (store.json احتياطي)
   const freeOver = threshold === undefined ? sc.freeShippingOver : threshold ?? 0
   const left = Math.max(0, freeOver - (subtotal - discount))

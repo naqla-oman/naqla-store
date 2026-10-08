@@ -34,3 +34,18 @@ bdi { unicode-bidi: isolate; }
 .check { display: flex; align-items: center; gap: 8px; font-weight: 500; } .check input { width: auto; min-height: 0; }
 .log { background: #0B1B2B; color: #CFE3EA; border-radius: 12px; padding: 12px; font: 12px/1.6 ui-monospace, monospace; max-height: 340px; overflow: auto; white-space: pre-wrap; direction: ltr; text-align: left; }
 .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+/* الجوال واللوحي: القائمة شريط علوي أفقي قابل للتمرير، والجداول تتمرّر داخل بطاقتها (كانت الصفحة تتمدد أفقياً) */
+.main { min-width: 0; }
+.card:has(> table), .card > .tablewrap { overflow-x: auto; }
+@media (max-width: 860px) {
+  .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto 1fr; }
+  .side { flex-direction: row; align-items: center; gap: 4px; padding: 10px 12px; overflow-x: auto; position: sticky; top: 0; z-index: 10; scrollbar-width: none; }
+  .side .brand { margin: 0 0 0 8px; font-size: 17px; flex: none; }
+  .side a { flex: none; white-space: nowrap; padding: 8px 10px; min-height: 40px; font-size: 14px; }
+  .side .who { margin: 0; margin-inline-start: auto; flex: none; display: flex; align-items: center; gap: 8px; }
+  .side .who bdi { display: none; }
+  .side .who .btn { margin-top: 0 !important; min-height: 38px; padding: 0 12px; }
+  .main { padding: 18px 14px; }
+  .g3, .g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .login .card { width: min(380px, calc(100vw - 32px)); }
+}

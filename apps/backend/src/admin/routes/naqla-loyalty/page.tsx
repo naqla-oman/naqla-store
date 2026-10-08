@@ -47,7 +47,7 @@ const LoyaltyPage = () => {
             </div>
             {!d.tiersEnabled && <Text size="small" className="mt-3 text-ui-fg-muted">{t("loyalty.tiersOff")}</Text>}
           </Card>
-          <Text size="xsmall" className="px-1 text-ui-fg-muted">{t("loyalty.contact")} <span dir="ltr">{d.source}</span>.</Text>
+          <Text size="xsmall" className="px-1 text-ui-fg-muted">{t("loyalty.contact")}</Text>
         </>
       )}
     </div>
