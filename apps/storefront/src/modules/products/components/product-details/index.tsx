@@ -23,7 +23,8 @@ export default function ProductDetails({ product }: { product: HttpTypes.StorePr
         <details open>
           <summary>{t("sb29cfa")} <Icon name="chevD" size={18} /></summary>
           <div className="body">
-            {product.description} {cfg.craftNote}
+            {/* الوصف المستورد فقرات بأسطر (store:import) */}
+            <span className="whitespace-pre-line">{product.description}</span> {cfg.craftNote}
             {product.material && <p className="mt-2">{t("material", { material: product.material })}</p>}
           </div>
         </details>

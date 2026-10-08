@@ -11,7 +11,7 @@
     "s88fc73": "Total",
     "sf84e5a": "Gift order — premium wrapping and a card with your message",
     "sa97f7e": "Encrypted payment",
-    "sab4bcb": "14-day exchange",
+    "sab4bcb": "{days}-day exchange",
     "s80bb43": "Confirmation on WhatsApp",
     "s85aedb": "Delivery details",
     "s90f911": "Full name",
@@ -114,7 +114,7 @@
   "cart": {
     "sacf86f": "Shopping cart",
     "sc2af64": "Secure payment",
-    "sab4bcb": "14-day exchange",
+    "sab4bcb": "{days}-day exchange",
     "s113808": "All governorates",
     "se4d013": "Checkout",
     "s43552d": "Start shopping",
@@ -154,7 +154,7 @@
   "product": {
     "s374125": "This option is sold out right now — we'll let you know as soon as it's back",
     "s9aecaf": "Your height in cm (optional)",
-    "s65df19": "Secure payment · 14-day exchange",
+    "s65df19": "Secure payment · {days}-day exchange",
     "s8fc546": "View cart",
     "scdc880": "Price includes VAT",
     "s8274ca": "No interest or fees",

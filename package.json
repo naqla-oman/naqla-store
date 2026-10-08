@@ -18,6 +18,7 @@
     "store:new": "node scripts/store-new.mjs",
     "store:setup": "node scripts/store-setup.mjs",
     "store:dev": "node scripts/store-dev.mjs",
+    "store:import": "node scripts/store-import.mjs",
     "console:setup": "pnpm --filter @naqla/console run setup",
     "console:dev": "pnpm --filter @naqla/console run dev",
     "console:worker": "pnpm --filter @naqla/console run worker",

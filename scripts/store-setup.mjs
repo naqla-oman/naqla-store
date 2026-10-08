@@ -77,7 +77,8 @@ if (existsSync(join(CLIENTS, slug, "locales", "en.json"))) {
   await run("npx", ["medusa", "exec", "./src/scripts/i18n-sync.ts"], { cwd: BACKEND, env: { ...process.env, ...env } }).catch((e) => console.log(c.y(`⚠ لم تُزرع الترجمات: ${(e.out ?? e.message).slice(-200)}`)))
 }
 const pk = (out.match(/Publishable key: (pk_[a-f0-9]+)/) || [])[1] || prev.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY
-if (!pk) fail("لم يُعثر على مفتاح النشر في مخرجات البذرة — هل كانت القاعدة مستخدمة سابقاً؟ استخدمي قاعدة جديدة")
+// آخر المخرجات مع الرسالة: خطأ البذرة (بيانات العميل غالباً) يُطبع في مخرجات db:migrate دون رمز خروج فاشل
+if (!pk) fail(`لم يُعثر على مفتاح النشر في مخرجات البذرة — هل كانت القاعدة مستخدمة سابقاً؟ استخدمي قاعدة جديدة\n${out.replace(/\x1b\[[0-9;]*m/g, "").split("\n").filter((l) => /error|Error/.test(l)).slice(-8).join("\n")}`)
 for (const line of out.split("\n").filter((l) => /checkout-setup|product-images|loyalty-tiers|tax-inclusive|Seeded/.test(l))) {
   console.log("  " + line.replace(/\x1b\[[0-9;]*m/g, "").replace(/^\s*info:\s*/, ""))
 }

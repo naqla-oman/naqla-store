@@ -76,7 +76,7 @@ export default function CartTemplate({ cart, freeOver: threshold }: { cart: Http
             </LocalizedClientLink>
             <div className="trustrow">
               <span><Icon name="lock" size={12} /> {t("sc2af64")}</span>
-              <span><Icon name="refresh" size={12} /> {t("sab4bcb")}</span>
+              <span><Icon name="refresh" size={12} /> {t("sab4bcb", { days: sc.seo.returnDays || 14 })}</span>
               <span><Icon name="truck" size={12} /> {t("s113808")}</span>
             </div>
           </div>
