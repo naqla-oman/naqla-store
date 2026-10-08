@@ -21,6 +21,9 @@ ENV NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
 # المنفّذ وحده يستعمل docker (المقبس يُركَّب في خدمته فقط — قرار 7)
 COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker
 COPY --from=dockercli /usr/local/libexec/docker/cli-plugins /usr/local/libexec/docker/cli-plugins
+# شهادات الجذر: docker build (buildx) يجلب رمز السجل (auth.docker.io) من جهة العميل — أي من هذه الحاوية —
+# وnode:*-slim بلا ca-certificates، فيفشل بناء واجهة أي متجر بـ «x509: certificate signed by unknown authority»
+COPY --from=dockercli /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /opt/naqla /opt/naqla
 WORKDIR /opt/naqla/apps/console
 EXPOSE 7000
